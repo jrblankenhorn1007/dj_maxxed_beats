@@ -98,6 +98,15 @@ continues without an iteration-count limit until explicit completion,
 blockage, an error, or manual interruption. Non-interactive mode grants tool
 approval automatically; inspect the prompt and monitor Copilot usage.
 
+## Decision log
+
+Maintain [`decision_log.md`](./decision_log.md) at the repository root as an
+append-only, dated record of material product, architecture, security, testing,
+and packaging decisions. Each entry records context, alternatives, rationale,
+and consequences. Commit each entry with the implementation or plan change it
+explains; supersede old decisions with a new entry rather than rewriting
+history. Never record credentials or private user data.
+
 ## Component responsibilities
 
 ### In-SuperCollider agent GUI
@@ -229,12 +238,15 @@ change important behavior.
   for each initial C++ UGen.
 - Decide whether the MVP only renders offline or also controls a running
   `sclang` session. Default: file-based compositions and offline render.
+- Turn the product acceptance criteria into a prioritized test list before
+  implementation; use the repository TDD skill for every code behavior.
 
 ### 1. Validate the SuperCollider integration
 
-- Build a minimal C++ UGen with its sclang class and help, then use it in a
-  procedural composition, convert that composition to a `Score`, and
-  successfully render a WAV using NRT mode.
+- First write and run failing tests for the minimal C++ UGen API and its
+  observable DSP contract. Then implement it with its sclang class and help,
+  use it in a procedural composition, convert that composition to a `Score`,
+  and render a WAV using NRT mode.
 - Install a minimal Quark/extension and open a small GUI from SCIDE without
   changing SuperCollider core.
 - Verify the workflow does not need a running real-time server or audio device.
@@ -276,6 +288,41 @@ change important behavior.
   dependencies, and distributed binaries before release. SuperCollider itself
   is GPL-3.0; this plan does not assume that generated audio is GPL-licensed.
 
+## Test plan: TDD
+
+Use the repository skill at [`.github/skills/tdd/SKILL.md`](./.github/skills/tdd/SKILL.md)
+for every behavior-changing implementation slice. Work one observable behavior
+at a time:
+
+1. Write the smallest test that specifies the next acceptance criterion.
+2. Run it before production code and capture a **Red** failure caused by the
+   missing/wrong behavior (not by broken test setup or missing dependencies).
+3. Implement the minimum change and run that test to **Green**.
+4. Refactor while keeping the relevant tests green.
+5. Repeat for the next behavior and record Red/Green/refactor evidence in
+   `RALPH_PROGRESS.md`.
+
+### Coverage strategy
+
+- Test DSP functions, parameter bounds, and deterministic seeded behavior in
+  isolation; test the built plugin and sclang class together with short
+  SuperCollider NRT renders.
+- Test provider request/response adapters, model discovery, stale pricing,
+  credit/USD calculations, and errors with fixtures or fakes—never live API
+  calls or real credentials in tests.
+- Test credential-store behavior through injected fakes and assert key
+  redaction/no persistence in logs and project files.
+- Test variation-session caps, cancellation, candidate isolation, and
+  confirmation before applying changes; use fixed seeds and short renders.
+- Use cross-platform CI for Windows 10 x64 and Apple Silicon macOS builds.
+  Record any tests that require physical audio hardware as manual checks, and
+  never treat subjective listening as a substitute for automated
+  determinism/safety tests.
+
+Use existing project test/build tools when suitable. If the new project lacks
+a test harness for a required behavior, write the test/specification first and
+introduce only the smallest maintainable harness needed to run it.
+
 ## Validation and acceptance criteria
 
 - **Windows 10 x64:** install, launch, save/remove provider keys, choose a
@@ -316,6 +363,9 @@ change important behavior.
   usage units/tokens and an estimated USD/credit amount when a valid rate is
   available; per-session totals aggregate correctly. Missing or stale rates
   are explicit, never shown as zero.
+- **TDD evidence:** every behavior-changing implementation iteration includes
+  the test-first Red result, Green result, and post-refactor test result in
+  `RALPH_PROGRESS.md`; tests are committed with the implementation.
 - **Agent quality:** representative music and editing tasks produce valid
   SuperCollider code, explain edits, surface uncertainty, and never claim
   success after a failed operation.

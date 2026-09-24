@@ -29,6 +29,8 @@ language environment cannot provide secure asynchronous API access.
 - [Implementation plan](./IMPLEMENTATION_PLAN.md)
 - [Development Ralph-loop prompt](./RALPH_IMPLEMENTATION_PROMPT.md)
 - [Copilot CLI Ralph runner](./scripts/ralph-loop.sh)
+- [TDD skill](./.github/skills/tdd/SKILL.md)
+- [Decision log](./decision_log.md)
 
 The development loop builds and tests the extension. The in-app music loop
 generates and renders a limited set of musical variations; these are separate
@@ -70,3 +72,4 @@ Copilot CLI references:
 
 - [Install Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/install-copilot-cli)
 - [Copilot CLI best practices](https://docs.github.com/en/copilot/how-tos/copilot-cli/cli-best-practices)
+- [Test-Driven Development: Red-Green-Refactor](https://martinfowler.com/bliki/TestDrivenDevelopment.html)

@@ -19,6 +19,13 @@ editing. The plan and this prompt are complementary. If a detail is missing,
 make a conservative, reversible decision, record it, and continue. Do not stop
 to ask the user routine implementation questions.
 
+Before implementing code, load and follow the repository skill
+[`tdd`](.github/skills/tdd/SKILL.md). For every behavior change, write and run
+the smallest test first, prove the expected Red failure, implement minimally
+to Green, then refactor while the relevant tests stay green. Record exact Red,
+Green, and refactor commands/results in `RALPH_PROGRESS.md`. Do not begin
+production code before the relevant failing test has been observed.
+
 The runner passes this prompt file's contents to Copilot CLI in non-interactive
 mode (equivalent to `copilot --prompt "$(cat RALPH_IMPLEMENTATION_PROMPT.md)"`).
 Each invocation is exactly one implementation iteration. The runner, not the
@@ -127,6 +134,12 @@ IMPLEMENTATION METHOD
   slices with evidence, exact test/build results, current blockers,
   decisions/assumptions, and the single best next task. Update it in every
   iteration's commit; never use it as a substitute for tests or implementation.
+- Maintain the append-only [`decision_log.md`](./decision_log.md) in the
+  workspace root. Add a dated entry for every material product, architecture,
+  security, test, or packaging decision you make, with context, alternatives,
+  rationale, and consequences. Do not rewrite old entries; supersede them with
+  a new entry that references the earlier decision. Keep secrets out. Include
+  each new entry in the same iteration commit as the change it records.
 - Make exactly one new commit for each iteration on the current project branch,
   including its progress update. Use a specific commit message and include the
   required `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`
@@ -140,9 +153,10 @@ IMPLEMENTATION METHOD
   Never use destructive reset/checkout/clean commands, never discard unrelated
   changes, and never include unrelated changes in an iteration commit.
 - In each iteration, select one or a few tightly related tasks from the plan,
-  implement them fully, run the narrowest relevant existing checks, and
-  inspect the resulting diff. Add focused tests for new behavior using the
-  project's existing test framework; do not add tools unnecessarily.
+  apply the `tdd` skill for each behavior, run the narrowest relevant checks,
+  refactor with tests green, and inspect the resulting diff. Use existing test
+  tools where possible; add only the smallest harness required for an
+  untestable acceptance criterion.
 - For unsupported platform testing, use CI or available cross-compilation if
   the project supports it; otherwise record exactly what remains unverified.
   Never claim Windows 10 or MacBook Neo validation based only on a build on a
@@ -176,7 +190,8 @@ IMPLEMENTATION_PLAN.md is implemented and verified, including:
 4. The user-reviewed edit/approval/undo workflow.
 5. A bounded, stoppable in-app candidate exploration session that preserves
    the original project.
-6. Focused tests/builds and truthful Windows 10/macOS validation status.
+6. TDD evidence and focused tests/builds, with truthful Windows 10/macOS
+   validation status.
 7. Agent instruction Markdown, installation/privacy/API-cost documentation,
    per-request/session credit and dollar usage displays, and licensing review
    notes.
