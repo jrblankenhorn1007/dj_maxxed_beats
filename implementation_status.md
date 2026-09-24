@@ -13,18 +13,18 @@
 
 ## Overall state
 
-The product is in planning and development-workflow setup. Requirements,
-architecture, the TDD process, visual test plan, decision logging, and the
-Copilot CLI runner are documented. No SuperCollider extension, agent GUI,
-provider integration, custom UGen, or music-generation implementation has
-been started.
+The product remains in planning and workflow setup. Requirements,
+architecture, TDD, visual verification, and decision logging are documented.
+No product implementation has started. The existing Copilot CLI runner is
+legacy and does not meet the required per-iteration worktree/branch and
+verified `origin/main` merge gate.
 
 ## Component status
 
 | Area | Status | Current state |
 | --- | --- | --- |
 | Product architecture and acceptance criteria | Documented | Quark-first, in-SuperCollider experience; no SuperCollider core fork planned. |
-| Development process | Set up | Copilot CLI runner, TDD skill, progress notes, decision log, and status snapshot are present. A mocked two-iteration test verifies status commits, links, line counts, and pushes. |
+| Development process | Runner update required | TDD skill, prompt, progress notes, decision log, and status snapshot are present. The current runner pushes commits from the checked-out branch; its mocked test verifies status reporting only, not worktree isolation or verified remote-main merging. Do not use `--auto` until the runner implements the required gate. |
 | Quark packaging and SCIDE entry point | Not started | No Quark classes or GUI exist. |
 | Custom C++ server plugin / UGen palette | Not started | Initial DSP palette still needs to be selected and documented. |
 | sclang composition and NRT rendering | Not started | No composition generation or render workflow exists. |
@@ -41,6 +41,8 @@ been started.
 - **Status-report workflow:** `bash tests/ralph-status-reporting.sh` passed. It
   exercised two mocked iterations and verified snapshot rewrites, commit
   links, line counts, and pushes to a temporary Git remote.
+- **Remote-main merge gate:** Not implemented or tested. The status-report
+  mock does not test per-iteration worktrees/branches or merges to `origin/main`.
 - **Copilot CLI runner:** `bash -n scripts/ralph-loop.sh`,
   `bash -n tests/ralph-status-reporting.sh`, and
   `scripts/ralph-loop.sh --check` passed with Copilot CLI 1.0.88.
@@ -54,6 +56,10 @@ been started.
 
 ## Open questions and next task
 
+- Update `scripts/ralph-loop.sh` and its tests to create a fresh worktree and
+  branch from `origin/main` for every iteration, publish and merge each branch
+  into remote main, and verify the remote merge before reporting completion.
+  Do not use `--auto` until this is implemented.
 - Choose and test a small first C++ UGen palette before committing to a stable
   DSP interface.
 - Verify the secure asynchronous HTTPS and credential-store options available

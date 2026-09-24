@@ -75,13 +75,16 @@ These are distinct features with different jobs:
    [`RALPH_IMPLEMENTATION_PROMPT.md`](./RALPH_IMPLEMENTATION_PROMPT.md), using
    [the Copilot CLI runner](./scripts/ralph-loop.sh). It changes
    extension/plugin code; it does not generate music as its task. Each CLI
-   invocation is one discrete iteration. Copilot creates one implementation
-   commit; the runner verifies it, updates the current-state
-   [`implementation_status.md`](./implementation_status.md) snapshot with its
-   commit link and text-line additions/deletions, creates a status-only
-   follow-up commit, and pushes both commits to the configured project GitHub
-   repository. The status file is rewritten each pass, not used as a history
-   log.
+   invocation is one discrete iteration in a fresh worktree and unique branch
+   created from the latest `origin/main`. Copilot creates one implementation
+   commit; the runner may add a status-only follow-up commit on that branch.
+   The runner publishes the branch, merges each iteration into remote
+   `origin/main` through the configured remote merge process, then fetches and
+   verifies that remote main contains the merge. A local merge, pushed branch,
+   or open pull request alone does not complete an iteration. The status file
+   is rewritten each pass, not used as a history log. Do not advance to the
+   next iteration or report a completion marker until remote-main integration
+   is verified.
 2. **In-app music exploration loop:** when the user explicitly starts a
    sampling session, generate and render a bounded set of alternative musical
    candidates using the custom UGens. Keep each candidate and its settings
@@ -97,11 +100,15 @@ original project, and only apply a selected candidate to the project after
 confirmation. Here, "sampling" means exploring generated music variations; it
 does not mean slicing or classifying a user's imported audio samples.
 
-Run the development loop with `scripts/ralph-loop.sh --auto`. The runner reads
-the implementation prompt on each pass, checks the commit/push boundary, and
-continues without an iteration-count limit until explicit completion,
-blockage, an error, or manual interruption. Non-interactive mode grants tool
-approval automatically; inspect the prompt and monitor Copilot usage.
+The current `scripts/ralph-loop.sh` is a legacy runner: it works in the
+checked-out branch, does not create a per-iteration worktree or branch, and
+pushes commits directly to that branch. It does not meet the required
+remote-main merge gate. Do not run it with `--auto` until it is updated to
+implement the lifecycle above. Its `--check` mode checks prerequisites only.
+The existing mocked status-report test covers status commits and pushes to a
+temporary remote, not worktree isolation or remote-main merging. Non-interactive
+mode grants tool approval automatically; inspect the prompt and monitor
+Copilot usage when a compliant runner is available.
 
 The status snapshot is linked from the
 [README](./README.md#project-documents). Run

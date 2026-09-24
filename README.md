@@ -47,40 +47,44 @@ then check the local prerequisites:
 scripts/ralph-loop.sh --check
 ```
 
-The runner reads `RALPH_IMPLEMENTATION_PROMPT.md` on each pass and starts one
-non-interactive Copilot CLI iteration at a time. Each pass rewrites
+## Required iteration integration
+
+An iteration is not complete merely because its tests pass, its branch is
+pushed, a pull request is open, or a local merge exists. Every iteration must
+start from the latest `origin/main` in a fresh worktree and branch, commit its
+implementation and any runner-owned status report there, then merge the
+iteration's work into remote `origin/main` through the repository's configured
+merge process. Fetch `origin` and verify that remote `main` contains the
+merged work before advancing to another iteration or reporting a completion
+marker.
+
+The current `scripts/ralph-loop.sh` does not yet implement this lifecycle: it
+runs in the checked-out branch, creates no iteration worktree/branch, and
+pushes its commits directly to that branch. Do not use the legacy `--auto`
+mode (`scripts/ralph-loop.sh --auto`) until the runner is updated to create an
+isolated branch and verify each remote-main merge.
+`scripts/ralph-loop.sh --check` only checks prerequisites; it does not verify
+this integration requirement.
+
+The TDD evidence remains in `RALPH_PROGRESS.md`; decisions remain in
+`decision_log.md`. A compliant runner should rewrite
 [`implementation_status.md`](./implementation_status.md) as a current-state
-snapshot, not an append-only history. Copilot creates one implementation
-commit; after validating it, the runner stamps that commit's link and text-line
-additions/deletions into the snapshot, creates a status-only commit, and pushes
-both commits. Detailed test evidence remains in `RALPH_PROGRESS.md`; decisions
-remain in `decision_log.md`.
+snapshot per iteration, not an append-only history, and keep runner-managed
+status commits on the iteration branch until it is merged.
 
 Each CLI iteration explicitly selects GPT-6 Luna (`--model gpt-6-luna`), rather
 than inheriting the model of any parent agent. Availability depends on the
 Copilot plan and organization model policies.
 
-There is no iteration-count limit: the runner continues until Copilot reports
-verified completion or a blocker, a real error occurs, or you stop it with
-Ctrl-C:
+When the runner is updated, its non-interactive Copilot CLI execution uses
+`--allow-all-tools`. This is not a sandbox: shell commands can affect files
+outside the repository. The runner must not enable `--allow-all-paths`, and
+the human launching it must use a trusted environment. Each pass can consume
+Copilot usage. Review the final changes and tests yourself; a model's
+completion marker is not independent proof that every requirement is met.
 
-```bash
-scripts/ralph-loop.sh --auto
-```
-
-`--auto` is an explicit opt-in: non-interactive Copilot CLI execution uses
-`--allow-all-tools`. This is not a sandbox: Copilot can run shell commands
-that affect files outside the repository. The runner does not enable
-`--allow-all-paths`, but that flag alone would not contain shell commands.
-Review the prompt and run only in a trusted environment. It requires a clean
-working tree, one implementation commit plus the runner-generated status
-commit per pass, and a successful push of both to `origin`. The runner stops
-on the prompt's `RALPH_COMPLETE` or `RALPH_BLOCKED` marker or an invalid
-iteration. Each pass can consume Copilot usage. Review the final changes and
-tests yourself; a model's completion marker is not independent proof that
-every requirement is met.
-
-Validate the runner's status-report workflow without making API calls:
+Validate the legacy runner's status-report workflow without making API calls;
+this test does not cover worktree creation or remote-main merging:
 
 ```bash
 bash tests/ralph-status-reporting.sh

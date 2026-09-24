@@ -157,3 +157,30 @@ credentials and private user data out of this file.
   loopback-restricted, command-limited, and disabled in release builds.
   Missing GUI/device/screen-capture access remains an explicit blocker rather
   than a claimed pass.
+
+### DEC-010 — Require each Ralph iteration to merge into remote main
+
+- **Date:** 2026-09-24
+- **Context:** DEC-007 describes pushing an iteration's implementation and
+  status commits directly from the checked-out branch. The project now
+  requires each isolated iteration to reach remote main before it is complete.
+- **Decision:** Start each iteration in a fresh worktree and unique branch
+  created from the latest `origin/main`. After tests and required commits,
+  publish the branch and merge its work into remote `origin/main` through the
+  repository's configured merge process. Fetch and verify the remote merge
+  result before emitting `RALPH_CONTINUE` or `RALPH_COMPLETE`, or starting the
+  next iteration. A local merge, pushed branch, or open pull request is not
+  sufficient. This supersedes DEC-007's direct-push integration workflow;
+  DEC-008's status-only report commit remains on the iteration branch before
+  the remote merge.
+- **Alternatives:** Continue pushing iteration commits directly to the
+  checked-out branch, treat a local merge or open pull request as completion,
+  or batch several iterations before integrating them.
+- **Rationale:** The remote main branch is the project's shared, completed
+  state. Per-iteration remote verification prevents a blocked or unmerged
+  feature branch from being mistaken for completed work.
+- **Consequences:** The runner and its tests must create isolated worktrees and
+  branches, perform the configured remote merge, and verify `origin/main`.
+  The current runner does not yet implement this workflow; do not use
+  `--auto` until it does. Protected-branch policies require waiting for the
+  pull request or merge queue to report merged.

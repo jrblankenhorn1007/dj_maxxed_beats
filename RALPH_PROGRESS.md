@@ -17,6 +17,9 @@ Ralph-Status: IN_PROGRESS
 - **Platform coverage:** The workflow test runs locally on macOS. Windows 10
   and MacBook Neo validation of the product remain unverified; product
   implementation has not started.
-- **Next task:** Begin the first product implementation iteration with a
-  narrowly scoped TDD slice. Resolve the initial UGen palette and verify the
-  sclang HTTPS/credential-store path as the plan's early discovery tasks.
+- **Next task:** Update `scripts/ralph-loop.sh` and its tests to create a fresh
+  worktree and branch from `origin/main` for every iteration, publish and
+  merge each branch into remote main, and verify the remote merge before
+  reporting completion. The current runner is legacy and `--auto` must not be
+  used until this gate is implemented. Product implementation follows once
+  the runner can safely complete and integrate each iteration.
