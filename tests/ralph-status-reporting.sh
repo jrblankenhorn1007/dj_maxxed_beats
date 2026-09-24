@@ -54,6 +54,12 @@ if [[ "${1:-}" == "--version" ]]; then
     exit 0
 fi
 
+if [[ "${1:-}" != "--model" || "${2:-}" != "gpt-6-luna" ]]; then
+    printf 'FAIL: expected the Ralph runner to select GPT-6 Luna.\n' >&2
+    exit 1
+fi
+shift 2
+
 completed_iteration="$(
     awk -F'`' '/^- \*\*Completed implementation iteration:\*\*/ { print $2 }' \
         implementation_status.md

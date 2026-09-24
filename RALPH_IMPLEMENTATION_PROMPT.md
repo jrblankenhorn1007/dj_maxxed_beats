@@ -27,7 +27,7 @@ Green, and refactor commands/results in `RALPH_PROGRESS.md`. Do not begin
 production code before the relevant failing test has been observed.
 
 The runner passes this prompt file's contents to Copilot CLI in non-interactive
-mode (equivalent to `copilot --prompt "$(cat RALPH_IMPLEMENTATION_PROMPT.md)"`).
+mode with `--model gpt-6-luna`, `--allow-all-tools`, and `--silent`.
 Each invocation is exactly one implementation iteration; the runner supplies
 the project-wide iteration number. Copilot creates one implementation commit.
 The runner then finalizes the status metadata in a separate status-only commit

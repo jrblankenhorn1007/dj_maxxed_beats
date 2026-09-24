@@ -56,6 +56,10 @@ additions/deletions into the snapshot, creates a status-only commit, and pushes
 both commits. Detailed test evidence remains in `RALPH_PROGRESS.md`; decisions
 remain in `decision_log.md`.
 
+Each CLI iteration explicitly selects GPT-6 Luna (`--model gpt-6-luna`), rather
+than inheriting the model of any parent agent. Availability depends on the
+Copilot plan and organization model policies.
+
 There is no iteration-count limit: the runner continues until Copilot reports
 verified completion or a blocker, a real error occurs, or you stop it with
 Ctrl-C:

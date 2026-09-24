@@ -7,6 +7,8 @@ on_interrupt() {
 }
 trap on_interrupt INT TERM
 
+copilot_model="gpt-6-luna"
+
 usage() {
     printf 'Usage: %s --check | --auto\n' "$0" >&2
     printf 'The --auto loop has no iteration-count limit; stop it with Ctrl-C.\n' >&2
@@ -109,6 +111,7 @@ fi
 
 if [[ "$mode" == "--check" ]]; then
     printf 'Copilot CLI: %s\n' "$(copilot --version)"
+    printf 'Configured Copilot model: GPT-6 Luna (%s)\n' "$copilot_model"
     printf 'Repository: %s\n' "$root"
     printf 'Branch: %s tracking %s\n' "$branch" "$upstream"
     printf 'Prompt: %s\n' "$prompt_file"
@@ -160,7 +163,7 @@ prompt's status-marker rules."
 
     printf '\n=== Copilot Ralph iteration %d ===\n' "$iteration"
     cli_status=0
-    if output="$(copilot --allow-all-tools --silent --prompt "$prompt" 2>&1)"; then
+    if output="$(copilot --model "$copilot_model" --allow-all-tools --silent --prompt "$prompt" 2>&1)"; then
         :
     else
         cli_status=$?
