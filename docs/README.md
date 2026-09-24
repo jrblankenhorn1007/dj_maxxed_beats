@@ -27,7 +27,9 @@ language environment cannot provide secure asynchronous API access.
 ## Project documents
 
 - [Implementation plan](./IMPLEMENTATION_PLAN.md)
-- [Canonical TDD and Ralph development skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd-ralph-loop/SKILL.md)
+- [Canonical TDD skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd/SKILL.md)
+- [Canonical Ralph Loop skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/SKILL.md)
+- [SuperCollider AI Music Agent Ralph prompt](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/references/ralph-loop.md)
 - [Canonical Ralph Loop agent](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/agents/ralph-loop.agent.md)
 - [Copilot Skills repository](https://github.com/jrblankenhorn1007/copilot_skills)
 - [Development Ralph-loop prompt](./RALPH_IMPLEMENTATION_PROMPT.md)
@@ -64,8 +66,14 @@ scripts/ralph-loop.sh --check
 ```
 
 Follow the canonical
-[TDD and Ralph development skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd-ralph-loop/SKILL.md)
-and its [Ralph Loop agent](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/agents/ralph-loop.agent.md).
+[Ralph Loop skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/SKILL.md)
+for the outer iteration and the
+[TDD skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd/SKILL.md)
+for behavior changes. When an iteration concerns the SuperCollider music
+product, also consult the
+[project-specific music-agent prompt](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/references/ralph-loop.md).
+Use the shared
+[Ralph Loop agent](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/agents/ralph-loop.agent.md).
 The local
 [`RALPH_IMPLEMENTATION_PROMPT.md`](./RALPH_IMPLEMENTATION_PROMPT.md) is a
 compatibility pointer to that shared workflow and this project's source-of-

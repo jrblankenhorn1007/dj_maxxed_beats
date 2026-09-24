@@ -1,20 +1,22 @@
 ---
 name: tdd
-description: Redirects TDD and Ralph workflow guidance to the canonical skill in the shared Copilot Skills repository.
+description: Points to shared TDD and Ralph skills, including music-specific guidance when relevant.
 ---
 
 # TDD workflow
 
-Read and follow the canonical
-[TDD and Ralph development skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd-ralph-loop/SKILL.md)
-and its
-[TDD reference](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd-ralph-loop/references/tdd.md).
-For a Ralph iteration, use the shared
-[Ralph Loop agent](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/agents/ralph-loop.agent.md).
+Follow the shared
+[TDD skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd/SKILL.md)
+for behavior-changing work. For a Ralph iteration, use the shared
+[Ralph Loop skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/SKILL.md)
+and [Ralph Loop agent](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/agents/ralph-loop.agent.md).
+When work concerns the SuperCollider music product, consult the Ralph Loop
+skill's
+[SuperCollider AI Music Agent prompt](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/references/ralph-loop.md)
+for project-specific context.
 
-The shared skill is the source of truth for test-first and iteration
-instructions; do not duplicate them in this pointer. Maxxed Beats acceptance
-criteria remain in
+The shared skills own the test-first and iteration instructions; do not
+duplicate them in this pointer. Maxxed Beats acceptance criteria remain in
 [IMPLEMENTATION_PLAN.md](../../../docs/IMPLEMENTATION_PLAN.md), and GUI
 verification remains in
 [VISUAL_TEST_PLAN.md](../../../docs/VISUAL_TEST_PLAN.md).
