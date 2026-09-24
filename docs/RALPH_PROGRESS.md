@@ -1,5 +1,7 @@
 Ralph-Status: IN_PROGRESS
 
+> This per-iteration log lives in `docs/RALPH_PROGRESS.md`.
+
 ## Iteration 1: ChaosOsc DSP core (first sound-design palette entry)
 
 - **Environment finding:** `sclang`, `scsynth`, and any SuperCollider plugin
@@ -34,11 +36,11 @@ Ralph-Status: IN_PROGRESS
   gitignored `.build/` dir) and removed the ad hoc build output. Re-ran
   `bash plugin/ChaosOsc/Tests/run_tests.sh`: all 6 assertions passed again
   (exit 0), confirming the refactor preserved behavior.
-- **Documentation:** Added `plugin/SOUND_DESIGN.md` describing the ChaosOsc
+- **Documentation:** Added `docs/plugin/SOUND_DESIGN.md` describing the ChaosOsc
   DSP, its planned sclang-facing controls (`chaosAmount`, `seed`, and a
   planned decoupled update-rate control), its real-time-safety rationale,
   and exactly what remains unverified (SC plugin build/load, sclang class,
-  NRT render, real-time audition). Added `decision_log.md` entry DEC-010
+  NRT render, real-time audition). Added `docs/decision_log.md` entry DEC-010
   recording the palette choice and the environment-driven scope decision to
   build/test the DSP core before the SC plugin wrapper.
 - **Regression check:** `bash -n scripts/ralph-loop.sh`,
@@ -96,3 +98,54 @@ Ralph-Status: IN_PROGRESS
 - **Next task:** Continue the ChaosOsc plugin-wrapper slice test-first in the
   next Ralph iteration, starting from the preserved scaffolding. Product
   iteration 2 remains incomplete.
+
+## Iteration 2 recovery — ChaosOsc wrapper and merge-per-iteration runner
+
+- **Audio-rate Red:** Added a core block-processing test comparing a varying
+  `chaosAmount` buffer with per-sample scalar calls. The first
+  `bash plugin/ChaosOsc/Tests/run_tests.sh` failed at compile time because
+  `chaososc::processBlock` did not exist.
+- **Audio-rate Green:** Added the no-allocation `processBlock` helper and
+  changed `ChaosOsc.cpp` to pass `in(0)` rather than `in0(0)`, so each audio
+  sample's control value is consumed. `bash plugin/ChaosOsc/Tests/run_tests.sh`
+  passed all seven assertions.
+- **Header-resolver Red/Green:** Added an assertion that a 404 candidate path
+  is not reported as resolved. `PYTHONDONTWRITEBYTECODE=1 python3
+  tests/test_fetch_sc_plugin_api.py` first failed because attempted paths and
+  successfully fetched paths shared one set; tracking them separately made all
+  four tests pass. The tests also cover `#    include` parsing and propagation
+  of non-404/network errors.
+- **Plugin build:** `bash plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh`
+  fetched/resolved 30 headers at the `ea52528` SuperCollider revision, built
+  `ChaosOsc.scx` with Apple clang, and found the expected `_load` symbol. The
+  compile emitted one unused-parameter warning in an upstream header.
+  `sclang` and `scsynth` are unavailable, so loading, NRT, and real-time
+  verification remain open.
+- **Runner Red:** Added `tests/ralph-iteration-worktrees.sh` before changing the
+  runner. It first failed because the CLI did not receive `--model gpt-6-luna`;
+  after pinning that model, it failed because Copilot still ran on `main`
+  rather than in a fresh iteration worktree.
+- **Runner Green:** Reworked `scripts/ralph-loop.sh` to require a clean,
+  synchronized `main`, create a per-iteration branch/worktree, push the
+  iteration branch, merge and push `main`, verify `origin/main`, then remove
+  the successful local worktree/branch. `bash tests/ralph-status-reporting.sh`
+  passed its two-iteration mock, verifying GPT-6 Luna selection, distinct
+  branches/worktrees, updated main bases, pushed merges, and cleanup.
+- **Refactor verification:** `bash -n scripts/ralph-loop.sh
+  tests/ralph-status-reporting.sh tests/ralph-iteration-worktrees.sh
+  plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh
+  plugin/ChaosOsc/Tests/run_tests.sh`, `git diff --check`, and
+  `scripts/ralph-loop.sh --check` on a synchronized-main fixture passed.
+- **Documentation layout:** Moved project documents into `docs/`, with plugin
+  notes under `docs/plugin/`; the root README is a landing page, while the
+  Copilot TDD skill remains at its required `.github/skills/` path.
+- **Post-move verification:** `bash tests/ralph-status-reporting.sh`,
+  `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_fetch_sc_plugin_api.py`,
+  `bash plugin/ChaosOsc/Tests/run_tests.sh`,
+  `bash plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh`, shell syntax checks,
+  and `git diff --check` passed after the docs/path changes.
+- **Next task:** Commit the validated recovery, incorporate the concurrent
+  `origin/main` GPT-6 Luna commit, merge the legacy
+  `agents/ralph-loop-implementation-check-files` branch to `main`, remove its
+  clean local worktree/branch, and relaunch the new runner from `main` in a
+  visible Terminal window.

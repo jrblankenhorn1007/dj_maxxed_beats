@@ -1,5 +1,7 @@
 # Decision Log
 
+This append-only decision record lives in `docs/decision_log.md`.
+
 Append dated entries for material decisions. Do not edit old entries; supersede
 them with a new entry that links back to the decision being replaced. Keep
 credentials and private user data out of this file.
@@ -225,3 +227,72 @@ credentials and private user data out of this file.
   status snapshot, then restart from a clean branch whose remote tip matches.
   Copilot's completion/continue marker alone does not prove that a pass was
   committed or pushed.
+
+### DEC-012 — Keep ChaosOsc's server wrapper thin and sample-accurate
+
+- **Context:** The DSP core was tested independently, but its first C++
+  SuperCollider wrapper needed a stable audio-rate control path without moving
+  synthesis logic into blocking or allocating code.
+- **Decision:** Wrap `ChaosOscCore` as an `SCUnit`, capture `seed` once when
+  the UGen is constructed, and route each sample of the `chaosAmount` input
+  through the core's `processBlock` helper.
+- **Alternatives:** Read only the first control sample for a whole block, or
+  duplicate the chaotic-map math inside the SuperCollider callback.
+- **Rationale:** Reading the input buffer per sample preserves audio-rate
+  modulation, while keeping the DSP arithmetic shared with the deterministic
+  core tests and keeping the UGen callback free of I/O, allocation, and
+  blocking work.
+- **Consequences:** The C++ wrapper and exported plugin entry point compile
+  against the pinned SuperCollider plugin API. Actual `scsynth` loading,
+  sclang classes/help, NRT rendering, and real-time audition remain separate
+  open verification tasks.
+
+### DEC-013 — Isolate, merge, and clean up every Ralph iteration
+
+- **Context:** The prior runner accumulated work on one feature branch and
+  did not merge successful iteration results into `main`.
+- **Decision:** Run the controller from a clean, synchronized `main`
+  worktree. For each iteration, create a fresh branch and sibling worktree,
+  let Copilot create one implementation commit, create the status-only
+  follow-up commit, push that iteration branch, merge it into `main`, push
+  and verify `origin/main`, then remove the successful local worktree and
+  branch. Keep the remote iteration branch for audit. Preserve failed or
+  interrupted worktrees for recovery.
+- **Alternatives:** Continue one long-lived feature branch and merge only
+  after the whole loop, or delete failed worktrees automatically.
+- **Rationale:** Each verified increment reaches `main` promptly, while a
+  separate worktree prevents in-progress edits from dirtying the controller's
+  main checkout. Preserving failures avoids losing uncommitted work.
+- **Consequences:** The runner must start from `main`; interrupted iteration
+  work requires explicit reconciliation before another pass. The mocked
+  workflow test verifies branch isolation, main merges/pushes, and cleanup.
+
+### DEC-014 — Pin the development loop to GPT-6 Luna
+
+- **Context:** The user requested GPT-6 Luna for the Copilot CLI Ralph loop.
+- **Decision:** Invoke Copilot CLI with `--model gpt-6-luna` on every
+  iteration and report the model in `--check`. Do not let the CLI choose
+  automatically or silently substitute another model.
+- **Alternatives:** Use Copilot's automatic model selection or a different
+  model.
+- **Rationale:** An explicit identifier makes the requested model choice
+  reproducible and verifiable in tests and command output.
+- **Consequences:** The authenticated Copilot account and organization must
+  allow GPT-6 Luna; if it is unavailable, the CLI failure is surfaced rather
+  than falling back.
+
+### DEC-015 — Organize project documentation under `docs/`
+
+- **Context:** Project plans, loop state, visual guidance, and plugin design
+  notes were scattered at the repository root and under `plugin/`.
+- **Decision:** Keep substantive project documentation under `docs/`, with
+  plugin notes under `docs/plugin/`. Keep the root `README.md` as a concise
+  repository landing page, and retain `LICENSE` and the TDD skill at their
+  conventional/canonical paths.
+- **Alternatives:** Leave the existing root layout or move every Markdown file,
+  including the root README and Copilot skill.
+- **Rationale:** A single documentation tree is easier to discover and keeps
+  the GitHub landing page and Copilot's canonical skill discovery path intact.
+- **Consequences:** The runner, prompts, tests, and internal links use `docs/`
+  paths. Any future documentation moves must keep the runner's file paths and
+  the Copilot skill location synchronized.

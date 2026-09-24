@@ -2,7 +2,7 @@
 """Fetches the read-only SuperCollider server plugin API headers (the
 public, documented interface a plugin builds against: SC_PlugIn.hpp and its
 transitive local includes) at the exact commit pinned in
-IMPLEMENTATION_PLAN.md (`ea52528`), so plugin sources can be compiled
+docs/IMPLEMENTATION_PLAN.md (`ea52528`), so plugin sources can be compiled
 against the real interface without a full local SuperCollider source
 checkout or build.
 
@@ -21,6 +21,7 @@ Requires network access to raw.githubusercontent.com.
 import os
 import re
 import sys
+import urllib.error
 import urllib.request
 
 SC_COMMIT = "ea52528"
@@ -39,7 +40,7 @@ ENTRY_POINTS = [
     "include/plugin_interface/SC_PlugIn.h",
 ]
 
-INCLUDE_RE = re.compile(r'#include\s+"([^"]+)"')
+INCLUDE_RE = re.compile(r'#\s*include\s+"([^"]+)"')
 
 
 def cache_dir():
@@ -62,8 +63,33 @@ def main():
     dest_root = cache_dir()
     os.makedirs(dest_root, exist_ok=True)
 
+    resolved = resolve_headers(dest_root)
+
+    print("")
+    print(f"SC plugin API header cache ready at: {dest_root}")
+    print(f"Resolved {len(resolved)} header file(s).")
+
+    if "include/plugin_interface/SC_PlugIn.hpp" not in resolved:
+        print("ERROR: the required entry point SC_PlugIn.hpp did not resolve.",
+              file=sys.stderr)
+        return 1
+    return 0
+
+
+def resolve_headers(dest_root):
+    """Breadth-first resolve ENTRY_POINTS and their transitive local
+    `#include "X.h"` directives into dest_root, trying each of
+    [including file's own dir] + SEARCH_DIRS as a candidate location for
+    every include (local includes are not otherwise resolvable from raw
+    GitHub content alone). Only one candidate directory actually holds each
+    header upstream, so every other candidate legitimately 404s; those are
+    swallowed here and do not abort resolution. Any other error (timeout,
+    DNS failure, non-404 HTTP status) is a genuine outage and is
+    propagated rather than being treated the same as a missing candidate.
+    Returns the set of relative header paths that were resolved.
+    """
     seen = set()
-    missing = []
+    resolved = set()
     to_fetch = list(ENTRY_POINTS)
 
     while to_fetch:
@@ -77,12 +103,17 @@ def main():
             with open(cached_path, "r", encoding="utf-8", errors="replace") as f:
                 content = f.read()
         else:
-            content = fetch(rel, dest_root)
-            if content is None:
-                missing.append(rel)
-                continue
+            try:
+                content = fetch(rel, dest_root)
+            except urllib.error.HTTPError as e:
+                if e.code == 404:
+                    # This candidate location doesn't exist upstream; a
+                    # sibling candidate_dir may still resolve the include.
+                    continue
+                raise
             print(f"fetched: {rel}")
 
+        resolved.add(rel)
         rel_dir = os.path.dirname(rel) + "/"
         for m in INCLUDE_RE.finditer(content):
             inc = m.group(1)
@@ -91,16 +122,7 @@ def main():
                 if candidate not in seen:
                     to_fetch.append(candidate)
 
-    resolved = seen - set(missing)
-    print("")
-    print(f"SC plugin API header cache ready at: {dest_root}")
-    print(f"Resolved {len(resolved)} header file(s).")
-
-    if "include/plugin_interface/SC_PlugIn.hpp" not in resolved:
-        print("ERROR: the required entry point SC_PlugIn.hpp did not resolve.",
-              file=sys.stderr)
-        return 1
-    return 0
+    return resolved
 
 
 if __name__ == "__main__":

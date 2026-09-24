@@ -92,6 +92,27 @@ void test_seed_edge_values_escape_fixed_points() {
            "varying output instead of sticking");
 }
 
+void test_block_processing_reads_audio_rate_control_per_sample() {
+    const float controls[] = {3.57f, 3.9f, 3.999f, 3.6f};
+    float blockOutput[4]{};
+
+    chaososc::ChaosOscCore blockCore;
+    blockCore.reset(0.37);
+    chaososc::processBlock(blockCore, controls, blockOutput, 4);
+
+    chaososc::ChaosOscCore sampleCore;
+    sampleCore.reset(0.37);
+    bool matchesPerSampleControls = true;
+    for (int i = 0; i < 4; ++i) {
+        const double expected = sampleCore.next(controls[i]);
+        if (std::fabs(blockOutput[i] - expected) > 1e-6) {
+            matchesPerSampleControls = false;
+        }
+    }
+    expect(matchesPerSampleControls,
+           "block processing applies chaosAmount independently per sample");
+}
+
 }  // namespace
 
 int main() {
@@ -99,6 +120,7 @@ int main() {
     test_deterministic_for_fixed_seed_and_params();
     test_out_of_range_chaos_amount_is_clamped_and_stable();
     test_seed_edge_values_escape_fixed_points();
+    test_block_processing_reads_audio_rate_control_per_sample();
 
     if (g_failures > 0) {
         std::fprintf(stderr, "\n%d test(s) failed\n", g_failures);

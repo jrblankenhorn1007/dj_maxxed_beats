@@ -1,49 +1,55 @@
 # Ralph Loop Prompt: Build the SuperCollider AI Music Agent
 
 Use this as the task prompt for the **development Ralph loop**, run one
-iteration at a time by [`scripts/ralph-loop.sh`](./scripts/ralph-loop.sh) with
+iteration at a time by [`scripts/ralph-loop.sh`](../scripts/ralph-loop.sh) with
 GitHub Copilot CLI. This outer engineering loop implements the product. It is
 not the in-SuperCollider music-exploration loop.
 
 ```text
 You are the autonomous implementation agent for the SuperCollider AI Music
 Agent. Work in the current project workspace. Implement the product described
-in IMPLEMENTATION_PLAN.md, including the requirements and completion criteria
-in this prompt. Work incrementally across repeated Ralph-loop iterations.
+in `docs/IMPLEMENTATION_PLAN.md`, including the requirements and completion
+criteria in this prompt. Work incrementally across repeated Ralph-loop
+iterations.
 
 SOURCE OF TRUTH
 
-Read IMPLEMENTATION_PLAN.md and this prompt at the start of every iteration,
-then inspect the current workspace, existing progress notes, and changes before
-editing. The plan and this prompt are complementary. If a detail is missing,
+Read `docs/IMPLEMENTATION_PLAN.md` and this prompt at the start of every
+iteration, then inspect the current workspace, existing progress notes, and
+changes before editing. The plan and this prompt are complementary. If a detail is missing,
 make a conservative, reversible decision, record it, and continue. Do not stop
 to ask the user routine implementation questions.
 
 Before implementing code, load and follow the repository skill
-[`tdd`](.github/skills/tdd/SKILL.md). For every behavior change, write and run
+[`tdd`](../.github/skills/tdd/SKILL.md). For every behavior change, write and run
 the smallest test first, prove the expected Red failure, implement minimally
 to Green, then refactor while the relevant tests stay green. Record exact Red,
-Green, and refactor commands/results in `RALPH_PROGRESS.md`. Do not begin
+Green, and refactor commands/results in `docs/RALPH_PROGRESS.md`. Do not begin
 production code before the relevant failing test has been observed.
 
 The runner passes this prompt file's contents to Copilot CLI in non-interactive
-mode (equivalent to `copilot --prompt "$(cat RALPH_IMPLEMENTATION_PROMPT.md)"`).
+mode with `--model gpt-6-luna`, `--allow-all-tools`, and `--silent`.
 Each invocation is exactly one implementation iteration; the runner supplies
-the project-wide iteration number. The runner requires a clean worktree and
-local `HEAD` equal to `origin/<branch>` before starting. Copilot creates one
-implementation commit. The runner then finalizes the status metadata in a
-separate status-only commit, pushes both commits, and verifies the remote ref
-matches the status commit before invoking Copilot again. The status commit's
-parent is the implementation commit, so the push includes both.
+the project-wide iteration number. The runner uses Copilot CLI model
+`gpt-6-luna` (GPT-6 Luna); do not select another model or silently fall back.
+It runs from a clean `main` worktree whose `HEAD` matches `origin/main`.
+For each invocation, it creates a fresh `ralph/iteration-<n>-<main-sha>`
+branch and sibling worktree from `main`. Copilot creates one implementation
+commit in that worktree. The runner finalizes the status metadata in a
+separate status-only commit, pushes the iteration branch, merges it to `main`,
+pushes and verifies `origin/main`, and only then invokes Copilot again. After
+a successful merge, it removes the local worktree and branch; the remote
+iteration branch remains for audit.
 
 Git-tracked project files are the durable iteration state; do not rely on
 transient Copilot conversation state. If the loop is interrupted, do not
 discard work or blindly restart. Inspect the worktree and commits, preserve
-uncommitted changes, and reconcile any local-only commits before restarting.
-The runner refuses a dirty or out-of-sync branch.
+uncommitted changes, and reconcile any unmerged iteration branch before
+restarting. The runner refuses a dirty or out-of-sync `main`; it also refuses
+to overwrite a leftover iteration worktree or branch.
 
-Read `implementation_status.md` at the start of each iteration. Rewrite it as
-a concise current-state snapshot during every iteration; do not append an
+Read `docs/implementation_status.md` at the start of each iteration. Rewrite
+it as a concise current-state snapshot during every iteration; do not append an
 iteration history. Update the component state, verification/platform coverage,
 blockers, and next task as appropriate. The runner requires the status file to
 change in the implementation commit. Preserve these exact runner-managed
@@ -54,7 +60,7 @@ fields for the runner to replace after that commit:
 - `Lines changed`
 
 The local `supercollider/` checkout is an upstream reference at the revision
-recorded in IMPLEMENTATION_PLAN.md. Treat it as read-only. Do not patch or
+recorded in `docs/IMPLEMENTATION_PLAN.md`. Treat it as read-only. Do not patch or
 reformat upstream SuperCollider files to make this product work; build an
 independent Quark/extension and plugin against the documented extension and
 plugin APIs.
@@ -147,8 +153,8 @@ VISUAL APPLICATION VERIFICATION
 - For every GUI-affecting iteration, launch the real app from SCIDE on an
   available target platform, exercise the changed visible workflow, capture
   the actual native application window, inspect the screenshot, and record
-  platform/version and artifact details in `RALPH_PROGRESS.md` and
-  `implementation_status.md`.
+  platform/version and artifact details in `docs/RALPH_PROGRESS.md` and
+  `docs/implementation_status.md`.
 - Before `RALPH_COMPLETE`, run the full deterministic mock-provider scenario
   on Windows 10 x64 and an actual MacBook Neo. The scenario must cover launch,
   response/edit review, approval, NRT render, usage display, and a visible
@@ -178,14 +184,14 @@ IMPLEMENTATION METHOD
   sclang/NRT composition-render prototype using that UGen; provider/API workflow;
   review/undo and safe rendering; in-app bounded candidate exploration;
   packaging and platform validation.
-- Keep state across iterations in `RALPH_PROGRESS.md` at the workspace root.
+- Keep state across iterations in `docs/RALPH_PROGRESS.md`.
   Its first line must be exactly `Ralph-Status: IN_PROGRESS`,
   `Ralph-Status: BLOCKED`, or `Ralph-Status: COMPLETE`. Record completed
   slices with evidence, exact test/build results, current blockers,
   decisions/assumptions, and the single best next task. Update it in every
   iteration's commit; never use it as a substitute for tests or implementation.
-- Keep [`implementation_status.md`](./implementation_status.md) at the
-  workspace root as a single current-state snapshot, not an append-only log.
+- Keep [`implementation_status.md`](./implementation_status.md) in `docs/` as
+  a single current-state snapshot, not an append-only log.
   Rewrite its product/component status, completed capabilities, verification
   evidence, unverified platforms, blockers/risks, and next task in every
   iteration. Preserve its three runner-managed loop-report fields unchanged;
@@ -193,28 +199,28 @@ IMPLEMENTATION METHOD
   iteration number, GitHub commit link, and added/deleted text-line counts.
   The snapshot commit is created by the runner immediately after your
   implementation commit.
-- Maintain the append-only [`decision_log.md`](./decision_log.md) in the
-  workspace root. Add a dated entry for every material product, architecture,
+- Maintain the append-only [`decision_log.md`](./decision_log.md) in `docs/`.
+  Add a dated entry for every material product, architecture,
   security, test, or packaging decision you make, with context, alternatives,
   rationale, and consequences. Do not rewrite old entries; supersede them with
   a new entry that references the earlier decision. Keep secrets out. Include
   each new entry in the same iteration commit as the change it records.
-- Make exactly one new implementation commit for each iteration on the current
-  project branch, including its progress update, status snapshot, and any
+- Make exactly one new implementation commit for each iteration on the
+  runner-created iteration branch, including its progress update, status snapshot, and any
   decision-log entry. Use a specific commit message and include the required
   `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>` trailer.
-  Do not push or create the separate status-report commit; the runner validates
-  your implementation commit, updates the three status metadata fields,
-  creates a commit containing only `implementation_status.md`, and pushes both
-  commits. The runner verifies the remote tip and reports both commit IDs
-  before starting another iteration. Never amend, force-push, or include
+  Do not push, merge, or create the separate status-report commit; the runner
+  validates your implementation commit, updates the three status metadata
+  fields, creates a commit containing only `docs/implementation_status.md`, pushes
+  the iteration branch, merges it into `main`, and verifies the `origin/main`
+  tip before starting another iteration. Never amend, force-push, or include
   credentials, generated audio, build outputs, or the upstream
   `supercollider/` reference checkout. If
   validation fails, keep working within the iteration until it passes or a
   genuine external blocker is documented; then commit only a truthful state.
-  The runner stops if the implementation commit is not a direct child, does not
-  update the status snapshot, leaves the tree dirty, or cannot verify the
-  remote branch is synchronized.
+  The runner stops if the implementation commit is not a direct child, does
+  not update the status snapshot, leaves the iteration worktree dirty, or
+  cannot verify the branch push and main merge.
 - Before changing files, inspect the current changes. Preserve user work.
   Never use destructive reset/checkout/clean commands, never discard unrelated
   changes, and never include unrelated changes in an iteration commit.
@@ -245,7 +251,7 @@ IMPLEMENTATION METHOD
 DEFINITION OF DONE
 
 Do not declare completion until every applicable acceptance criterion in
-IMPLEMENTATION_PLAN.md is implemented and verified, including:
+`docs/IMPLEMENTATION_PLAN.md` is implemented and verified, including:
 
 1. The integrated SuperCollider GUI, secure provider-key workflows, provider
    switching, and available-model selection for OpenAI and Anthropic, without
@@ -267,8 +273,8 @@ IMPLEMENTATION_PLAN.md is implemented and verified, including:
    screenshots are captured and inspected, and Windows 10 x64 plus actual
    MacBook Neo results/artifacts are recorded.
 
-At the end of each iteration, update RALPH_PROGRESS.md and rewrite
-implementation_status.md before creating the implementation commit. If all
+At the end of each iteration, update `docs/RALPH_PROGRESS.md` and rewrite
+`docs/implementation_status.md` before creating the implementation commit. If all
 criteria pass, report completion with test evidence and the remaining platform
 caveats, set
 `Ralph-Status: COMPLETE`, and make `RALPH_COMPLETE` the last non-empty line of

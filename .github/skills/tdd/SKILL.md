@@ -7,7 +7,8 @@ description: Use for every behavior-changing implementation or bug fix. Drive th
 
 Use this skill before writing production code for a behavior change or bug fix.
 The project implementation prompt requires this skill on every development
-iteration.
+iteration. Project documentation lives in `docs/`; this skill stays in its
+canonical `.github/skills/tdd/` location so Copilot can load it.
 
 ## Red-Green-Refactor
 
@@ -16,7 +17,7 @@ iteration.
    relevant test.
 2. **Red: write the test first.** Add or change the test before production
    code. Run it and confirm it fails because the behavior is missing or wrong.
-   Record the command and the meaningful failure in `RALPH_PROGRESS.md`.
+   Record the command and the meaningful failure in `docs/RALPH_PROGRESS.md`.
 3. **Green: implement minimally.** Make only the production change needed to
    pass that test. Run the new test and the smallest relevant regression set.
 4. **Refactor.** Improve implementation and test structure without changing
@@ -53,12 +54,12 @@ delete an assertion merely to get Green.
   available UI test framework permits. For GUI-affecting changes, launch the
   actual app from SCIDE, exercise the visible workflow, capture its native
   window, and inspect the screenshot. Before completion, run the full scenario
-  from `VISUAL_TEST_PLAN.md` on Windows 10 x64 and an actual MacBook Neo.
+  from `docs/VISUAL_TEST_PLAN.md` on Windows 10 x64 and an actual MacBook Neo.
   Prefer OS accessibility automation; only add a small test-only CLI or
   in-process driver if needed, and do not add an unauthenticated production
   control endpoint. Use mock providers and safe fixtures, never real API keys.
   Record platform versions and screenshot artifact references in
-  `RALPH_PROGRESS.md` and `implementation_status.md`. Manual listening
+  `docs/RALPH_PROGRESS.md` and `docs/implementation_status.md`. Manual listening
   complements, but does not replace, deterministic tests.
 
 Use the repository's existing test/build ecosystem where possible. If a
@@ -69,7 +70,7 @@ repeatable, and free of external billing/network dependencies.
 
 ## Iteration evidence
 
-For each behavior-changing slice, include in `RALPH_PROGRESS.md`:
+For each behavior-changing slice, include in `docs/RALPH_PROGRESS.md`:
 
 - the Red command and why it failed as expected;
 - the Green command and result;

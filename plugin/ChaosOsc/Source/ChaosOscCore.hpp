@@ -1,14 +1,12 @@
 // ChaosOsc DSP core: a logistic-map chaotic oscillator.
 //
 // This is the initial entry in the product's distinctive sound-design
-// palette (see decision_log.md for the selection rationale). The core is
+// palette (see docs/decision_log.md for the selection rationale). The core is
 // plain, dependency-free C++ so it can be unit tested without a
-// SuperCollider build environment. The eventual SC plugin wrapper
-// (a UGen subclass built against SC_PlugIn.h) will call `next()` once per
-// audio-rate sample per channel; it must not do anything blocking or
-// otherwise unsafe for the real-time audio thread. This header contains no
-// I/O, allocation, or blocking calls, so it is real-time safe by
-// construction.
+// SuperCollider build environment. The SC plugin wrapper (a UGen subclass
+// built against SC_PlugIn.hpp) calls `processBlock()` with audio-rate control
+// and output buffers. It does no I/O, allocation, or blocking calls, so it
+// is real-time safe by construction.
 //
 // DSP behavior: the logistic map x[n+1] = r * x[n] * (1 - x[n]) is chaotic
 // for r roughly in [3.57, 4.0]. Its trajectory is bounded to [0, 1] for any
@@ -66,5 +64,14 @@ public:
 private:
     double state_ = 0.5;
 };
+
+inline void processBlock(ChaosOscCore& core,
+                         const float* chaosAmounts,
+                         float* output,
+                         int nSamples) {
+    for (int i = 0; i < nSamples; ++i) {
+        output[i] = static_cast<float>(core.next(chaosAmounts[i]));
+    }
+}
 
 }  // namespace chaososc

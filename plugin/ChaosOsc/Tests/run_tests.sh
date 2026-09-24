@@ -2,11 +2,10 @@
 # Builds and runs the ChaosOsc DSP-core unit tests.
 #
 # The core (Source/ChaosOscCore.hpp) has no SuperCollider dependency, so this
-# script only needs a C++17 compiler. It does not require sclang/scsynth or a
-# SuperCollider plugin build environment, which are not assumed to be
-# installed in every development environment. The SC plugin wrapper and its
-# NRT/real-time integration tests are added in a later iteration once that
-# build environment is verified.
+# script only needs a C++17 compiler. It verifies the pure DSP core and
+# per-sample block helper without requiring sclang/scsynth. The separate
+# build_plugin_smoke_test.sh checks the C++ wrapper against pinned API headers;
+# loading and rendering still require a SuperCollider runtime.
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

@@ -6,7 +6,7 @@
 #
 # What this proves: the UGen C++ source is a syntactically and semantically
 # valid consumer of the real SC_PlugIn.hpp interface at the exact commit
-# pinned in IMPLEMENTATION_PLAN.md, and produces a shared library exporting
+# pinned in docs/IMPLEMENTATION_PLAN.md, and produces a shared library exporting
 # the plugin's load entry point, matching what scsynth's plugin loader scans
 # for (see supercollider's PluginLoad(name) macro / server plugin loading in
 # WritingUGens.schelp).
@@ -15,7 +15,7 @@
 # development environment: that scsynth actually loads and runs this plugin
 # at audio-rate/control-rate without dropouts, that NRT rendering with it
 # succeeds, or ABI compatibility with a real scsynth build on any platform.
-# Those remain open verification tasks (see RALPH_PROGRESS.md).
+# Those remain open verification tasks (see docs/RALPH_PROGRESS.md).
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -36,16 +36,17 @@ out_lib="${bin_dir}/ChaosOsc.scx"
 
 echo "Built shared plugin library: ${out_lib}"
 
-# The plugin loader looks up a load function whose symbol name is derived
-# from the PluginLoad(ChaosOscUGens) macro argument, expanded by SC_PlugIn.h
-# to `load(ChaosOscUGens)`; confirm the exported symbol is present so a
-# missing/garbled PluginLoad invocation is caught here rather than only at
-# scsynth load time.
+# The plugin loader looks up the C-linkage symbols PluginLoad(ChaosOscUGens)
+# expands to (see SC_InterfaceTable.h): the exported `load` entry point
+# (plus `api_version`/`server_type`), not a symbol containing the macro
+# argument -- confirm the actual required symbol is present so a missing/
+# garbled PluginLoad invocation is caught here rather than only at scsynth
+# load time.
 if command -v nm >/dev/null 2>&1; then
-    if nm -gU "${out_lib}" 2>/dev/null | grep -q "load(ChaosOscUGens)"; then
-        echo "Verified exported plugin load symbol: load(ChaosOscUGens)"
+    if nm -gU "${out_lib}" 2>/dev/null | grep -qE '\b_load$'; then
+        echo "Verified exported plugin load symbol: _load"
     else
-        echo "ERROR: expected exported symbol 'load(ChaosOscUGens)' not found in ${out_lib}" >&2
+        echo "ERROR: expected exported symbol '_load' not found in ${out_lib}" >&2
         nm -gU "${out_lib}" 2>/dev/null | grep -i load || true
         exit 1
     fi
