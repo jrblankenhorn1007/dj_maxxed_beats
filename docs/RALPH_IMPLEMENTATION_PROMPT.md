@@ -38,6 +38,12 @@ commit there. Copilot's `RALPH_READY_CONTINUE` and
 remote integration is blocked, the runner records a blocked status on the
 iteration branch when possible and emits `RALPH_BLOCKED`.
 
+Before launching the agent, the runner fetches `origin`, verifies the clean
+`main` integration worktree against the fetched `origin/main`, and includes
+that preflight evidence in the iteration prompt. Treat it as satisfying the
+shared agent's remote/worktree discovery requirement; do not repeat the fetch
+or inspect the separate integration worktree.
+
 The runner's `--auto` mode uses non-interactive `--allow-all-tools`; shell
 commands can affect files outside the repository. It is not a sandbox. Run it
 only in a trusted environment and review the resulting changes.
