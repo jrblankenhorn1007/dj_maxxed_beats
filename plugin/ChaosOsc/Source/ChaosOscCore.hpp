@@ -15,6 +15,8 @@
 // audio signal distinct from standard oscillator/noise UGens.
 #pragma once
 
+#include <cmath>
+
 namespace chaososc {
 
 // Bounds for the logistic-map growth-rate ("chaosAmount") control. Values
@@ -28,6 +30,7 @@ constexpr double kMaxChaosAmount = 3.999;
 // free of any external dependency so the core stays trivially unit
 // testable and safe to call from the audio thread.
 inline double clampChaosAmount(double amount) {
+    if (std::isnan(amount)) return kMinChaosAmount;
     if (amount < kMinChaosAmount) return kMinChaosAmount;
     if (amount > kMaxChaosAmount) return kMaxChaosAmount;
     return amount;
@@ -44,6 +47,7 @@ public:
     // silence forever, so those exact edges are nudged into the open
     // interval.
     void reset(double seed) {
+        if (std::isnan(seed)) seed = 0.5;
         if (seed <= 0.0) seed = 1e-6;
         if (seed >= 1.0) seed = 1.0 - 1e-6;
         state_ = seed;

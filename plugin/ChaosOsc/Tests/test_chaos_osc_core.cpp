@@ -14,6 +14,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <limits>
 #include <vector>
 
 namespace {
@@ -92,6 +93,36 @@ void test_seed_edge_values_escape_fixed_points() {
            "varying output instead of sticking");
 }
 
+void test_nan_chaos_amount_uses_minimum() {
+    chaososc::ChaosOscCore nanControlCore;
+    chaososc::ChaosOscCore minimumControlCore;
+    nanControlCore.reset(0.37);
+    minimumControlCore.reset(0.37);
+
+    const double nanOutput =
+        nanControlCore.next(std::numeric_limits<double>::quiet_NaN());
+    const double minimumOutput =
+        minimumControlCore.next(chaososc::kMinChaosAmount);
+    expect(std::isfinite(nanOutput) && nanOutput == minimumOutput,
+           "NaN chaosAmount falls back to the minimum and keeps output finite");
+}
+
+void test_nan_seed_uses_default_state() {
+    chaososc::ChaosOscCore nanSeedCore;
+    chaososc::ChaosOscCore defaultCore;
+    nanSeedCore.reset(std::numeric_limits<double>::quiet_NaN());
+
+    bool matchesDefaultSequence = true;
+    for (int i = 0; i < 100; ++i) {
+        if (nanSeedCore.next(3.9) != defaultCore.next(3.9)) {
+            matchesDefaultSequence = false;
+            break;
+        }
+    }
+    expect(matchesDefaultSequence,
+           "NaN seed falls back to the default midpoint state");
+}
+
 void test_block_processing_reads_audio_rate_control_per_sample() {
     const float controls[] = {3.57f, 3.9f, 3.999f, 3.6f};
     float blockOutput[4]{};
@@ -120,6 +151,8 @@ int main() {
     test_deterministic_for_fixed_seed_and_params();
     test_out_of_range_chaos_amount_is_clamped_and_stable();
     test_seed_edge_values_escape_fixed_points();
+    test_nan_chaos_amount_uses_minimum();
+    test_nan_seed_uses_default_state();
     test_block_processing_reads_audio_rate_control_per_sample();
 
     if (g_failures > 0) {
