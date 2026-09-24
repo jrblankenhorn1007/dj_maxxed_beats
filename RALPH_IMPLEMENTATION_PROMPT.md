@@ -1,8 +1,9 @@
 # Ralph Loop Prompt: Build the SuperCollider AI Music Agent
 
-Use this as the task prompt for the **development Ralph loop**. This is the
-outer engineering loop that implements the product. It is not the in-app music
-exploration loop.
+Use this as the task prompt for the **development Ralph loop**, run one
+iteration at a time by [`scripts/ralph-loop.sh`](./scripts/ralph-loop.sh) with
+GitHub Copilot CLI. This outer engineering loop implements the product. It is
+not the in-SuperCollider music-exploration loop.
 
 ```text
 You are the autonomous implementation agent for the SuperCollider AI Music
@@ -17,6 +18,11 @@ then inspect the current workspace, existing progress notes, and changes before
 editing. The plan and this prompt are complementary. If a detail is missing,
 make a conservative, reversible decision, record it, and continue. Do not stop
 to ask the user routine implementation questions.
+
+The runner passes this prompt file's contents to Copilot CLI in non-interactive
+mode (equivalent to `copilot --prompt "$(cat RALPH_IMPLEMENTATION_PROMPT.md)"`).
+Each invocation is exactly one implementation iteration. The runner, not the
+agent, checks the iteration boundary and pushes the commit.
 
 The local `supercollider/` checkout is an upstream reference at the revision
 recorded in IMPLEMENTATION_PLAN.md. Treat it as read-only. Do not patch or
@@ -83,6 +89,14 @@ PRODUCT REQUIREMENTS
   provider's configured key. Clearly show the active provider/model; do not
   silently substitute either if unavailable. Use separate provider adapters
   behind a common extension interface.
+- Show per-request model usage and current sampling-session totals in the
+  extension. Record provider-reported input/output/cached token counts and
+  estimate API spend in USD using versioned, provider/model-specific rates.
+  Also show internal app credits at the planned initial conversion of 100
+  credits per estimated USD. Credits are informational, not purchasable or
+  provider-issued. Label costs as estimates and display the pricing-data
+  version/date. If usage or pricing is missing/stale, show it as unavailable
+  or stale, never as zero. Keep usage history local and user-clearable.
 - Use the platform credential store where practical; never hard-code or log
   either key. Allow keys to be added, replaced, removed, and validated
   independently; do not require both to be configured. Disclose API usage,
@@ -108,21 +122,20 @@ IMPLEMENTATION METHOD
   review/undo and safe rendering; in-app bounded candidate exploration;
   packaging and platform validation.
 - Keep state across iterations in `RALPH_PROGRESS.md` at the workspace root.
-  Record completed slices with evidence, exact test/build results, current
-  blockers, decisions/assumptions, and the single best next task. Update it
-  after every meaningful iteration. Do not use this file as a substitute for
-  tests or implementation.
-- End every completed development-loop iteration with exactly one new commit
-  on the project branch and push it to the configured GitHub repository.
-  Include the implementation/progress update for that iteration in the commit.
-  Use a specific commit message and include the required
-  `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`
-  trailer. Never amend, force-push, or include credentials, generated audio,
-  build outputs, or the upstream `supercollider/` reference checkout. If
-  validation fails, keep working within the iteration until it passes or a
-  genuine external blocker is documented; then commit only a truthful,
-  non-misleading state and report the blocker. If push fails, preserve the
-  local commit, do not force-push or discard work, and report the exact issue.
+  Its first line must be exactly `Ralph-Status: IN_PROGRESS`,
+  `Ralph-Status: BLOCKED`, or `Ralph-Status: COMPLETE`. Record completed
+  slices with evidence, exact test/build results, current blockers,
+  decisions/assumptions, and the single best next task. Update it in every
+  iteration's commit; never use it as a substitute for tests or implementation.
+- Make exactly one new commit for each iteration on the current project branch,
+  including its progress update. Use a specific commit message and include the
+  required `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`
+  trailer. Do not push; the runner validates and pushes the iteration commit.
+  Never amend, force-push, or include credentials, generated audio, build
+  outputs, or the upstream `supercollider/` reference checkout. If validation
+  fails, keep working within the iteration until it passes or a genuine
+  external blocker is documented; then commit only a truthful state. The
+  runner stops if there is not exactly one new commit or if the tree is dirty.
 - Before changing files, inspect the current changes. Preserve user work.
   Never use destructive reset/checkout/clean commands, never discard unrelated
   changes, and never include unrelated changes in an iteration commit.
@@ -139,6 +152,14 @@ IMPLEMENTATION METHOD
 - Do not implement or run an unbounded in-SuperCollider sampling session during
   development. Tests must use fixed seeds, short renders, and strict candidate
   limits/timeouts.
+- Do not treat automatic tool approval as a sandbox. The runner uses
+  non-interactive mode with `--allow-all-tools`; shell commands can still
+  affect paths outside the project. Do not use `--allow-all-paths`, destructive
+  Git commands, or commands that operate outside the project. The runner
+  requires a clean tree, one commit per pass, and a successful push. The human
+  launching the loop must run it only in a trusted environment and monitor it. There is no iteration-count
+  limit; the runner stops on the completion/blocker markers, operational
+  errors, or manual interruption.
 
 DEFINITION OF DONE
 
@@ -157,11 +178,16 @@ IMPLEMENTATION_PLAN.md is implemented and verified, including:
    the original project.
 6. Focused tests/builds and truthful Windows 10/macOS validation status.
 7. Agent instruction Markdown, installation/privacy/API-cost documentation,
-   and licensing review notes.
+   per-request/session credit and dollar usage displays, and licensing review
+   notes.
 
 At the end of each iteration, update RALPH_PROGRESS.md. If all criteria pass,
-report completion with test evidence and the remaining platform caveats. If
-blocked, report the specific blocker, what was tried, and the next actionable
-step; do not claim completion. Otherwise, state the next task and continue in
-the next Ralph iteration.
+report completion with test evidence and the remaining platform caveats, set
+`Ralph-Status: COMPLETE`, and make `RALPH_COMPLETE` the last non-empty line of
+the final response. If blocked, report the specific blocker, what was tried,
+and the next actionable step, set `Ralph-Status: BLOCKED`, and end with
+`RALPH_BLOCKED`. Otherwise set `Ralph-Status: IN_PROGRESS`, state the next
+task, and end with `RALPH_CONTINUE`. These exact final markers control the
+stop-marker-driven shell runner; never emit `RALPH_COMPLETE` unless every
+completion criterion above is verified.
 ```

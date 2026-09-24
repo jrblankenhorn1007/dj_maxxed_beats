@@ -72,10 +72,11 @@ These are distinct features with different jobs:
 
 1. **Development Ralph loop (outside SuperCollider):** repeatedly implements and
    verifies the product against this plan and
-   [`RALPH_IMPLEMENTATION_PROMPT.md`](./RALPH_IMPLEMENTATION_PROMPT.md). It
-   changes extension/plugin code; it does not generate music as its task. Each
-   completed iteration ends in its own validated commit pushed to the
-   configured project GitHub repository.
+   [`RALPH_IMPLEMENTATION_PROMPT.md`](./RALPH_IMPLEMENTATION_PROMPT.md), using
+   [the Copilot CLI runner](./scripts/ralph-loop.sh). It changes
+   extension/plugin code; it does not generate music as its task. Each CLI
+   invocation is one discrete iteration and ends in one validated commit
+   pushed to the configured project GitHub repository.
 2. **In-app music exploration loop:** when the user explicitly starts a
    sampling session, generate and render a bounded set of alternative musical
    candidates using the custom UGens. Keep each candidate and its settings
@@ -91,6 +92,12 @@ original project, and only apply a selected candidate to the project after
 confirmation. Here, "sampling" means exploring generated music variations; it
 does not mean slicing or classifying a user's imported audio samples.
 
+Run the development loop with `scripts/ralph-loop.sh --auto`. The runner reads
+the implementation prompt on each pass, checks the commit/push boundary, and
+continues without an iteration-count limit until explicit completion,
+blockage, an error, or manual interruption. Non-interactive mode grants tool
+approval automatically; inspect the prompt and monitor Copilot usage.
+
 ## Component responsibilities
 
 ### In-SuperCollider agent GUI
@@ -104,6 +111,19 @@ does not mean slicing or classifying a user's imported audio samples.
 - Provide provider adapters for OpenAI and Anthropic (Claude), with a common
   extension-facing interface for supported chat, streaming, and structured-edit
   capabilities. Keep provider-specific API behavior behind these adapters.
+- Show usage after each model request and for the current sampling session:
+  provider-reported input/output/cached token counts, estimated API cost in
+  USD, and estimated app credits. Keep a local usage history that the user can
+  inspect and clear.
+- Define app credits as an internal, non-purchasable usage display, initially
+  at 100 credits per estimated USD. This is not a provider balance, invoice, or
+  promise of exact billing. Revisit the conversion before introducing paid app
+  credits or subscriptions.
+- Estimate USD from versioned, provider/model-specific input, output, and
+  cached-token rates. Show the rate-table version/date and label totals as
+  estimates. If usage or current pricing is unavailable, show what is known
+  and label credits/USD as unavailable or stale; never report zero as a
+  success-shaped fallback.
 - Fetch and refresh each configured provider's available model list using its
   model-list API; show provider and model IDs clearly, and persist the selected
   model separately for each provider. Filter or label models according to
@@ -136,6 +156,8 @@ does not mean slicing or classifying a user's imported audio samples.
 - If a provider's model-list request fails, report the error and identify any
   cached model list as potentially stale. Never silently change the provider
   or model.
+- Do not send telemetry or usage history outside the user's machine except as
+  part of the model request the user initiated.
 
 ### SuperCollider Quark / language bridge
 
@@ -290,6 +312,10 @@ change important behavior.
   independently; available models can be refreshed per configured provider;
   the chosen provider/model is explicit for each request; switching providers
   and reporting unavailable models work without silent fallback.
+- **Usage/cost visibility:** each successful model response reports provider
+  usage units/tokens and an estimated USD/credit amount when a valid rate is
+  available; per-session totals aggregate correctly. Missing or stale rates
+  are explicit, never shown as zero.
 - **Agent quality:** representative music and editing tasks produce valid
   SuperCollider code, explain edits, surface uncertainty, and never claim
   success after a failed operation.
