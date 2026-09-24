@@ -69,9 +69,20 @@ if [[ "${1:-}" != "--agent" || "${2:-}" != "ralph-loop" ||
 fi
 shift 4
 
+prompt=""
+while [[ "$#" -gt 0 ]]; do
+    if [[ "$1" == "--prompt" ]]; then
+        shift
+        prompt="${1:-}"
+        break
+    fi
+    shift
+done
+
 branch="$(git branch --show-current)"
 worktree="$(git rev-parse --show-toplevel)"
-if [[ "$branch" == "main" || "$worktree" == "$MAIN_WORKTREE" ]]; then
+main_worktree_real="$(cd "$MAIN_WORKTREE" && pwd -P)"
+if [[ "$branch" == "main" || "$worktree" == "$main_worktree_real" ]]; then
     printf 'Copilot was not launched in an iteration worktree.\n' >&2
     exit 1
 fi
@@ -84,6 +95,34 @@ case "$branch" in
 esac
 
 main_head="$(git -C "$MAIN_WORKTREE" rev-parse main)"
+if ! tracking_head="$(
+    git -C "$MAIN_WORKTREE" rev-parse --verify refs/remotes/origin/main 2>/dev/null
+)"; then
+    printf 'Copilot fixture did not receive a fetched origin/main ref.\n' >&2
+    printf 'PREFLIGHT_REJECTED\n'
+    exit 1
+fi
+if [[ "$tracking_head" != "$main_head" ]]; then
+    printf 'Copilot fixture received a stale origin/main ref: %s != %s\n' \
+        "$tracking_head" "$main_head" >&2
+    printf 'PREFLIGHT_REJECTED\n'
+    exit 1
+fi
+for preflight_detail in \
+    "Runner-owned Git preflight (completed for this iteration)" \
+    "Integration worktree: $main_worktree_real" \
+    "- Branch: main" \
+    "- State: clean" \
+    "Local main and fetched origin/main commit: $main_head" \
+    "Do not repeat the fetch or inspect the separate integration" \
+    "Work only in this iteration worktree."; do
+    if [[ "$prompt" != *"$preflight_detail"* ]]; then
+        printf 'Copilot fixture did not receive preflight detail: %s\n' \
+            "$preflight_detail" >&2
+        printf 'PREFLIGHT_REJECTED\n'
+        exit 1
+    fi
+done
 remote_head="$(
     git ls-remote --heads origin refs/heads/main |
         awk 'NR == 1 { print $1 }'
@@ -342,6 +381,8 @@ if [[ -e "$copilot_call_log" ]]; then
     exit 1
 fi
 git -C "$main_worktree" push origin main >/dev/null
+stale_tracking_head="$(git -C "$main_worktree" rev-parse main^)"
+git -C "$main_worktree" update-ref refs/remotes/origin/main "$stale_tracking_head"
 
 if loop_output="$(
     cd "$main_worktree"

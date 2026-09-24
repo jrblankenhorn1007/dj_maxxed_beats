@@ -213,13 +213,41 @@ Ralph-Status: IN_PROGRESS
   the initial pending response and successful retry, merge-commit and
   squash-style remote-SHA verification, marker ordering and cleanup, plus the
   closed-PR blocker case.
+- **Live iteration-3 preflight blocker:** Restarted the loop in visible
+  Terminal.app after verifying clean `main` at `b2f6a9e`. The shared agent
+  stopped before implementation because its remote fetch and read-only check
+  of the separate main worktree were denied. It made no code or documentation
+  changes and created no commit; the runner preserved the clean
+  `ralph/iteration-3-b2f6a9e` worktree. The parent session independently
+  verified that both `main` and `origin/main` were clean and at `b2f6a9e`.
+- **Runner-owned preflight Red:** Extended the mock to start with a stale but
+  present `refs/remotes/origin/main`, require a fresh ref before invoking
+  Copilot, and assert that the prompt contains the clean integration-worktree
+  path and verified commit. The first fixture attempt deleted the tracking ref
+  and was correctly rejected by the runner's upstream check; retaining the
+  ref at its previous commit established the relevant Red. `bash -n
+  tests/ralph-iteration-worktrees.sh && bash tests/ralph-status-reporting.sh`
+  then failed as expected with `Copilot fixture received a stale origin/main
+  ref`.
+- **Runner-owned preflight Green:** Before each iteration, the runner now
+  checks the integration worktree is clean, fetches `origin`, confirms local
+  `main` equals the fetched `origin/main`, and identifies the unique main
+  worktree. It passes those facts in the prompt and tells the agent not to
+  repeat the fetch or inspect another worktree. Re-ran `bash -n
+  scripts/ralph-loop.sh tests/ralph-iteration-worktrees.sh && bash
+  tests/ralph-status-reporting.sh`; the stale-ref refresh, prompt evidence,
+  two mocked merges, pending-requirements retry, marker/cleanup checks, and
+  closed-PR blocker all passed.
 - **Remote merge coverage:** The test uses a fake GitHub CLI and temporary
   bare remote; it does not exercise live GitHub authentication, branch
   protection, checks, or a merge queue. GitHub CLI 2.101.0 is now installed
   from the official arm64 release (checksum verified) and
-  `gh auth status --hostname github.com` passes. A live runner preflight from
-  clean `main` and real remote PR merge remain to be verified.
-- **Next task:** Begin iteration 3 with a test-first ChaosOsc sclang
-  class/help and deterministic NRT integration test. First provision and
-  verify `sclang`/`scsynth`; keep runtime loading, NRT, and platform gaps open
-  until they have direct evidence.
+  `gh auth status --hostname github.com` passes. The migration PR's merge
+  commit was verified on `origin/main`; the runner-owned preflight change
+  still needs a live iteration rerun. Branch-protection and merge-queue
+  behavior are not covered by the local mock.
+- **Next task:** Merge the runner-owned preflight update, then restart project
+  iteration 3 from the new synchronized `main` SHA. Keep the preserved
+  `ralph/iteration-3-b2f6a9e` worktree untouched. The product increment remains
+  a test-first ChaosOsc sclang class/help and deterministic NRT integration
+  test; first provision and verify `sclang`/`scsynth`.

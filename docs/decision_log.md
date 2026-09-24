@@ -373,3 +373,31 @@ credentials and private user data out of this file.
   by a successful retry, as well as merge-commit and squash-style remote merge
   results. A PR that remains open and unmergeable until timeout is recorded as
   BLOCKED and cannot advance the loop.
+
+### DEC-019 — Let the runner own remote and integration-worktree preflight
+
+- **Date:** 2026-09-24
+- **Context:** During project iteration 3, the shared agent stopped before
+  implementation because its non-interactive remote fetch and read-only check
+  of the separate `main` worktree were denied. The runner had already checked
+  the main worktree and remote tip, but that evidence was not available to the
+  agent. No implementation changes or commit were made.
+- **Decision:** Before each Copilot invocation, the runner checks that the
+  integration worktree for `main` is unique and clean, fetches `origin`, and
+  verifies local `main` matches the fetched `origin/main`. Include the
+  integration path and verified commit in the prompt. Treat this as satisfying
+  the shared agent's fetch/worktree-discovery step; the agent must work only
+  in its iteration worktree and must not repeat the fetch or inspect the
+  separate integration worktree.
+- **Alternatives:** Grant the model broader interactive access to unrelated
+  worktrees, remove the shared agent's safety checks, or allow implementation
+  to proceed without fresh remote verification.
+- **Rationale:** Runner-owned preflight is deterministic, uses the same
+  repository context that creates and integrates iteration worktrees, and
+  fails before invoking the model if freshness or cleanliness cannot be
+  verified. Passing explicit evidence preserves the shared agent's safety
+  requirements without requiring a second, potentially denied network call.
+- **Consequences:** The lifecycle test starts with a stale remote-tracking ref
+  and verifies that the runner refreshes it and passes the clean integration
+  worktree details to Copilot. A live iteration rerun is required to confirm
+  the shared agent accepts this preflight handoff.

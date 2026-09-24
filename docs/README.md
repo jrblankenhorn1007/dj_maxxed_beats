@@ -77,8 +77,12 @@ organization. It selects the shared `ralph-loop` agent with `--agent` and
 reads the prompt pointer once per non-interactive iteration.
 For each pass, it creates a fresh
 `ralph/iteration-<n>-<main-sha>` branch and a sibling worktree from the current
-`main` tip. Copilot creates one implementation commit there; the runner stamps
-its commit link and text-line counts into
+`main` tip. Before each invocation, the runner fetches `origin`, verifies that
+the clean `main` integration worktree matches the fetched `origin/main`, and
+passes that evidence to the agent. The agent uses this runner-owned preflight
+instead of repeating the fetch or inspecting another worktree. Copilot creates
+one implementation commit there; the runner stamps its commit link and
+text-line counts into
 [`implementation_status.md`](./implementation_status.md), then creates a
 status-only commit. It pushes the iteration branch, opens a pull request to
 `main`, and requests a GitHub merge commit with `gh pr merge --merge`, matching

@@ -355,13 +355,60 @@ while :; do
             ;;
     esac
 
-    ensure_main_synced
     if [[ -n "$(git status --porcelain)" ]]; then
         printf 'Main worktree became dirty before iteration %d.\n' "$iteration" >&2
         exit 65
     fi
 
-    main_head_before="$(git rev-parse "$main_branch")"
+    if ! git fetch origin; then
+        printf 'Could not fetch origin before iteration %d; refusing to start it.\n' \
+            "$iteration" >&2
+        exit 69
+    fi
+    ensure_main_synced
+    if ! integration_worktree="$(
+        git worktree list --porcelain |
+            awk -v target_branch="refs/heads/$main_branch" '
+                /^worktree / { path = substr($0, 10) }
+                /^branch / && $2 == target_branch {
+                    print path
+                    matches++
+                }
+                END {
+                    if (matches != 1) exit 1
+                }
+            '
+    )"; then
+        printf 'Could not identify the unique %s integration worktree.\n' \
+            "$main_branch" >&2
+        exit 65
+    fi
+    if [[ "$integration_worktree" != "$root" ]]; then
+        printf 'The %s integration worktree is %s, not the runner root %s.\n' \
+            "$main_branch" "$integration_worktree" "$root" >&2
+        exit 65
+    fi
+    if [[ -n "$(git -C "$integration_worktree" status --porcelain)" ]]; then
+        printf 'The %s integration worktree became dirty before iteration %d.\n' \
+            "$main_branch" "$iteration" >&2
+        exit 65
+    fi
+
+    main_head_before="$(git -C "$integration_worktree" rev-parse "$main_branch")"
+    if ! fetched_main_head="$(
+        git -C "$integration_worktree" rev-parse --verify \
+            "refs/remotes/origin/$main_branch" 2>/dev/null
+    )"; then
+        printf 'Fetched origin/%s is unavailable before iteration %d.\n' \
+            "$main_branch" "$iteration" >&2
+        exit 69
+    fi
+    if [[ "$fetched_main_head" != "$main_head_before" ]]; then
+        printf 'Fetched origin/%s (%s) does not match local %s (%s).\n' \
+            "$main_branch" "$fetched_main_head" "$main_branch" \
+            "$main_head_before" >&2
+        exit 65
+    fi
     main_short_before="$(git rev-parse --short "$main_head_before")"
     iteration_branch="ralph/iteration-$iteration-$main_short_before"
     iteration_worktree="$worktree_parent/ralph-iteration-$iteration-$main_short_before"
@@ -392,6 +439,18 @@ while :; do
     git worktree add -b "$iteration_branch" "$iteration_worktree" "$main_branch"
     head_before="$(git -C "$iteration_worktree" rev-parse HEAD)"
     prompt="$(cat "$prompt_file")
+
+Runner-owned Git preflight (completed for this iteration):
+- git fetch origin succeeded.
+- Integration worktree: $integration_worktree
+  - Branch: $main_branch
+  - State: clean
+- Local main and fetched origin/main commit: $main_head_before
+- This iteration worktree: $iteration_worktree (created from $main_head_before)
+
+This satisfies the Ralph agent's required remote fetch and integration-worktree
+discovery. Do not repeat the fetch or inspect the separate integration
+worktree. Work only in this iteration worktree.
 
 Copilot CLI Ralph-loop iteration $iteration.
 Read docs/RALPH_PROGRESS.md and docs/implementation_status.md in this iteration worktree.
