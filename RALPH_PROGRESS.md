@@ -59,3 +59,40 @@ Ralph-Status: IN_PROGRESS
   `ChaosOscCore`. In parallel, begin phase-0 discovery on sclang's secure
   asynchronous HTTPS/credential-store options (`HTTPClient` or similar) so a
   headless helper's necessity can be decided.
+
+## Ralph restart checkpoint and Git push barrier (iteration 2 not completed)
+
+- At the user's request, the active `--auto` process was stopped while
+  iteration 2 was in progress. At that point, local `HEAD` and
+  `origin/agents/ralph-loop-implementation-check-files` both resolved to
+  `48b7b42`; iteration 1's implementation commit `c5b2192` is its parent and
+  was already reachable from origin. No iteration 2 commit had been created.
+- The stopped pass had left uncommitted plugin-build scaffolding:
+  `.gitignore`, `plugin/fetch_sc_plugin_api.py`, and
+  `plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh`. These files are being
+  preserved. The smoke test has not been run; no SuperCollider plugin wrapper
+  or new product behavior is claimed.
+- **Red/Green (fetch error handling):** Added
+  `tests/test_fetch_sc_plugin_api.py`. The initial
+  `python3 tests/test_fetch_sc_plugin_api.py` failed because `fetch()` swallowed
+  a mocked `URLError`. Removed that broad catch; then
+  `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_fetch_sc_plugin_api.py` passed.
+  This covers error propagation only, not a successful live header download.
+- **Red (runner restart guard):** Added a regression case to
+  `bash tests/ralph-status-reporting.sh` that gives the fixture a clean but
+  unpushed commit. It failed against the prior runner because the runner
+  invoked mocked Copilot instead of rejecting the out-of-sync branch.
+- **Green (runner restart guard):** The runner now checks that local `HEAD`
+  equals the configured `origin/<branch>` before starting. Its existing
+  post-push remote-ref check remains the barrier before the next iteration,
+  and its output identifies both pushed commit IDs. The regression test also
+  checks the remote tip at each mocked Copilot invocation.
+- **Refactor verification:** `bash tests/ralph-status-reporting.sh` passed
+  with two verified push reports; `bash -n scripts/ralph-loop.sh`,
+  `bash -n tests/ralph-status-reporting.sh`, `scripts/ralph-loop.sh --check`,
+  `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_fetch_sc_plugin_api.py`, and
+  `git diff --check` passed. These checks cover the development runner and
+  fetch error handling, not the unimplemented SuperCollider plugin.
+- **Next task:** Continue the ChaosOsc plugin-wrapper slice test-first in the
+  next Ralph iteration, starting from the preserved scaffolding. Product
+  iteration 2 remains incomplete.

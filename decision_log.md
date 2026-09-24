@@ -202,3 +202,26 @@ credentials and private user data out of this file.
   render, and real-time audition for ChaosOsc remain unimplemented and
   unverified; this is recorded as an explicit open task rather than an
   inferred pass.
+
+### DEC-011 — Require verified Git synchronization before Ralph advances
+
+- **Context:** An interrupted development loop can leave uncommitted work or
+  a local-only implementation commit. Starting another iteration from that
+  state risks confusing the project iteration number and leaves the previous
+  work absent from the remote branch.
+- **Decision:** Require a clean worktree and exact local `HEAD`/`origin/<branch>`
+  equality before `--auto` starts. After each pass, push the implementation
+  commit and its status-only follow-up together, verify that the remote ref
+  equals the status commit, and report both commit IDs before continuing.
+- **Alternatives:** Let the next model invocation proceed based only on the
+  local status marker, or push the implementation commit separately before
+  creating its status report.
+- **Rationale:** The status report accurately records the completed commit
+  hash and line counts, while the synchronization checks make the Git branch
+  the durable record and prevent a restart from silently continuing on
+  unpushed state.
+- **Consequences:** A stopped run that leaves dirty or local-only work now
+  fails preflight. Inspect and preserve that state, reconcile the commits and
+  status snapshot, then restart from a clean branch whose remote tip matches.
+  Copilot's completion/continue marker alone does not prove that a pass was
+  committed or pushed.

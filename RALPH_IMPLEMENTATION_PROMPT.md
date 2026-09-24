@@ -29,9 +29,18 @@ production code before the relevant failing test has been observed.
 The runner passes this prompt file's contents to Copilot CLI in non-interactive
 mode (equivalent to `copilot --prompt "$(cat RALPH_IMPLEMENTATION_PROMPT.md)"`).
 Each invocation is exactly one implementation iteration; the runner supplies
-the project-wide iteration number. Copilot creates one implementation commit.
-The runner then finalizes the status metadata in a separate status-only commit
-and pushes both commits.
+the project-wide iteration number. The runner requires a clean worktree and
+local `HEAD` equal to `origin/<branch>` before starting. Copilot creates one
+implementation commit. The runner then finalizes the status metadata in a
+separate status-only commit, pushes both commits, and verifies the remote ref
+matches the status commit before invoking Copilot again. The status commit's
+parent is the implementation commit, so the push includes both.
+
+Git-tracked project files are the durable iteration state; do not rely on
+transient Copilot conversation state. If the loop is interrupted, do not
+discard work or blindly restart. Inspect the worktree and commits, preserve
+uncommitted changes, and reconcile any local-only commits before restarting.
+The runner refuses a dirty or out-of-sync branch.
 
 Read `implementation_status.md` at the start of each iteration. Rewrite it as
 a concise current-state snapshot during every iteration; do not append an
@@ -197,12 +206,15 @@ IMPLEMENTATION METHOD
   Do not push or create the separate status-report commit; the runner validates
   your implementation commit, updates the three status metadata fields,
   creates a commit containing only `implementation_status.md`, and pushes both
-  commits. Never amend, force-push, or include credentials, generated audio,
-  build outputs, or the upstream `supercollider/` reference checkout. If
+  commits. The runner verifies the remote tip and reports both commit IDs
+  before starting another iteration. Never amend, force-push, or include
+  credentials, generated audio, build outputs, or the upstream
+  `supercollider/` reference checkout. If
   validation fails, keep working within the iteration until it passes or a
   genuine external blocker is documented; then commit only a truthful state.
   The runner stops if the implementation commit is not a direct child, does not
-  update the status snapshot, or leaves the tree dirty.
+  update the status snapshot, leaves the tree dirty, or cannot verify the
+  remote branch is synchronized.
 - Before changing files, inspect the current changes. Preserve user work.
   Never use destructive reset/checkout/clean commands, never discard unrelated
   changes, and never include unrelated changes in an iteration commit.

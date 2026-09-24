@@ -54,6 +54,15 @@ if [[ "${1:-}" == "--version" ]]; then
     exit 0
 fi
 
+printf 'invoked\n' >> "$COPILOT_CALL_LOG"
+local_head="$(git rev-parse HEAD)"
+remote_head="$(git ls-remote --heads origin refs/heads/main | awk 'NR == 1 { print $1 }')"
+if [[ "$local_head" != "$remote_head" ]]; then
+    printf 'Copilot started at %s while origin/main was %s.\n' \
+        "$local_head" "$remote_head" >&2
+    exit 1
+fi
+
 completed_iteration="$(
     awk -F'`' '/^- \*\*Completed implementation iteration:\*\*/ { print $2 }' \
         implementation_status.md
@@ -92,12 +101,54 @@ printf '%s\n' "$marker"
 EOF
 chmod +x "$fake_bin/copilot"
 
-(
+copilot_call_log="$test_root/copilot-calls"
+printf 'Local-only checkpoint\n' >> "$worktree/README.md"
+git -C "$worktree" add README.md
+git -C "$worktree" commit -m "test: create unpushed checkpoint" >/dev/null
+
+if unsynced_output="$(
     cd "$worktree"
     HOME="$test_root/home" \
+        COPILOT_CALL_LOG="$copilot_call_log" \
         PATH="$fake_bin:/usr/bin:/bin" \
-        scripts/ralph-loop.sh --auto
-)
+        scripts/ralph-loop.sh --auto 2>&1
+)"; then
+    printf 'FAIL: the runner started with a local-only commit.\n' >&2
+    exit 1
+fi
+if ! printf '%s\n' "$unsynced_output" |
+    grep -Fq 'does not match origin/main'; then
+    printf 'FAIL: the runner did not explain the unsynced-branch refusal.\n' >&2
+    printf '%s\n' "$unsynced_output" >&2
+    exit 1
+fi
+if [[ -e "$copilot_call_log" ]]; then
+    printf 'FAIL: Copilot was invoked before the local branch was pushed.\n' >&2
+    exit 1
+fi
+git -C "$worktree" push origin main >/dev/null
+
+if loop_output="$(
+    cd "$worktree"
+    HOME="$test_root/home" \
+        COPILOT_CALL_LOG="$copilot_call_log" \
+        PATH="$fake_bin:/usr/bin:/bin" \
+        scripts/ralph-loop.sh --auto 2>&1
+)"; then
+    printf '%s\n' "$loop_output"
+else
+    printf '%s\n' "$loop_output" >&2
+    exit 1
+fi
+
+verified_push_count="$(
+    printf '%s\n' "$loop_output" |
+        awk '/^Verified push: origin\/main at / { count++ } END { print count + 0 }'
+)"
+if [[ "$verified_push_count" != "2" ]]; then
+    printf 'FAIL: the runner did not report a verified push for both iterations.\n' >&2
+    exit 1
+fi
 
 status_commit="$(git -C "$worktree" rev-parse HEAD)"
 implementation_commit="$(git -C "$worktree" rev-parse HEAD^)"

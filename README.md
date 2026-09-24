@@ -53,8 +53,30 @@ non-interactive Copilot CLI iteration at a time. Each pass rewrites
 snapshot, not an append-only history. Copilot creates one implementation
 commit; after validating it, the runner stamps that commit's link and text-line
 additions/deletions into the snapshot, creates a status-only commit, and pushes
-both commits. Detailed test evidence remains in `RALPH_PROGRESS.md`; decisions
-remain in `decision_log.md`.
+both commits. That push moves the branch to the status commit, whose parent is
+the implementation commit. Before starting, the runner requires a clean
+worktree and exact equality between local `HEAD` and `origin/<branch>`. After
+each push it verifies that the remote ref equals the new status commit and
+prints the implementation and status commit IDs. It does not launch the next
+Copilot iteration until that remote check succeeds.
+
+Iteration state is the committed repository files, not transient Copilot
+conversation state: implementation, tests, `RALPH_PROGRESS.md`,
+`implementation_status.md`, and `decision_log.md` are committed and pushed
+with each pass. If the loop is interrupted, inspect the worktree and branch
+before restarting:
+
+```bash
+git status --short
+git log --oneline '@{u}..HEAD'
+git rev-parse HEAD '@{u}'
+```
+
+Do not discard interrupted changes or blindly restart. Review and preserve
+uncommitted work, and reconcile any local-only commits with the remote and
+status snapshot. `--auto` refuses to start while the worktree is dirty or when
+local `HEAD` differs from `origin/<branch>`. Detailed test evidence remains in
+`RALPH_PROGRESS.md`; decisions remain in `decision_log.md`.
 
 There is no iteration-count limit: the runner continues until Copilot reports
 verified completion or a blocker, a real error occurs, or you stop it with
@@ -70,8 +92,9 @@ that affect files outside the repository. The runner does not enable
 `--allow-all-paths`, but that flag alone would not contain shell commands.
 Review the prompt and run only in a trusted environment. It requires a clean
 working tree, one implementation commit plus the runner-generated status
-commit per pass, and a successful push of both to `origin`. The runner stops
-on the prompt's `RALPH_COMPLETE` or `RALPH_BLOCKED` marker or an invalid
+commit per pass, and a successful, verified push of both to `origin` before
+the next iteration. The runner stops on an out-of-sync branch, push failure,
+the prompt's `RALPH_COMPLETE` or `RALPH_BLOCKED` marker, or an invalid
 iteration. Each pass can consume Copilot usage. Review the final changes and
 tests yourself; a model's completion marker is not independent proof that
 every requirement is met.

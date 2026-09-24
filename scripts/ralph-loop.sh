@@ -102,6 +102,31 @@ github_repository_url() {
     esac
 }
 
+ensure_remote_synced() {
+    local local_head
+    local remote_refs
+    local remote_head
+
+    local_head="$(git rev-parse HEAD)"
+    if ! remote_refs="$(git ls-remote --heads origin "refs/heads/$branch")"; then
+        printf 'Could not verify origin/%s; refusing to start the Ralph loop.\n' \
+            "$branch" >&2
+        exit 69
+    fi
+    remote_head="$(printf '%s\n' "$remote_refs" | awk 'NR == 1 { print $1 }')"
+    if [[ -z "$remote_head" ]]; then
+        printf 'Remote branch origin/%s was not found; push it before starting.\n' \
+            "$branch" >&2
+        exit 65
+    fi
+    if [[ "$local_head" != "$remote_head" ]]; then
+        printf 'Local HEAD %s does not match origin/%s (%s); refusing to start.\n' \
+            "$local_head" "$branch" "$remote_head" >&2
+        printf 'Push or reconcile the branch before restarting the Ralph loop.\n' >&2
+        exit 65
+    fi
+}
+
 if ! last_completed_iteration="$(completed_iteration)"; then
     printf 'Status snapshot must contain exactly one numeric completed-iteration field.\n' >&2
     exit 65
@@ -121,6 +146,8 @@ if [[ -n "$(git status --porcelain)" ]]; then
     printf 'Working tree must be clean before --auto starts.\n' >&2
     exit 65
 fi
+
+ensure_remote_synced
 
 ralph_status() {
     if [[ -f "$progress_file" ]]; then
@@ -273,10 +300,13 @@ prompt's status-marker rules."
         printf 'Push verification failed for %s; stopping.\n' "$branch" >&2
         exit 1
     fi
+    status_short_commit="$(git rev-parse --short "$status_head")"
+    printf 'Verified push: origin/%s at %s (implementation %s, status %s).\n' \
+        "$branch" "$status_short_commit" "$short_commit" "$status_short_commit"
     printf 'Iteration %d implementation commit: %s (+%s / -%s text lines)\n' \
         "$iteration" "$short_commit" "$loc_added" "$loc_deleted"
     printf 'Iteration %d status-report commit: %s\n' \
-        "$iteration" "$(git rev-parse --short "$status_head")"
+        "$iteration" "$status_short_commit"
     if [[ "$cli_status" -ne 0 ]]; then
         printf 'Copilot CLI exited with status %d after its commit was pushed.\n' "$cli_status" >&2
         exit "$cli_status"
