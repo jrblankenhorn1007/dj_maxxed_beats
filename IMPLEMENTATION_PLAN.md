@@ -71,20 +71,15 @@ The same composition can be auditioned live or rendered offline.
 These are distinct features with different jobs:
 
 1. **Development Ralph loop (outside SuperCollider):** repeatedly implements and
-   verifies the product against this plan and
-   [`RALPH_IMPLEMENTATION_PROMPT.md`](./RALPH_IMPLEMENTATION_PROMPT.md), using
-   [the Copilot CLI runner](./scripts/ralph-loop.sh). It changes
-   extension/plugin code; it does not generate music as its task. Each CLI
-   invocation is one discrete iteration in a fresh worktree and unique branch
-   created from the latest `origin/main`. Copilot creates one implementation
-   commit; the runner may add a status-only follow-up commit on that branch.
-   The runner publishes the branch, merges each iteration into remote
-   `origin/main` through the configured remote merge process, then fetches and
-   verifies that remote main contains the merge. A local merge, pushed branch,
-   or open pull request alone does not complete an iteration. The status file
-   is rewritten each pass, not used as a history log. Do not advance to the
-   next iteration or report a completion marker until remote-main integration
-   is verified.
+   verifies the product against this plan. Follow the canonical
+   [TDD and Ralph development skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd-ralph-loop/SKILL.md)
+   and its [Ralph Loop agent](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/agents/ralph-loop.agent.md)
+   for test-first development and iteration mechanics. Those shared
+   instructions are maintained in the
+   [`copilot_skills` repository](https://github.com/jrblankenhorn1007/copilot_skills),
+   not copied into this plan. This plan remains the source of truth for the
+   product's acceptance criteria; the development loop changes extension and
+   plugin code, not music-generation behavior.
 2. **In-app music exploration loop:** when the user explicitly starts a
    sampling session, generate and render a bounded set of alternative musical
    candidates using the custom UGens. Keep each candidate and its settings
@@ -100,15 +95,11 @@ original project, and only apply a selected candidate to the project after
 confirmation. Here, "sampling" means exploring generated music variations; it
 does not mean slicing or classifying a user's imported audio samples.
 
-The current `scripts/ralph-loop.sh` is a legacy runner: it works in the
-checked-out branch, does not create a per-iteration worktree or branch, and
-pushes commits directly to that branch. It does not meet the required
-remote-main merge gate. Do not run it with `--auto` until it is updated to
-implement the lifecycle above. Its `--check` mode checks prerequisites only.
-The existing mocked status-report test covers status commits and pushes to a
-temporary remote, not worktree isolation or remote-main merging. Non-interactive
-mode grants tool approval automatically; inspect the prompt and monitor
-Copilot usage when a compliant runner is available.
+The checked-in `scripts/ralph-loop.sh` is legacy and does not implement the
+iteration workflow required by the
+[canonical skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd-ralph-loop/SKILL.md).
+Do not run it with `--auto`; `--check` only checks prerequisites. Its mocked
+status-report test does not cover isolated worktrees or remote-main merging.
 
 The status snapshot is linked from the
 [README](./README.md#project-documents). Run
@@ -256,14 +247,18 @@ change important behavior.
 - Decide whether the MVP only renders offline or also controls a running
   `sclang` session. Default: file-based compositions and offline render.
 - Turn the product acceptance criteria into a prioritized test list before
-  implementation; use the repository TDD skill for every code behavior.
+  implementation. Follow the canonical
+  [TDD and Ralph development skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd-ralph-loop/SKILL.md)
+  for test-first mechanics rather than keeping a separate copy here.
 
 ### 1. Validate the SuperCollider integration
 
-- First write and run failing tests for the minimal C++ UGen API and its
-  observable DSP contract. Then implement it with its sclang class and help,
-  use it in a procedural composition, convert that composition to a `Score`,
-  and render a WAV using NRT mode.
+- Validate the minimal C++ UGen API and its observable DSP contract with
+  focused tests and short NRT renders, following the test-first process in the
+  [canonical TDD skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd-ralph-loop/SKILL.md).
+  Then implement its sclang class and help, use it in a procedural
+  composition, convert that composition to a `Score`, and render a WAV using
+  NRT mode.
 - Install a minimal Quark/extension and open a small GUI from SCIDE without
   changing SuperCollider core.
 - Verify the workflow does not need a running real-time server or audio device.
@@ -307,18 +302,13 @@ change important behavior.
 
 ## Test plan: TDD
 
-Use the repository skill at [`.github/skills/tdd/SKILL.md`](./.github/skills/tdd/SKILL.md)
-for every behavior-changing implementation slice, and the
+Follow the canonical
+[TDD and Ralph development skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd-ralph-loop/SKILL.md)
+and its [TDD reference](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd-ralph-loop/references/tdd.md)
+for test-first development and iteration evidence. This plan retains
+project-specific coverage criteria below; it does not duplicate the shared
+Red-Green-Refactor procedure. Use the
 [visual application test plan](./VISUAL_TEST_PLAN.md) for GUI acceptance.
-Work one observable behavior at a time:
-
-1. Write the smallest test that specifies the next acceptance criterion.
-2. Run it before production code and capture a **Red** failure caused by the
-   missing/wrong behavior (not by broken test setup or missing dependencies).
-3. Implement the minimum change and run that test to **Green**.
-4. Refactor while keeping the relevant tests green.
-5. Repeat for the next behavior and record Red/Green/refactor evidence in
-   `RALPH_PROGRESS.md`.
 
 ### Coverage strategy
 
@@ -394,9 +384,9 @@ introduce only the smallest maintainable harness needed to run it.
   usage units/tokens and an estimated USD/credit amount when a valid rate is
   available; per-session totals aggregate correctly. Missing or stale rates
   are explicit, never shown as zero.
-- **TDD evidence:** every behavior-changing implementation iteration includes
-  the test-first Red result, Green result, and post-refactor test result in
-  `RALPH_PROGRESS.md`; tests are committed with the implementation.
+- **TDD evidence:** keep project verification results in
+  `RALPH_PROGRESS.md`; the canonical skill defines the required test-first
+  evidence for each behavior change.
 - **Agent quality:** representative music and editing tasks produce valid
   SuperCollider code, explain edits, surface uncertainty, and never claim
   success after a failed operation.

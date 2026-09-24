@@ -184,3 +184,25 @@ credentials and private user data out of this file.
   The current runner does not yet implement this workflow; do not use
   `--auto` until it does. Protected-branch policies require waiting for the
   pull request or merge queue to report merged.
+
+### DEC-011 — Use the shared Copilot Skills repository for TDD/Ralph guidance
+
+- **Date:** 2026-09-24
+- **Context:** This repository duplicated general TDD and Ralph-loop
+  instructions that are now maintained in the shared
+  `jrblankenhorn1007/copilot_skills` repository.
+- **Decision:** Treat that repository's
+  [TDD and Ralph development skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd-ralph-loop/SKILL.md)
+  and [Ralph Loop agent](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/agents/ralph-loop.agent.md)
+  as canonical. Keep only local redirect pointers; retain product acceptance
+  criteria, visual-test requirements, implementation evidence, and project
+  decisions in this repository.
+- **Alternatives:** Maintain separate full copies here, or remove local entry
+  points and leave developers to discover the shared repository.
+- **Rationale:** One canonical workflow avoids divergence while local pointers
+  keep the shared instructions discoverable from this project.
+- **Consequences:** Project documentation links to the shared skill and agent
+  rather than restating their workflow. The legacy shell runner only reads the
+  local prompt pointer and does not enforce the isolated-worktree and
+  verified-remote-merge lifecycle; `--auto` remains unsupported until it is
+  upgraded.

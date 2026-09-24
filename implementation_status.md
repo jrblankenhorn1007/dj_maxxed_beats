@@ -14,17 +14,17 @@
 ## Overall state
 
 The product remains in planning and workflow setup. Requirements,
-architecture, TDD, visual verification, and decision logging are documented.
-No product implementation has started. The existing Copilot CLI runner is
-legacy and does not meet the required per-iteration worktree/branch and
-verified `origin/main` merge gate.
+architecture, the canonical TDD/Ralph workflow, visual verification, and
+decision logging are documented. No product implementation has started. The
+existing Copilot CLI runner is legacy and does not meet the required
+per-iteration worktree/branch and verified `origin/main` merge gate.
 
 ## Component status
 
 | Area | Status | Current state |
 | --- | --- | --- |
 | Product architecture and acceptance criteria | Documented | Quark-first, in-SuperCollider experience; no SuperCollider core fork planned. |
-| Development process | Runner update required | TDD skill, prompt, progress notes, decision log, and status snapshot are present. The current runner pushes commits from the checked-out branch; its mocked test verifies status reporting only, not worktree isolation or verified remote-main merging. Do not use `--auto` until the runner implements the required gate. |
+| Development process | Runner update required | Canonical TDD/Ralph instructions are maintained in the [`copilot_skills` repository](https://github.com/jrblankenhorn1007/copilot_skills); local skill and prompt files are redirect pointers. Project progress, status, and decisions remain here. The current runner does not implement isolated worktrees or verified remote-main merging; do not use `--auto` until it does. |
 | Quark packaging and SCIDE entry point | Not started | No Quark classes or GUI exist. |
 | Custom C++ server plugin / UGen palette | Not started | Initial DSP palette still needs to be selected and documented. |
 | sclang composition and NRT rendering | Not started | No composition generation or render workflow exists. |
