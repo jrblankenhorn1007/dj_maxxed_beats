@@ -8,12 +8,11 @@
 
 ## Latest loop report
 
-- **Completed implementation iteration:** `1`
-- **Iteration commit:** [`c5b2192`](https://github.com/jrblankenhorn1007/dj_maxxed_beats/commit/c5b219293fe360e95651d2773e2d9d0130014f8f)
-- **Lines changed:** `+405 / -38` (Git numstat; text files; includes documentation; binary files excluded)
-- **Loop state:** Iteration 2's ChaosOsc wrapper and runner changes are
-  validated locally; implementation/status commits and migration to `main`
-  are still pending.
+- **Completed implementation iteration:** `2`
+- **Iteration commit:** [`9d2c1ef`](https://github.com/jrblankenhorn1007/dj_maxxed_beats/commit/9d2c1ef73b01181767a7e57d4f9dffc83a404a09)
+- **Lines changed:** `+1233 / -683` (Git numstat; text files; includes documentation; binary files excluded)
+- **Loop state:** Iteration 2 is committed and validated on the legacy branch;
+  merge to `main` and legacy worktree cleanup are pending.
 
 ## Overall state
 
