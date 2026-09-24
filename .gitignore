@@ -1,2 +1,5 @@
 .DS_Store
 /supercollider/
+plugin/**/Tests/.build/
+plugin/**/Tests/*_bin
+/plugin/.sc-plugin-api-cache/

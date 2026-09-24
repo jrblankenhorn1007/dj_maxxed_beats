@@ -1,5 +1,7 @@
 # Visual Application Test Plan
 
+This plan is maintained at `docs/VISUAL_TEST_PLAN.md`.
+
 The Ralph loop's final acceptance gate is to launch the real SuperCollider
 application workflow, exercise it, capture its actual window, and inspect the
 screenshots. A passing build, headless test, mocked widget, or textual log is
@@ -14,7 +16,8 @@ not visual confirmation.
   x64 and on an actual MacBook Neo. Generic macOS/Apple Silicon testing does
   not establish MacBook Neo compatibility.
 - If a required device or desktop-capture facility is unavailable, record the
-  exact limitation in `RALPH_PROGRESS.md` and `implementation_status.md`.
+  exact limitation in `docs/RALPH_PROGRESS.md` and
+  `docs/implementation_status.md`.
   Do not claim visual verification or mark the project complete while a
   required platform gate is unverified.
 
@@ -76,8 +79,8 @@ visual success from logs.
 
 ## Evidence to retain
 
-For each tested platform, record in `RALPH_PROGRESS.md` and
-`implementation_status.md`:
+For each tested platform, record in `docs/RALPH_PROGRESS.md` and
+`docs/implementation_status.md`:
 
 - device/model, OS version, SuperCollider version, and build/plugin revision;
 - scenario steps and whether the real GUI was launched from SCIDE;

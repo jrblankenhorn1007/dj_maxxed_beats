@@ -79,7 +79,10 @@ These are distinct features with different jobs:
    [`copilot_skills` repository](https://github.com/jrblankenhorn1007/copilot_skills),
    not copied into this plan. This plan remains the source of truth for the
    product's acceptance criteria; the development loop changes extension and
-   plugin code, not music-generation behavior.
+   plugin code, not music-generation behavior. The local runner
+   ([`../scripts/ralph-loop.sh`](../scripts/ralph-loop.sh)) uses a fresh
+   worktree and branch for each iteration and verifies the configured PR merge
+   on `origin/main` before it emits a final marker or starts another pass.
 2. **In-app music exploration loop:** when the user explicitly starts a
    sampling session, generate and render a bounded set of alternative musical
    candidates using the custom UGens. Keep each candidate and its settings
@@ -95,20 +98,27 @@ original project, and only apply a selected candidate to the project after
 confirmation. Here, "sampling" means exploring generated music variations; it
 does not mean slicing or classifying a user's imported audio samples.
 
-The checked-in `scripts/ralph-loop.sh` is legacy and does not implement the
-iteration workflow required by the
-[canonical skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd-ralph-loop/SKILL.md).
-Do not run it with `--auto`; `--check` only checks prerequisites. Its mocked
-status-report test does not cover isolated worktrees or remote-main merging.
+Run the development loop from the clean, synchronized `main` worktree with
+`scripts/ralph-loop.sh --auto`. It continues without an iteration-count limit
+until explicit completion, blockage, an error, or manual interruption. A
+failed pass leaves its iteration branch/worktree for review; never discard it
+to restart. The `--check` mode verifies GitHub CLI authentication and
+repository prerequisites. Non-interactive mode grants tool approval
+automatically; inspect the prompt and monitor Copilot usage. Final
+`RALPH_CONTINUE` and `RALPH_COMPLETE` markers are emitted only after
+`origin/main` contains the verified pull-request merge commit.
 
 The status snapshot is linked from the
 [README](./README.md#project-documents). Run
-`bash tests/ralph-status-reporting.sh` to exercise the commit/report/push flow
-with a mocked Copilot CLI and a local Git remote.
+`bash tests/ralph-status-reporting.sh` to exercise two successful mocked
+iterations plus a closed-PR blocker case, including fresh worktrees, GitHub
+CLI pull-request merges, a retried pending merge request, merge-SHA verification
+for merge-commit and squash-style results, blocked-status reporting, and
+cleanup against a local Git remote.
 
 ## Decision log
 
-Maintain [`decision_log.md`](./decision_log.md) at the repository root as an
+Maintain [`decision_log.md`](./decision_log.md) in `docs/` as an
 append-only, dated record of material product, architecture, security, testing,
 and packaging decisions. Each entry records context, alternatives, rationale,
 and consequences. Commit each entry with the implementation or plan change it
@@ -416,15 +426,15 @@ introduce only the smallest maintainable harness needed to run it.
 
 ## Source review
 
-The local upstream checkout is in [`supercollider/`](./supercollider/) at
+The local upstream checkout is in [`supercollider/`](../supercollider/) at
 commit `ea52528` (`develop` at checkout time). Key references:
 
-- [SuperCollider platform support and overview](./supercollider/README.md)
-- [Writing Unit Generators](./supercollider/HelpSource/Guides/WritingUGens.schelp)
-- [Non-Realtime Synthesis (NRT)](./supercollider/HelpSource/Guides/Non-Realtime-Synthesis.schelp)
-- [OSC Communication](./supercollider/HelpSource/Guides/OSC_communication.schelp)
-- [Using Quarks](./supercollider/HelpSource/Guides/UsingQuarks.schelp)
-- [macOS build and Apple Silicon guidance](./supercollider/README_MACOS.md)
-- [Windows build and extension guidance](./supercollider/README_WINDOWS.md)
-- [SuperCollider GPL-3.0 license](./supercollider/COPYING)
+- [SuperCollider platform support and overview](../supercollider/README.md)
+- [Writing Unit Generators](../supercollider/HelpSource/Guides/WritingUGens.schelp)
+- [Non-Realtime Synthesis (NRT)](../supercollider/HelpSource/Guides/Non-Realtime-Synthesis.schelp)
+- [OSC Communication](../supercollider/HelpSource/Guides/OSC_communication.schelp)
+- [Using Quarks](../supercollider/HelpSource/Guides/UsingQuarks.schelp)
+- [macOS build and Apple Silicon guidance](../supercollider/README_MACOS.md)
+- [Windows build and extension guidance](../supercollider/README_WINDOWS.md)
+- [SuperCollider GPL-3.0 license](../supercollider/COPYING)
 - [Official example plugins](https://github.com/supercollider/example-plugins)
