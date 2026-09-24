@@ -157,3 +157,48 @@ credentials and private user data out of this file.
   loopback-restricted, command-limited, and disabled in release builds.
   Missing GUI/device/screen-capture access remains an explicit blocker rather
   than a claimed pass.
+
+### DEC-010 — Initial sound-design palette: ChaosOsc (logistic-map chaotic oscillator)
+
+- **Context:** Phase 0/1 of the implementation plan require choosing and
+  documenting the first custom C++ sound-design UGen before building the
+  SuperCollider plugin wrapper. The development environment for this
+  iteration has no `sclang`/`scsynth` or SuperCollider plugin build headers
+  installed, so the plugin wrapper itself cannot yet be built or tested here.
+- **Decision:** Select a logistic-map chaotic oscillator ("ChaosOsc") as the
+  first palette entry, and implement it first as a dependency-free C++ DSP
+  core (`plugin/ChaosOsc/Source/ChaosOscCore.hpp`) that is unit tested
+  directly with a small assert-based C++ test (`plugin/ChaosOsc/Tests/`,
+  run via `run_tests.sh`), independent of any SuperCollider toolchain. The
+  planned controls (`chaosAmount`, `seed`, and a later decoupled update-rate
+  control) are documented in `plugin/SOUND_DESIGN.md`. The SC `UGen`
+  subclass, sclang class, and help file are deferred to a later iteration
+  once a SuperCollider plugin build environment is verified/available.
+- **Alternatives:** (a) Wait until a full SuperCollider plugin build
+  environment is available before writing any DSP code — rejected because it
+  blocks TDD progress on the one piece of the requirement that does not need
+  that environment. (b) Pick a UGen backed by unbounded/unstable feedback
+  (for example unconstrained analog-style feedback distortion) — rejected for
+  the first entry because a chaotic map with a well-understood bounded
+  parameter range is easier to make provably stable and testable first.
+  (c) Use a physically-modeled or spectral technique for the first UGen —
+  deferred as a possible later palette addition; the logistic map is simpler
+  to specify, implement, and test end-to-end first.
+- **Rationale:** The logistic map gives a distinctive, broadband, chaotic
+  signal with a small, well-documented stable parameter range
+  (`chaosAmount` clamped to `[3.57, 3.999]`), is trivially deterministic for a
+  given seed (required both for reproducible tests and for reproducible
+  candidate exploration later), and needs no allocation, I/O, or blocking
+  calls, so it is real-time-audio-thread safe by construction. Building and
+  testing its pure-math core first, independent of the SC toolchain,
+  lets TDD proceed now and de-risks the DSP contract before wrapping it in
+  `SC_PlugIn.h` boilerplate.
+- **Consequences:** `plugin/ChaosOsc/Source/ChaosOscCore.hpp` is the
+  authoritative DSP contract for ChaosOsc; the eventual `UGen` subclass must
+  call it unchanged (only per-sample plumbing, control-rate parameter reads,
+  and buffer I/O belong in the wrapper). Until a SuperCollider plugin build
+  environment (source/headers, `sclang`, `scsynth`) is available in a
+  development environment, the sclang class, help file, plugin build, NRT
+  render, and real-time audition for ChaosOsc remain unimplemented and
+  unverified; this is recorded as an explicit open task rather than an
+  inferred pass.
