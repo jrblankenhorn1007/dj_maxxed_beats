@@ -72,9 +72,13 @@ These are distinct features with different jobs:
 
 1. **Development Ralph loop (outside SuperCollider):** repeatedly implements and
    verifies the product against this plan. Follow the canonical
-   [TDD and Ralph development skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd-ralph-loop/SKILL.md)
-   and its [Ralph Loop agent](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/agents/ralph-loop.agent.md)
-   for test-first development and iteration mechanics. Those shared
+   [Ralph Loop skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/SKILL.md),
+   [TDD skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd/SKILL.md),
+   and [Ralph Loop agent](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/agents/ralph-loop.agent.md)
+   for iteration mechanics and test-first development. When relevant to
+   SuperCollider music-product work, consult the skill's
+   [project-specific music-agent prompt](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/references/ralph-loop.md).
+   Those shared
    instructions are maintained in the
    [`copilot_skills` repository](https://github.com/jrblankenhorn1007/copilot_skills),
    not copied into this plan. This plan remains the source of truth for the
@@ -259,14 +263,14 @@ change important behavior.
   `sclang` session. Default: file-based compositions and offline render.
 - Turn the product acceptance criteria into a prioritized test list before
   implementation. Follow the canonical
-  [TDD and Ralph development skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd-ralph-loop/SKILL.md)
+  [TDD skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd/SKILL.md)
   for test-first mechanics rather than keeping a separate copy here.
 
 ### 1. Validate the SuperCollider integration
 
 - Validate the minimal C++ UGen API and its observable DSP contract with
   focused tests and short NRT renders, following the test-first process in the
-  [canonical TDD skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd-ralph-loop/SKILL.md).
+  [canonical TDD skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd/SKILL.md).
   Then implement its sclang class and help, use it in a procedural
   composition, convert that composition to a `Score`, and render a WAV using
   NRT mode.
@@ -314,11 +318,14 @@ change important behavior.
 ## Test plan: TDD
 
 Follow the canonical
-[TDD and Ralph development skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd-ralph-loop/SKILL.md)
-and its [TDD reference](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd-ralph-loop/references/tdd.md)
-for test-first development and iteration evidence. This plan retains
-project-specific coverage criteria below; it does not duplicate the shared
-Red-Green-Refactor procedure. Use the
+[TDD skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd/SKILL.md)
+for test-first development and iteration evidence, and the
+[Ralph Loop skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/SKILL.md)
+for outer-loop mechanics. When working on the SuperCollider music product,
+consult its
+[project-specific Ralph prompt](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/references/ralph-loop.md).
+This plan retains project-specific coverage criteria below; it does not
+duplicate the shared Red-Green-Refactor procedure. Use the
 [visual application test plan](./VISUAL_TEST_PLAN.md) for GUI acceptance.
 
 ### Coverage strategy

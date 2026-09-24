@@ -5,12 +5,22 @@ not a second source of general TDD or Ralph-loop instructions.
 
 ## Canonical workflow
 
-Read and follow the
-[TDD and Ralph development skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd-ralph-loop/SKILL.md),
-its
-[Ralph-loop reference](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd-ralph-loop/references/ralph-loop.md),
-and the
+Follow the shared
+[Ralph Loop skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/SKILL.md)
+for isolated iterations and verified remote integration. For behavior
+changes, also follow the shared
+[TDD skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd/SKILL.md)
+and use the shared
 [Ralph Loop agent](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/agents/ralph-loop.agent.md).
+
+When an iteration implements or validates the SuperCollider music product,
+consult the Ralph Loop skill's
+[SuperCollider AI Music Agent prompt](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/references/ralph-loop.md)
+for domain-specific context. Use it only when relevant; this project's
+[implementation plan](./IMPLEMENTATION_PLAN.md) remains the source of product
+acceptance criteria, and the local runner and status files remain authoritative
+for project protocol.
+
 The shared repository owns the general test-first and iteration workflow; do
 not duplicate those instructions here.
 
