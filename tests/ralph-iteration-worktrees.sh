@@ -13,7 +13,9 @@ gh_call_log="$test_root/gh-calls"
 gh_state_dir="$test_root/gh-state"
 
 mkdir -p "$main_worktree/scripts" "$main_worktree/docs" \
-    "$fake_bin" "$test_root/home" "$gh_state_dir"
+    "$fake_bin" "$test_root/home/.copilot/agents" "$gh_state_dir"
+printf 'name: Ralph Loop\n' \
+    > "$test_root/home/.copilot/agents/ralph-loop.agent.md"
 git init --bare --initial-branch=main "$remote" >/dev/null
 git init --initial-branch=main "$main_worktree" >/dev/null
 git -C "$main_worktree" config user.name "Ralph Worktree Test"
@@ -60,10 +62,12 @@ if [[ "${1:-}" == "--version" ]]; then
     exit 0
 fi
 
-if [[ "${1:-}" != "--model" || "${2:-}" != "gpt-6-luna" ]]; then
-    printf 'Ralph did not select the required gpt-6-luna model.\n' >&2
+if [[ "${1:-}" != "--agent" || "${2:-}" != "ralph-loop" ||
+    "${3:-}" != "--model" || "${4:-}" != "gpt-6-luna" ]]; then
+    printf 'Ralph did not select the shared agent and required gpt-6-luna model.\n' >&2
     exit 1
 fi
+shift 4
 
 branch="$(git branch --show-current)"
 worktree="$(git rev-parse --show-toplevel)"
@@ -278,6 +282,11 @@ if ! printf '%s\n' "$check_output" |
 fi
 if ! printf '%s\n' "$check_output" | grep -Fq 'GitHub CLI:'; then
     printf 'FAIL: --check did not verify the GitHub CLI prerequisite.\n' >&2
+    exit 1
+fi
+if ! printf '%s\n' "$check_output" |
+    grep -Fq 'Ralph Loop agent: ralph-loop'; then
+    printf 'FAIL: --check did not verify the shared Ralph Loop agent.\n' >&2
     exit 1
 fi
 

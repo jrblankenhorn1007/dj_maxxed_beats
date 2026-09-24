@@ -48,6 +48,13 @@ if ! gh auth status --hostname github.com >/dev/null 2>&1; then
     printf 'GitHub CLI must be authenticated to merge iteration pull requests.\n' >&2
     exit 69
 fi
+copilot_home="${COPILOT_HOME:-$HOME/.copilot}"
+ralph_agent_file="$copilot_home/agents/ralph-loop.agent.md"
+if [[ ! -f "$ralph_agent_file" ]]; then
+    printf 'The canonical Ralph Loop agent must be installed at %s.\n' \
+        "$ralph_agent_file" >&2
+    exit 69
+fi
 
 root="$(git rev-parse --show-toplevel)"
 cd "$root"
@@ -297,6 +304,7 @@ ensure_main_synced
 if [[ "$mode" == "--check" ]]; then
     printf 'Copilot CLI: %s\n' "$(copilot --version)"
     printf 'Model: GPT-6 Luna (%s)\n' "$copilot_model"
+    printf 'Ralph Loop agent: ralph-loop (%s)\n' "$ralph_agent_file"
     printf 'GitHub CLI: %s (authenticated for github.com)\n' "$(gh --version)"
     printf 'Repository: %s\n' "$root"
     printf 'Main branch: %s tracking %s\n' "$main_branch" "$upstream"
@@ -407,7 +415,7 @@ has verified the remote merge, then emits RALPH_CONTINUE or RALPH_COMPLETE."
     cli_status=0
     if output="$(
         cd "$iteration_worktree" &&
-            copilot --model "$copilot_model" --allow-all-tools --silent \
+            copilot --agent ralph-loop --model "$copilot_model" --allow-all-tools --silent \
                 --prompt "$prompt" 2>&1
     )"; then
         :

@@ -324,3 +324,27 @@ credentials and private user data out of this file.
   out, or remote verification fails, the runner records and verifies a BLOCKED
   status commit on the preserved iteration branch when possible, then emits
   only `RALPH_BLOCKED`.
+
+### DEC-017 — Use shared Copilot Skills for TDD/Ralph guidance
+
+- **Date:** 2026-09-24
+- **Context:** This repository copied general TDD and Ralph-loop instructions
+  into local skill and prompt files, creating a second source of truth beside
+  the shared `jrblankenhorn1007/copilot_skills` repository.
+- **Decision:** Treat the shared
+  [TDD and Ralph development skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd-ralph-loop/SKILL.md)
+  and [Ralph Loop agent](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/agents/ralph-loop.agent.md)
+  as canonical. Keep `.github/skills/tdd/SKILL.md` and
+  `docs/RALPH_IMPLEMENTATION_PROMPT.md` as concise redirect pointers. Retain
+  product acceptance criteria, visual requirements, per-iteration evidence,
+  status snapshots, and project decisions in this repository.
+- **Alternatives:** Continue copying the shared workflow into local files, or
+  remove local discovery points and require developers to find the shared
+  repository themselves.
+- **Rationale:** A single canonical workflow avoids drift while local pointers
+  keep the shared instructions discoverable from this project.
+- **Consequences:** Local skill and prompt files no longer duplicate TDD/Ralph
+  procedures. The runner requires the canonical user-level Ralph agent and
+  selects it by name. It remains a project-specific integration point and must
+  continue to meet the shared fresh-worktree and verified-remote-merge
+  requirements.

@@ -11,9 +11,9 @@
 - **Completed implementation iteration:** `2`
 - **Iteration commit:** [`9d2c1ef`](https://github.com/jrblankenhorn1007/dj_maxxed_beats/commit/9d2c1ef73b01181767a7e57d4f9dffc83a404a09)
 - **Lines changed:** `+1233 / -683` (Git numstat; text files; includes documentation; binary files excluded)
-- **Loop state:** Iteration 2 is committed and validated on the legacy branch;
-  migration to `main` through the configured GitHub merge process and legacy
-  worktree cleanup are pending.
+- **Loop state:** Iteration 2's implementation and runner upgrade are
+  validated. The project-wide next iteration is 3; the runner requires the
+  configured remote-main merge verification before it can advance.
 
 ## Overall state
 
@@ -24,9 +24,8 @@ wrapper that builds against the pinned SuperCollider API headers. Audio-rate
 `chaosAmount` values are applied per sample; `seed` is captured at UGen
 construction. The local environment has no `sclang` or `scsynth`, so plugin
 loading, sclang classes/help, NRT rendering, and real-time audition remain
-unverified. Iteration 2's implementation and runner changes have passed
-focused tests but are still on the legacy feature branch pending a verified
-remote merge to `main`. The runner pins GPT-6 Luna, uses a fresh
+unverified. Iteration 2's implementation and runner changes have passed focused tests.
+The runner pins GPT-6 Luna, uses a fresh
 branch/worktree per iteration, opens a pull request, requests the configured
 GitHub merge process, waits for the merged state, and verifies the merge commit
 on `origin/main` before emitting a final marker.
@@ -36,7 +35,7 @@ on `origin/main` before emitting a final marker.
 | Area | Status | Current state |
 | --- | --- | --- |
 | Product architecture and acceptance criteria | Documented | Quark-first, in-SuperCollider experience; no SuperCollider core fork planned. |
-| Development process | Set up | The runner pins `gpt-6-luna`, creates one branch/worktree per iteration, opens and merges a PR through GitHub CLI auto-merge, verifies the reported merge commit on `origin/main`, then removes the successful local worktree/branch. The mocked test simulates squash merges and a closed-PR blocker, verifying branch isolation, remote verification, marker ordering, blocker-commit persistence, and cleanup. |
+| Development process | Set up | Canonical TDD/Ralph instructions and the `ralph-loop` agent live in the shared `copilot_skills` repository; local skill/prompt files are redirect pointers. The runner selects that agent, pins `gpt-6-luna`, creates one branch/worktree per iteration, opens and merges a PR through GitHub CLI auto-merge, verifies the reported merge commit on `origin/main`, then removes the successful local worktree/branch. The mocked test simulates squash merges and a closed-PR blocker, verifying agent/model selection, branch isolation, remote verification, marker ordering, blocker-commit persistence, and cleanup. |
 | Custom C++ server plugin / UGen palette | In progress | ChaosOsc DSP core and `SCUnit` wrapper exist (`plugin/ChaosOsc/Source/`); the wrapper reads audio-rate controls per sample and captures the seed at construction. DSP tests pass and the plugin compiles against the pinned API headers with `_load` exported. sclang class/help, runtime loading, NRT, and real-time audition are not implemented/validated. |
 | Quark packaging and SCIDE entry point | Not started | No Quark classes or GUI exist. |
 | sclang composition and NRT rendering | Not started | No composition generation or render workflow exists; blocked on the same missing SC toolchain. |
@@ -59,8 +58,9 @@ on `origin/main` before emitting a final marker.
   passed after the documentation move and runner update. It rejects an
   out-of-sync main, then exercises two mocked iterations, including PR
   creation, configured auto-merge, squash-merge verification on `origin/main`,
-  status commits, marker ordering, cleanup, and a third iteration whose closed
-  PR is recorded as a pushed `BLOCKED` status without a success marker.
+  status commits, shared-agent/model selection, marker ordering, cleanup, and
+  a third iteration whose closed PR is recorded as a pushed `BLOCKED` status
+  without a success marker.
 - **Plugin-header fetch error path:** `PYTHONDONTWRITEBYTECODE=1 python3
   tests/test_fetch_sc_plugin_api.py` passed (4 tests), covering mocked
   `URLError`/HTTP 503 propagation, 404 candidate resolution, and indented
@@ -101,13 +101,9 @@ on `origin/main` before emitting a final marker.
 
 ## Open questions and next task
 
-- Merge the legacy feature branch into `main` through the configured GitHub
-  pull-request/merge-queue process, verify its merge commit on `origin/main`,
-  remove its clean local worktree/branch, then restart the new runner from the
-  synchronized main worktree in a visible Terminal window. GitHub CLI
-  authentication is available.
-- Implement the ChaosOsc sclang class/help and an NRT integration test
-  test-first; an actual `scsynth` installation is still needed to validate
-  runtime loading/rendering.
+- Begin iteration 3 by writing a failing integration test for the ChaosOsc
+  sclang class/help and a deterministic NRT render. An actual
+  `sclang`/`scsynth` installation is still needed to validate runtime
+  loading/rendering.
 - Verify the secure asynchronous HTTPS and credential-store options available
   to sclang; use the planned headless helper only if needed.

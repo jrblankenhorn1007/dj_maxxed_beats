@@ -1,312 +1,43 @@
-# Ralph Loop Prompt: Build the SuperCollider AI Music Agent
+# Ralph Implementation Prompt
 
-Use this as the task prompt for the **development Ralph loop**, run one
-iteration at a time by [`scripts/ralph-loop.sh`](../scripts/ralph-loop.sh) with
-GitHub Copilot CLI. This outer engineering loop implements the product. It is
-not the in-SuperCollider music-exploration loop. Every iteration uses a fresh
-worktree and branch from the latest `origin/main`; it is incomplete until the
-configured remote merge process reports the work merged and `origin/main`
-contains its merge commit.
+This file is a compatibility pointer read by the local Copilot CLI runner,
+not a second source of general TDD or Ralph-loop instructions.
 
-```text
-You are the autonomous implementation agent for the SuperCollider AI Music
-Agent. Work in the current project workspace. Implement the product described
-in `docs/IMPLEMENTATION_PLAN.md`, including the requirements and completion
-criteria in this prompt. Work incrementally across repeated Ralph-loop
-iterations. Work only in the fresh Git worktree and branch created from the
-latest `origin/main` for this iteration.
+## Canonical workflow
 
-SOURCE OF TRUTH
+Read and follow the
+[TDD and Ralph development skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd-ralph-loop/SKILL.md),
+its
+[Ralph-loop reference](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd-ralph-loop/references/ralph-loop.md),
+and the
+[Ralph Loop agent](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/agents/ralph-loop.agent.md).
+The shared repository owns the general test-first and iteration workflow; do
+not duplicate those instructions here.
 
-Read `docs/IMPLEMENTATION_PLAN.md` and this prompt at the start of every
-iteration, then inspect the current workspace, existing progress notes, and
-changes before editing. The plan and this prompt are complementary. If a detail is missing,
-make a conservative, reversible decision, record it, and continue. Do not stop
-to ask the user routine implementation questions.
+## Project sources of truth
 
-Before implementing code, load and follow the repository skill
-[`tdd`](../.github/skills/tdd/SKILL.md). For every behavior change, write and run
-the smallest test first, prove the expected Red failure, implement minimally
-to Green, then refactor while the relevant tests stay green. Record exact Red,
-Green, and refactor commands/results in `docs/RALPH_PROGRESS.md`. Do not begin
-production code before the relevant failing test has been observed.
+- [Product acceptance criteria](./IMPLEMENTATION_PLAN.md)
+- [Visual verification](./VISUAL_TEST_PLAN.md)
+- [Per-iteration evidence](./RALPH_PROGRESS.md)
+- [Current project status](./implementation_status.md)
+- [Append-only project decisions](./decision_log.md)
 
-The runner passes this prompt file's contents to Copilot CLI in non-interactive
-mode with `--model gpt-6-luna`, `--allow-all-tools`, and `--silent`.
-Each invocation is exactly one implementation iteration; the runner supplies
-the project-wide iteration number. The runner uses Copilot CLI model
-`gpt-6-luna` (GPT-6 Luna); do not select another model or silently fall back.
-It runs from a clean `main` worktree whose `HEAD` matches `origin/main`.
-For each invocation, it creates a fresh `ralph/iteration-<n>-<main-sha>`
-branch and sibling worktree from `origin/main`. Copilot creates one
-implementation commit in that worktree. The runner finalizes status metadata
-in a separate status-only commit, pushes the iteration branch, opens a pull
-request, and requests the repository-configured merge process with
-`gh pr merge --auto` without imposing a merge strategy. It waits for GitHub to
-report the pull request merged, fetches `origin/main`, and verifies that the
-reported merge commit is contained there before emitting a final marker or
-starting another iteration. For squash or merge-queue flows, verify the
-resulting merge SHA rather than requiring the iteration branch commit itself
-to be an ancestor. After successful remote verification, it fast-forwards
-local `main` and removes the local worktree and branch; the remote iteration
-branch remains for audit.
+Keep project-specific progress, status, acceptance criteria, and decisions in
+those files. Treat the upstream `supercollider/` checkout as read-only.
 
-Git-tracked project files are the durable iteration state; do not rely on
-transient Copilot conversation state. If the loop is interrupted, do not
-discard work or blindly restart. Inspect the worktree and commits, preserve
-uncommitted changes, and reconcile any unmerged iteration branch before
-restarting. The runner refuses a dirty or out-of-sync `main`; it also refuses
-to overwrite a leftover iteration worktree or branch.
+## Local runner protocol
 
-Read `docs/implementation_status.md` at the start of each iteration. Rewrite
-it as a concise current-state snapshot during every iteration; do not append an
-iteration history. Update the component state, verification/platform coverage,
-blockers, and next task as appropriate. The runner requires the status file to
-change in the implementation commit. Preserve these exact runner-managed
-fields for the runner to replace after that commit:
+The
+[local runner](../scripts/ralph-loop.sh) invokes GPT-6 Luna for one iteration
+in a fresh worktree and branch. It creates a status-report commit, publishes
+the iteration branch, opens a pull request, and uses the repository-configured
+GitHub merge process. It emits the final `RALPH_CONTINUE` or `RALPH_COMPLETE`
+marker only after fetching `origin/main` and verifying the pull-request merge
+commit there. Copilot's `RALPH_READY_CONTINUE` and
+`RALPH_READY_COMPLETE` are pre-merge handoffs, not completion markers. If
+remote integration is blocked, the runner records a blocked status on the
+iteration branch when possible and emits `RALPH_BLOCKED`.
 
-- `Completed implementation iteration`
-- `Iteration commit`
-- `Lines changed`
-
-The local `supercollider/` checkout is an upstream reference at the revision
-recorded in `docs/IMPLEMENTATION_PLAN.md`. Treat it as read-only. Do not patch or
-reformat upstream SuperCollider files to make this product work; build an
-independent Quark/extension and plugin against the documented extension and
-plugin APIs.
-
-TWO DISTINCT LOOPS
-
-1. This development loop changes and tests extension/plugin source code.
-   Each iteration must leave a durable progress update and a concrete,
-   verifiable increment.
-2. The in-app music exploration loop is a product feature. It starts only when
-   the user explicitly asks to explore variations. It generates and renders a
-   bounded set of musical candidates using the extension's fixed, tested
-   C++ UGens.
-   It is not an autonomous software-development loop and must never alter
-   extension/plugin source code.
-
-For the in-app loop, use the product-plan default of at most four candidates
-per session unless the user chooses a lower limit. Let the user stop at any
-time. Keep candidates in an isolated per-session workspace with their source,
-seed, parameters, and rendered audio. Do not overwrite the original project.
-Check technical validity (code/build/render status, duration, silence, and
-clipping); let the user audition and choose among candidates for subjective
-quality. Do not claim automated musical judgment or add an AI audio critic.
-Copy/apply a selected candidate to the user's project only after confirmation.
-Interpret "sampling" as generated variations, not imported-audio slicing or
-sample-library curation.
-
-PRODUCT REQUIREMENTS
-
-- Deliver a cross-platform SuperCollider Quark/extension for Windows 10 x64
-  and Apple Silicon macOS, including validation on a MacBook Neo when that
-  hardware is available. Its chat and composition UI must open from within
-  SuperCollider; do not create a separate user-facing desktop app.
-- Provide a minimal documented entry point from SCIDE (for example, evaluating
-  an `Agent.gui` class method). Do not fork/patch SuperCollider core just to add
-  a docked panel or menu item unless the upstream extension mechanism is
-  verified to support that without maintaining a fork.
-- Deliver a C++ SuperCollider server plugin with a distinctive, documented
-  sound-design palette. The exact initial UGen set is not yet specified: choose
-  a small, coherent first palette suitable for unusual procedural synthesis,
-  document the DSP choices and exposed controls, and keep them stable for
-  sclang composition code.
-- Do not put chat, provider API calls, file access, or other blocking work in a
-  UGen/audio callback. The plugin performs DSP only. Test its intended use in
-  both offline rendering and real-time audition.
-- Verify the simplest secure, asynchronous HTTPS and credential-store path
-  available to the SuperCollider language side. If it is insufficient,
-  include a small headless provider helper in the extension's install/launch
-  workflow; it must not have a separate user-facing UI.
-- The agent turns prompts into reviewable SuperCollider composition code,
-  using the custom UGens where appropriate. A user can create tracks, request
-  revisions/tasks, render an audio file, and optionally audition live.
-- Prefer file-based `.scd` composition and SuperCollider NRT `Score` rendering
-  for the MVP. The Quark/extension GUI is the primary user interface. The
-  generated track must not require a real-time server or audio device to
-  render.
-- Include the agent instruction Markdown described in the plan and test it
-  against representative composition and editing requests.
-- Support independently managed OpenAI and Anthropic (Claude) API keys. Let
-  the user choose a provider and refreshable list of models available to that
-  provider's configured key. Clearly show the active provider/model; do not
-  silently substitute either if unavailable. Use separate provider adapters
-  behind a common extension interface.
-- Show per-request model usage and current sampling-session totals in the
-  extension. Record provider-reported input/output/cached token counts and
-  estimate API spend in USD using versioned, provider/model-specific rates.
-  Also show internal app credits at the planned initial conversion of 100
-  credits per estimated USD. Credits are informational, not purchasable or
-  provider-issued. Label costs as estimates and display the pricing-data
-  version/date. If usage or pricing is missing/stale, show it as unavailable
-  or stale, never as zero. Keep usage history local and user-clearable.
-- Use the platform credential store where practical; never hard-code or log
-  either key. Allow keys to be added, replaced, removed, and validated
-  independently; do not require both to be configured. Disclose API usage,
-  cost, and what project context is sent to the selected provider.
-- Show diffs before changing user project files, preserve undo/backups, and
-  ask for clear user approval before executing generated code or applying a
-  candidate to the original project. Treat generated SuperCollider code as
-  potentially capable of arbitrary local actions; approval is not a sandbox.
-- Keep the Quark GUI, language classes, help, and required plugin artifacts
-  together in a straightforward extension install/update workflow. Any
-  required headless helper is an internal implementation detail, not another
-  user-facing app. Document supported SuperCollider versions and review
-  applicable licenses before distributing binaries.
-
-VISUAL APPLICATION VERIFICATION
-
-- Follow [`VISUAL_TEST_PLAN.md`](./VISUAL_TEST_PLAN.md). A successful build,
-  headless test, log message, or mocked window is not visual confirmation.
-- For every GUI-affecting iteration, launch the real app from SCIDE on an
-  available target platform, exercise the changed visible workflow, capture
-  the actual native application window, inspect the screenshot, and record
-  platform/version and artifact details in `docs/RALPH_PROGRESS.md` and
-  `docs/implementation_status.md`.
-- Before `RALPH_COMPLETE`, run the full deterministic mock-provider scenario
-  on Windows 10 x64 and an actual MacBook Neo. The scenario must cover launch,
-  response/edit review, approval, NRT render, usage display, and a visible
-  error state; verify the rendered file independently. Once implemented, also
-  exercise the bounded variation controls. Capture and visually inspect fresh
-  native screenshots. Never use real API keys or make billable calls for this
-  test.
-- Prefer existing SCIDE/sclang scripting and native accessibility automation.
-  If they cannot reliably exercise the real GUI, implement only the smallest
-  test-only CLI or in-process driver needed to launch the visible app and
-  invoke named test actions through the actual UI/controller code. Do not add
-  a permanently enabled or unauthenticated production control endpoint. Any
-  necessary IPC must be explicit-test-mode, loopback-only, per-run
-  authenticated, tightly command-limited, and disabled in release builds.
-- If the environment cannot launch the app, capture/inspect its native window,
-  or access a required target device, record the exact limitation and leave the
-  visual gate open. Do not claim completion based on screenshots from another
-  OS/device or on logs/headless tests.
-
-IMPLEMENTATION METHOD
-
-- First inventory the project and identify its actual language, tooling, and
-  test/build commands. The workspace may not yet contain an extension
-  scaffold. Do not assume a standalone app framework or overwrite user files;
-  use SuperCollider's supported Quark, sclang GUI, and plugin mechanisms.
-- Break the plan into small vertical slices: Quark GUI and first UGen; an
-  sclang/NRT composition-render prototype using that UGen; provider/API workflow;
-  review/undo and safe rendering; in-app bounded candidate exploration;
-  packaging and platform validation.
-- Keep state across iterations in `docs/RALPH_PROGRESS.md`.
-  Its first line must be exactly `Ralph-Status: IN_PROGRESS`,
-  `Ralph-Status: BLOCKED`, or `Ralph-Status: COMPLETE`. Record completed
-  slices with evidence, exact test/build results, current blockers,
-  decisions/assumptions, and the single best next task. Update it in every
-  iteration's commit; never use it as a substitute for tests or implementation.
-- Keep [`implementation_status.md`](./implementation_status.md) in `docs/` as
-  a single current-state snapshot, not an append-only log.
-  Rewrite its product/component status, completed capabilities, verification
-  evidence, unverified platforms, blockers/risks, and next task in every
-  iteration. Preserve its three runner-managed loop-report fields unchanged;
-  after your implementation commit, the runner fills in the project-wide
-  iteration number, GitHub commit link, and added/deleted text-line counts.
-  The snapshot commit is created by the runner immediately after your
-  implementation commit.
-- Maintain the append-only [`decision_log.md`](./decision_log.md) in `docs/`.
-  Add a dated entry for every material product, architecture,
-  security, test, or packaging decision you make, with context, alternatives,
-  rationale, and consequences. Do not rewrite old entries; supersede them with
-  a new entry that references the earlier decision. Keep secrets out. Include
-  each new entry in the same iteration commit as the change it records.
-- Make exactly one new implementation commit for each iteration on the
-  runner-created iteration branch, including its progress update, status snapshot, and any
-  decision-log entry. Use a specific commit message and include the required
-  `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>` trailer.
-  Do not push, merge, or create the separate status-report commit. The runner
-  validates your implementation commit, updates the three status metadata
-  fields, creates a status-only commit containing
-  `docs/implementation_status.md`, publishes the branch, opens a pull request,
-  and requests the repository-configured merge process. It then waits for the
-  remote pull request to report merged and verifies the merge commit on
-  `origin/main` before starting another iteration or emitting a final marker.
-  Never amend, force-push, or include credentials, generated audio, build
-  outputs, or the upstream `supercollider/` reference checkout. If validation,
-  merge, or remote verification fails, preserve the worktree and branch and
-  report the blocker. The runner stops if the implementation commit is not a
-  direct child, does not update the status snapshot, or leaves the iteration
-  worktree dirty.
-- Before changing files, inspect the `origin/main` worktree and current
-  changes. Preserve user work. If that worktree has uncommitted changes, stop
-  before starting an iteration.
-  Never use destructive reset/checkout/clean commands, never discard unrelated
-  changes, and never include unrelated changes in an iteration commit.
-- In each iteration, select one or a few tightly related tasks from the plan,
-  apply the `tdd` skill for each behavior, run the narrowest relevant checks,
-  refactor with tests green, and inspect the resulting diff. Use existing test
-  tools where possible; add only the smallest harness required for an
-  untestable acceptance criterion.
-- For unsupported platform testing, use CI or available cross-compilation if
-  the project supports it; otherwise record exactly what remains unverified.
-  Never claim Windows 10 or MacBook Neo validation based only on a build on a
-  different platform.
-- Handle errors explicitly. Do not claim a task succeeded when build, render,
-  API, or file operations failed. Do not silently skip a plan requirement.
-- Do not implement or run an unbounded in-SuperCollider sampling session during
-  development. Tests must use fixed seeds, short renders, and strict candidate
-  limits/timeouts.
-- Do not treat automatic tool approval or a Git worktree as a sandbox. The
-  runner uses non-interactive mode with `--allow-all-tools`; shell commands can
-  still affect paths outside the project. Do not use `--allow-all-paths`,
-  destructive Git commands, or commands that target unrelated paths. The
-  runner must require a clean `origin/main` worktree, a new iteration
-  worktree/branch, and a verified merge to remote `origin/main` for each pass.
-  The human launching the loop must use a trusted environment and monitor it.
-  The runner enforces this lifecycle through GitHub CLI pull requests and the
-  repository-configured merge process; its preflight requires authenticated
-  Copilot and GitHub CLIs.
-
-DEFINITION OF DONE
-
-Do not declare completion until every applicable acceptance criterion in
-`docs/IMPLEMENTATION_PLAN.md` is implemented and verified, including:
-
-1. The integrated SuperCollider GUI, secure provider-key workflows, provider
-   switching, and available-model selection for OpenAI and Anthropic, without
-   a separate user-facing desktop app.
-2. The custom C++ UGen(s), matching sclang class/help, and supported plugin
-   builds.
-3. A procedural composition using the custom UGen(s) rendered to a playable
-   audio file in NRT mode.
-4. The user-reviewed edit/approval/undo workflow.
-5. A bounded, stoppable in-app candidate exploration session that preserves
-   the original project.
-6. TDD evidence and focused tests/builds, with truthful Windows 10/macOS
-   validation status.
-7. Agent instruction Markdown, installation/privacy/API-cost documentation,
-   per-request/session credit and dollar usage displays, and licensing review
-   notes.
-8. Visual sign-off under `VISUAL_TEST_PLAN.md`: the real GUI is launched from
-   SCIDE, the mock-provider end-to-end workflow is exercised, fresh native
-   screenshots are captured and inspected, and Windows 10 x64 plus actual
-   MacBook Neo results/artifacts are recorded.
-9. Every implementation iteration is committed on its own worktree branch,
-   merged into remote `origin/main`, and verified there before that iteration
-   is considered complete.
-
-At the end of each iteration, update `docs/RALPH_PROGRESS.md` and rewrite
-`docs/implementation_status.md` before creating the implementation commit.
-For successful work, the model's handoff marker is
-`RALPH_READY_CONTINUE` or `RALPH_READY_COMPLETE`; the runner withholds the
-final marker until the configured remote merge is verified. If a genuine
-implementation blocker exists, set `Ralph-Status: BLOCKED` and end with
-`RALPH_BLOCKED`.
-If all criteria pass, report completion evidence and platform caveats, set
-`Ralph-Status: COMPLETE`, and end with `RALPH_READY_COMPLETE`. If blocked,
-report the specific blocker, what was tried, and the next actionable step,
-set `Ralph-Status: BLOCKED`, and end with `RALPH_BLOCKED`. Otherwise set
-`Ralph-Status: IN_PROGRESS`, state the next task, and end with
-`RALPH_READY_CONTINUE`. These handoff markers control the stop-marker-driven
-runner. Never emit a final `RALPH_CONTINUE` or `RALPH_COMPLETE` before the
-remote merge is verified, and never emit `RALPH_READY_COMPLETE` unless every
-completion criterion above is verified. If the configured remote merge is
-closed, times out, or cannot be verified, the runner records a
-`Ralph-Status: BLOCKED` update on the preserved iteration branch and emits
-only `RALPH_BLOCKED`.
-```
+The runner's `--auto` mode uses non-interactive `--allow-all-tools`; shell
+commands can affect files outside the repository. It is not a sandbox. Run it
+only in a trusted environment and review the resulting changes.

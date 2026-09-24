@@ -27,9 +27,12 @@ language environment cannot provide secure asynchronous API access.
 ## Project documents
 
 - [Implementation plan](./IMPLEMENTATION_PLAN.md)
+- [Canonical TDD and Ralph development skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd-ralph-loop/SKILL.md)
+- [Canonical Ralph Loop agent](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/agents/ralph-loop.agent.md)
+- [Copilot Skills repository](https://github.com/jrblankenhorn1007/copilot_skills)
 - [Development Ralph-loop prompt](./RALPH_IMPLEMENTATION_PROMPT.md)
 - [Copilot CLI Ralph runner](../scripts/ralph-loop.sh)
-- [TDD skill](../.github/skills/tdd/SKILL.md)
+- [Local TDD skill pointer](../.github/skills/tdd/SKILL.md)
 - [Visual application test plan](./VISUAL_TEST_PLAN.md)
 - [Decision log](./decision_log.md)
 - [Current implementation status](./implementation_status.md)
@@ -38,7 +41,9 @@ language environment cannot provide secure asynchronous API access.
 Project-facing documentation is organized under `docs/`, with plugin design
 notes under `docs/plugin/`. The root `README.md` is a short repository landing
 page. The `LICENSE` and `.github/skills/tdd/SKILL.md` stay at the repository
-root/canonical Copilot skill path.
+root/canonical Copilot skill path. The local skill and prompt files point to
+the shared `copilot_skills` repository; they do not duplicate its workflow
+instructions.
 
 The development loop builds and tests the extension. The in-app music loop
 generates and renders a limited set of musical variations; these are separate
@@ -48,18 +53,29 @@ loops.
 
 Install and authenticate [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/install-copilot-cli)
 and [GitHub CLI](https://cli.github.com/). The GitHub CLI must be authenticated
-for the repository that receives iteration pull requests. Run the loop from
-the clean `main` worktree tracking `origin/main`, then check the local
+for the repository that receives iteration pull requests. Install the
+canonical `ralph-loop.agent.md` from the shared `copilot_skills` repository in
+`$COPILOT_HOME/agents/` (default: `~/.copilot/agents/`). Run the loop from the
+clean `main` worktree tracking `origin/main`, then check the local
 prerequisites:
 
 ```bash
 scripts/ralph-loop.sh --check
 ```
 
+Follow the canonical
+[TDD and Ralph development skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd-ralph-loop/SKILL.md)
+and its [Ralph Loop agent](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/agents/ralph-loop.agent.md).
+The local
+[`RALPH_IMPLEMENTATION_PROMPT.md`](./RALPH_IMPLEMENTATION_PROMPT.md) is a
+compatibility pointer to that shared workflow and this project's source-of-
+truth files.
+
 The runner pins Copilot CLI to **GPT-6 Luna** (`gpt-6-luna`) with `--model`;
 it does not silently fall back if the model is unavailable to your account or
-organization. It reads `RALPH_IMPLEMENTATION_PROMPT.md` once per
-non-interactive iteration. For each pass, it creates a fresh
+organization. It selects the shared `ralph-loop` agent with `--agent` and
+reads the prompt pointer once per non-interactive iteration.
+For each pass, it creates a fresh
 `ralph/iteration-<n>-<main-sha>` branch and a sibling worktree from the current
 `main` tip. Copilot creates one implementation commit there; the runner stamps
 its commit link and text-line counts into

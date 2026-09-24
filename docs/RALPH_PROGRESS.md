@@ -139,6 +139,35 @@ Ralph-Status: IN_PROGRESS
 - **Documentation layout:** Moved project documents into `docs/`, with plugin
   notes under `docs/plugin/`; the root README is a landing page, while the
   Copilot TDD skill remains at its required `.github/skills/` path.
+- **Shared workflow guidance:** Incorporated `origin/main`'s DEC-011 by
+  replacing the copied local TDD/Ralph procedures with redirect pointers to
+  the canonical `copilot_skills` skill and Ralph Loop agent. Product
+  requirements and GUI criteria remain in this project's plan; implementation
+  evidence and decisions remain in the local progress/status/log files.
+- **Shared-agent Red:** Extended the mocked runner test to require
+  `--agent ralph-loop` and verify the agent prerequisite in `--check`.
+  `bash -n tests/ralph-iteration-worktrees.sh && bash
+  tests/ralph-status-reporting.sh` failed as expected because `--check` did not
+  report the shared Ralph Loop agent.
+- **Shared-agent Green:** The runner now requires the canonical user-level
+  agent file, selects it with `--agent ralph-loop`, and reports the configured
+  agent during `--check`. Re-ran `bash -n scripts/ralph-loop.sh
+  tests/ralph-iteration-worktrees.sh && bash tests/ralph-status-reporting.sh`;
+  two squash-merged iterations and the closed-PR blocker scenario passed.
+  The existing user-level agent profile is available at the documented
+  Copilot path; the mock verifies runner argument selection.
+- **Shared-agent Red:** Extended the mocked runner test to require
+  `--agent ralph-loop` and verify the agent prerequisite in `--check`.
+  `bash -n tests/ralph-iteration-worktrees.sh && bash
+  tests/ralph-status-reporting.sh` failed as expected because `--check` did not
+  report the shared Ralph Loop agent.
+- **Shared-agent Green:** The runner now requires the canonical user-level
+  agent file, selects it with `--agent ralph-loop`, and reports the configured
+  agent during `--check`. Re-ran `bash -n scripts/ralph-loop.sh
+  tests/ralph-iteration-worktrees.sh && bash tests/ralph-status-reporting.sh`;
+  two squash-merged iterations and the closed-PR blocker scenario passed.
+  The existing user-level agent profile is available at the documented
+  Copilot path; the mock verifies runner argument selection.
 - **Post-move verification:** `bash tests/ralph-status-reporting.sh`,
   `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_fetch_sc_plugin_api.py`,
   `bash plugin/ChaosOsc/Tests/run_tests.sh`,
@@ -180,7 +209,7 @@ Ralph-Status: IN_PROGRESS
   from the official arm64 release (checksum verified) and
   `gh auth status --hostname github.com` passes. A live runner preflight from
   clean `main` and real remote PR merge remain to be verified.
-- **Next task:** Commit and push the resolved migration branch, merge it into
-  `main` through the configured PR/merge-queue process, verify its merge
-  commit, remove the clean legacy worktree/branch, then restart the runner
-  from synchronized `main` in a visible Terminal window.
+- **Next task:** Begin iteration 3 with a test-first ChaosOsc sclang
+  class/help and deterministic NRT integration test. First provision and
+  verify `sclang`/`scsynth`; keep runtime loading, NRT, and platform gaps open
+  until they have direct evidence.
