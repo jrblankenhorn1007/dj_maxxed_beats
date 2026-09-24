@@ -55,6 +55,9 @@ wrapped in a `UGen::next` callback.
   (determinism required for reproducible candidate exploration and for tests).
 - Out-of-range `chaosAmount` values (for example `10.0` or `-5.0`) are clamped
   internally and still produce bounded, finite output.
+- A NaN `chaosAmount` falls back to the minimum documented value; a NaN `seed`
+  falls back to the default midpoint state (`0.5`). This prevents invalid
+  floating-point inputs from poisoning the oscillator's state or output.
 - Seeding at the map's exact fixed point (`0.0`) still escapes into varying
   output instead of producing silence forever.
 

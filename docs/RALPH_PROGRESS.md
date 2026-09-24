@@ -251,3 +251,38 @@ Ralph-Status: IN_PROGRESS
   `ralph/iteration-3-b2f6a9e` worktree untouched. The product increment remains
   a test-first ChaosOsc sclang class/help and deterministic NRT integration
   test; first provision and verify `sclang`/`scsynth`.
+
+## Iteration 3: deterministic handling of NaN ChaosOsc inputs
+
+- **Behavior under test:** A NaN `chaosAmount` must use the minimum supported
+  map parameter and produce finite output; a NaN seed must use the default
+  midpoint state. This prevents invalid floating-point inputs from corrupting
+  the DSP state while preserving existing handling of infinities.
+- **Red:** Added both assertions to
+  `plugin/ChaosOsc/Tests/test_chaos_osc_core.cpp` before changing production
+  code. `bash plugin/ChaosOsc/Tests/run_tests.sh` failed for the expected
+  behavior: the NaN control did not produce the minimum-parameter output, and
+  the NaN seed did not match the default-state sequence. The seven existing
+  assertions continued to pass.
+- **Green:** `chaososc::clampChaosAmount()` now maps NaN to
+  `kMinChaosAmount`; `ChaosOscCore::reset()` maps NaN seed to `0.5`. Re-ran
+  `bash plugin/ChaosOsc/Tests/run_tests.sh`: all nine assertions passed,
+  including both new regressions.
+- **Refactor verification:** No additional code refactor was needed for this
+  small change. After updating the DSP contract, decision history, and status
+  documentation, reran `bash plugin/ChaosOsc/Tests/run_tests.sh`; all nine
+  assertions passed. `bash plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh`
+  fetched/resolved 30 pinned API headers, built `ChaosOsc.scx`, and verified
+  the `_load` symbol; it emitted one unused-parameter warning from an upstream
+  header. `git diff --check` passed.
+- **Coverage and limitations:** Verified on macOS/arm64 with the available
+  C++17 compiler. `sclang` and `scsynth` are not installed, so the planned
+  sclang class/help and deterministic NRT integration test remain unimplemented;
+  plugin runtime loading, NRT rendering, and real-time audition remain
+  unverified. Windows 10 x64 and actual MacBook Neo coverage remain open.
+- **Decision:** Added DEC-020 in `docs/decision_log.md`, specifying the
+  deterministic NaN fallbacks while preserving prior finite/infinity
+  clamping behavior.
+- **Next task:** Provision and verify `sclang`/`scsynth`, then write a failing
+  ChaosOsc sclang class/help and deterministic NRT integration test before
+  implementing the wrapper's language-side interface.

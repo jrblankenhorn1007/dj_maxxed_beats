@@ -401,3 +401,24 @@ credentials and private user data out of this file.
   and verifies that the runner refreshes it and passes the clean integration
   worktree details to Copilot. A live iteration rerun is required to confirm
   the shared agent accepts this preflight handoff.
+
+### DEC-020 — Define deterministic fallbacks for NaN ChaosOsc inputs
+
+- **Date:** 2026-09-24
+- **Context:** The pure DSP core clamps finite out-of-range controls, but a
+  NaN `chaosAmount` bypassed both comparisons and contaminated the oscillator
+  state. A NaN `seed` likewise initialized the state to NaN, making every
+  subsequent output invalid.
+- **Decision:** Treat a NaN `chaosAmount` as the minimum documented map value
+  (`3.57`) and a NaN `seed` as the default midpoint (`0.5`). Preserve the
+  existing clamping behavior for finite controls and infinities.
+- **Alternatives:** Allow NaN to propagate, reject it through an error channel
+  unavailable to the audio callback, or change all non-finite values to the
+  fallback.
+- **Rationale:** Explicit deterministic fallbacks keep the real-time DSP
+  callback simple and ensure malformed floating-point controls cannot poison
+  oscillator state. Restricting the special case to NaN avoids changing
+  established infinity handling.
+- **Consequences:** Unit tests compare both fallbacks against their specified
+  reference behavior. The sclang class, plugin loading, and NRT integration
+  remain separate work requiring an installed SuperCollider toolchain.
