@@ -301,8 +301,9 @@ change important behavior.
 ## Test plan: TDD
 
 Use the repository skill at [`.github/skills/tdd/SKILL.md`](./.github/skills/tdd/SKILL.md)
-for every behavior-changing implementation slice. Work one observable behavior
-at a time:
+for every behavior-changing implementation slice, and the
+[visual application test plan](./VISUAL_TEST_PLAN.md) for GUI acceptance.
+Work one observable behavior at a time:
 
 1. Write the smallest test that specifies the next acceptance criterion.
 2. Run it before production code and capture a **Red** failure caused by the
@@ -328,6 +329,12 @@ at a time:
   Record any tests that require physical audio hardware as manual checks, and
   never treat subjective listening as a substitute for automated
   determinism/safety tests.
+- For GUI changes, launch the real app from SCIDE, exercise the actual visible
+  workflow, capture its native window, and inspect the screenshot. Before
+  completion, run the full visual scenario on Windows 10 x64 and an actual
+  MacBook Neo. Prefer platform accessibility automation; add a minimal
+  test-only CLI/in-process driver only if existing tools cannot reliably
+  exercise the GUI. A headless test or mock window is not visual sign-off.
 
 Use existing project test/build tools when suitable. If the new project lacks
 a test harness for a required behavior, write the test/specification first and
@@ -342,6 +349,13 @@ introduce only the smallest maintainable harness needed to run it.
 - **MacBook Neo:** verify the actual macOS version and Apple Silicon build,
   then repeat the same workflow. Do not infer device-specific compatibility
   solely from generic macOS support.
+- **Visual application sign-off:** before `RALPH_COMPLETE`, launch the real
+  packaged extension from SCIDE on Windows 10 x64 and an actual MacBook Neo.
+  Exercise the deterministic mock-provider composition/edit/render workflow,
+  capture fresh native screenshots, inspect the images, and record the
+  platform versions, results, and artifact references. If either platform or
+  screenshot inspection is unavailable, leave this criterion open and report
+  the blocker; do not infer success from logs or headless tests.
 - **SuperCollider integration:** install the extension through the documented
   Quark/extension workflow; open its GUI from SCIDE without patching/forking
   SuperCollider core.

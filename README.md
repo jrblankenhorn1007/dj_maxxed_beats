@@ -30,6 +30,7 @@ language environment cannot provide secure asynchronous API access.
 - [Development Ralph-loop prompt](./RALPH_IMPLEMENTATION_PROMPT.md)
 - [Copilot CLI Ralph runner](./scripts/ralph-loop.sh)
 - [TDD skill](./.github/skills/tdd/SKILL.md)
+- [Visual application test plan](./VISUAL_TEST_PLAN.md)
 - [Decision log](./decision_log.md)
 - [Current implementation status](./implementation_status.md)
 
@@ -80,6 +81,12 @@ Validate the runner's status-report workflow without making API calls:
 ```bash
 bash tests/ralph-status-reporting.sh
 ```
+
+Before the development loop can report completion, it must also launch the
+real SuperCollider GUI, run the visual scenario, capture and inspect native
+screenshots on Windows 10 x64 and an actual MacBook Neo. See the
+[visual application test plan](./VISUAL_TEST_PLAN.md); headless checks alone
+are not sufficient.
 
 The in-SuperCollider music-variation loop is a product feature and is not
 launched by this development runner.

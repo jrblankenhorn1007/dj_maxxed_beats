@@ -50,9 +50,16 @@ delete an assertion merely to get Green.
   Test early stop, candidate isolation, and that the original project remains
   unchanged unless the user confirms applying a candidate.
 - **GUI/manual behavior:** automate state and action behavior where the
-  available UI test framework permits. Record a manual checklist for
-  platform-specific layout/audio-device checks; manual listening complements,
-  but does not replace, deterministic tests.
+  available UI test framework permits. For GUI-affecting changes, launch the
+  actual app from SCIDE, exercise the visible workflow, capture its native
+  window, and inspect the screenshot. Before completion, run the full scenario
+  from `VISUAL_TEST_PLAN.md` on Windows 10 x64 and an actual MacBook Neo.
+  Prefer OS accessibility automation; only add a small test-only CLI or
+  in-process driver if needed, and do not add an unauthenticated production
+  control endpoint. Use mock providers and safe fixtures, never real API keys.
+  Record platform versions and screenshot artifact references in
+  `RALPH_PROGRESS.md` and `implementation_status.md`. Manual listening
+  complements, but does not replace, deterministic tests.
 
 Use the repository's existing test/build ecosystem where possible. If a
 required behavior has no test harness, first write a failing executable check

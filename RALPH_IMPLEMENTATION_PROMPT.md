@@ -131,6 +131,34 @@ PRODUCT REQUIREMENTS
   user-facing app. Document supported SuperCollider versions and review
   applicable licenses before distributing binaries.
 
+VISUAL APPLICATION VERIFICATION
+
+- Follow [`VISUAL_TEST_PLAN.md`](./VISUAL_TEST_PLAN.md). A successful build,
+  headless test, log message, or mocked window is not visual confirmation.
+- For every GUI-affecting iteration, launch the real app from SCIDE on an
+  available target platform, exercise the changed visible workflow, capture
+  the actual native application window, inspect the screenshot, and record
+  platform/version and artifact details in `RALPH_PROGRESS.md` and
+  `implementation_status.md`.
+- Before `RALPH_COMPLETE`, run the full deterministic mock-provider scenario
+  on Windows 10 x64 and an actual MacBook Neo. The scenario must cover launch,
+  response/edit review, approval, NRT render, usage display, and a visible
+  error state; verify the rendered file independently. Once implemented, also
+  exercise the bounded variation controls. Capture and visually inspect fresh
+  native screenshots. Never use real API keys or make billable calls for this
+  test.
+- Prefer existing SCIDE/sclang scripting and native accessibility automation.
+  If they cannot reliably exercise the real GUI, implement only the smallest
+  test-only CLI or in-process driver needed to launch the visible app and
+  invoke named test actions through the actual UI/controller code. Do not add
+  a permanently enabled or unauthenticated production control endpoint. Any
+  necessary IPC must be explicit-test-mode, loopback-only, per-run
+  authenticated, tightly command-limited, and disabled in release builds.
+- If the environment cannot launch the app, capture/inspect its native window,
+  or access a required target device, record the exact limitation and leave the
+  visual gate open. Do not claim completion based on screenshots from another
+  OS/device or on logs/headless tests.
+
 IMPLEMENTATION METHOD
 
 - First inventory the project and identify its actual language, tooling, and
@@ -222,6 +250,10 @@ IMPLEMENTATION_PLAN.md is implemented and verified, including:
 7. Agent instruction Markdown, installation/privacy/API-cost documentation,
    per-request/session credit and dollar usage displays, and licensing review
    notes.
+8. Visual sign-off under `VISUAL_TEST_PLAN.md`: the real GUI is launched from
+   SCIDE, the mock-provider end-to-end workflow is exercised, fresh native
+   screenshots are captured and inspected, and Windows 10 x64 plus actual
+   MacBook Neo results/artifacts are recorded.
 
 At the end of each iteration, update RALPH_PROGRESS.md and rewrite
 implementation_status.md before creating the implementation commit. If all

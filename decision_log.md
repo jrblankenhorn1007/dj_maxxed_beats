@@ -135,3 +135,25 @@ credentials and private user data out of this file.
   one runner-generated status commit; both are pushed together. The report
   counts added/deleted text lines, including documentation, and excludes
   binary changes.
+
+### DEC-009 — Require visual end-to-end sign-off for the real application
+
+- **Context:** Headless tests and successful builds cannot show that the
+  integrated SuperCollider GUI launches, lays out correctly, and supports the
+  user's actual workflow.
+- **Decision:** Make live SCIDE launch, deterministic end-to-end interaction,
+  native screenshot capture, and visual image inspection a required final
+  gate on Windows 10 x64 and an actual MacBook Neo. Use a mock provider and a
+  safe fixture so validation needs no real API credentials or billable calls.
+- **Alternatives:** Treat unit/integration tests or screenshots of a mock
+  window as sufficient, or expose a permanent network control API in the app.
+- **Rationale:** Only a real visible run can catch integration, layout, and
+  rendering problems. Existing accessibility automation should be tried
+  first; if insufficient, a narrowly scoped test-only CLI/in-process driver
+  can control the actual application without adding user-facing UI.
+- **Consequences:** GUI-affecting iterations include visual evidence when
+  available; completion requires both target-platform runs and screenshot
+  artifacts. Any necessary IPC is opt-in test-only, authenticated,
+  loopback-restricted, command-limited, and disabled in release builds.
+  Missing GUI/device/screen-capture access remains an explicit blocker rather
+  than a claimed pass.

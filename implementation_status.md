@@ -14,9 +14,10 @@
 ## Overall state
 
 The product is in planning and development-workflow setup. Requirements,
-architecture, the TDD process, decision logging, and the Copilot CLI runner are
-documented. No SuperCollider extension, agent GUI, provider integration,
-custom UGen, or music-generation implementation has been started.
+architecture, the TDD process, visual test plan, decision logging, and the
+Copilot CLI runner are documented. No SuperCollider extension, agent GUI,
+provider integration, custom UGen, or music-generation implementation has
+been started.
 
 ## Component status
 
@@ -33,6 +34,7 @@ custom UGen, or music-generation implementation has been started.
 | Review, approval, undo, and candidate isolation | Specified | Safety requirements are planned but not implemented. |
 | In-app variation loop | Specified | User-started, stoppable, isolated, and limited to four candidates by default; not implemented. |
 | Tests, builds, and release packaging | Not started | No product test/build harness or distributable extension exists. |
+| Visual application verification | Planned | `VISUAL_TEST_PLAN.md` requires live SCIDE GUI runs, native screenshots, and image inspection on both target platforms; no app exists to test yet. |
 
 ## Verification and platform coverage
 
@@ -47,6 +49,8 @@ custom UGen, or music-generation implementation has been started.
   evidence for this specific device.
 - **SuperCollider plugin build, NRT render, providers, and GUI:** Not
   implemented or validated.
+- **Native GUI screenshots:** Not available; the application/GUI has not yet
+  been implemented.
 
 ## Open questions and next task
 
