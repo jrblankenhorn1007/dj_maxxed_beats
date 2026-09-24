@@ -422,3 +422,27 @@ credentials and private user data out of this file.
 - **Consequences:** Unit tests compare both fallbacks against their specified
   reference behavior. The sclang class, plugin loading, and NRT integration
   remain separate work requiring an installed SuperCollider toolchain.
+
+### DEC-021 — Expose ChaosOsc through an audio-rate sclang class
+
+- **Date:** 2026-09-24
+- **Context:** The tested DSP core and compilable server-plugin wrapper had no
+  matching language class or help entry, so compositions could not express
+  the UGen through the normal SuperCollider graph-building API. This
+  environment has neither `sclang` nor `scsynth`, and no available package
+  installer was detected.
+- **Decision:** Add `ChaosOsc.ar(chaosAmount = 3.9, seed = 0.5)` as a standard
+  `UGen` class in the plugin's `Classes/` directory, with matching `HelpSource`
+  documentation. Keep this slice limited to the audio-rate constructor and
+  document that the seed is captured at Synth construction.
+- **Alternatives:** Defer the class until a runtime can be installed, expose a
+  control-rate constructor despite the server plugin's audio output, or add a
+  runtime/NRT claim without executing SuperCollider.
+- **Rationale:** The product requires a stable sclang-facing UGen interface;
+  adding the conventional class/help source is a useful, independently
+  reviewable increment. A source-contract test can verify the intended
+  signature, while runtime behavior remains an explicit open check.
+- **Consequences:** Source-level tests cover the class signature, defaults,
+  controls, and help content. Loading the class and plugin, NRT rendering,
+  and real-time audition still require a SuperCollider runtime and must not
+  be treated as verified.

@@ -286,3 +286,37 @@ Ralph-Status: IN_PROGRESS
 - **Next task:** Provision and verify `sclang`/`scsynth`, then write a failing
   ChaosOsc sclang class/help and deterministic NRT integration test before
   implementing the wrapper's language-side interface.
+
+## Iteration 4: ChaosOsc audio-rate sclang class and help
+
+- **Behavior under test:** SuperCollider compositions can call
+  `ChaosOsc.ar(chaosAmount, seed)` with documented defaults (`3.9`, `0.5`),
+  and the help entry describes the audio-rate output and construction-time
+  seed behavior.
+- **Red:** Added `tests/test_chaososc_language_contract.py` first and ran
+  `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_chaososc_language_contract.py`.
+  Both tests failed because the expected `plugin/ChaosOsc/Classes/ChaosOsc.sc`
+  and `plugin/ChaosOsc/HelpSource/Classes/ChaosOsc.schelp` files did not
+  exist. This was the missing interface under test, not a test-runner or
+  dependency failure.
+- **Green:** Added the audio-rate `ChaosOsc : UGen` class, forwarding
+  `chaosAmount` and `seed` to the registered server UGen, plus the matching
+  help page. Re-ran
+  `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_chaososc_language_contract.py`;
+  both source-contract tests passed after documenting the explicit signature.
+- **Refactor verification:** Tightened the constructor assertion to cover the
+  full method body. Re-ran the language contract tests together with
+  `bash plugin/ChaosOsc/Tests/run_tests.sh`; all source-contract tests and all
+  nine existing DSP assertions passed. `bash
+  plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh` also fetched/resolved 30
+  pinned headers, built `ChaosOsc.scx`, and verified `_load` (with one
+  unused-parameter warning in an upstream header). `git diff --check` passed.
+- **Runtime limitation:** `sclang` and `scsynth` are absent from `PATH`, and
+  `brew`, `port`, and `nix` installers are unavailable. This iteration does
+  not claim that SuperCollider loaded the class/help or plugin. NRT rendering,
+  live audition, Windows 10 x64, and MacBook Neo remain unverified.
+- **Decision:** Added DEC-021 documenting the audio-rate class/API and the
+  source-only verification boundary.
+- **Next task:** Provision a supported SuperCollider runtime, then write and
+  run a failing integration test that loads ChaosOsc from sclang and renders
+  a short deterministic NRT Score to WAV before extending the product further.

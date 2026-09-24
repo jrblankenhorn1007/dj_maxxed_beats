@@ -14,8 +14,10 @@ and help file.
 `plugin/ChaosOsc/Tests/test_chaos_osc_core.cpp`). The C++ server plugin
 wrapper (`plugin/ChaosOsc/Source/ChaosOsc.cpp`) builds against the pinned
 SuperCollider plugin API headers and exports the plugin load symbol. The
-sclang class, help file, loading in `scsynth`, NRT render, and real-time
-audition are not implemented or validated yet. See
+audio-rate sclang class and help file are now present under
+`plugin/ChaosOsc/Classes/` and `plugin/ChaosOsc/HelpSource/`. Their source
+contract is tested, but they have not been loaded in `sclang`; loading in
+`scsynth`, NRT rendering, and real-time audition remain unverified. See
 [`RALPH_PROGRESS.md`](../RALPH_PROGRESS.md) for exact verification evidence
 and [`decision_log.md`](../decision_log.md) for the selection rationale.
 
