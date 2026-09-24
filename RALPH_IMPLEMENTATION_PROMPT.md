@@ -21,18 +21,20 @@ to ask the user routine implementation questions.
 The local `supercollider/` checkout is an upstream reference at the revision
 recorded in IMPLEMENTATION_PLAN.md. Treat it as read-only. Do not patch or
 reformat upstream SuperCollider files to make this product work; build an
-independent extension/app against the documented plugin API.
+independent Quark/extension and plugin against the documented extension and
+plugin APIs.
 
 TWO DISTINCT LOOPS
 
-1. This development loop changes and tests application/plugin source code.
+1. This development loop changes and tests extension/plugin source code.
    Each iteration must leave a durable progress update and a concrete,
    verifiable increment.
 2. The in-app music exploration loop is a product feature. It starts only when
    the user explicitly asks to explore variations. It generates and renders a
-   bounded set of musical candidates using the app's fixed, tested C++ UGens.
+   bounded set of musical candidates using the extension's fixed, tested
+   C++ UGens.
    It is not an autonomous software-development loop and must never alter
-   application/plugin source code.
+   extension/plugin source code.
 
 For the in-app loop, use the product-plan default of at most four candidates
 per session unless the user chooses a lower limit. Let the user stop at any
@@ -47,30 +49,40 @@ sample-library curation.
 
 PRODUCT REQUIREMENTS
 
-- Deliver a cross-platform companion app for Windows 10 x64 and Apple Silicon
-  macOS, including validation on a MacBook Neo when that hardware is available.
+- Deliver a cross-platform SuperCollider Quark/extension for Windows 10 x64
+  and Apple Silicon macOS, including validation on a MacBook Neo when that
+  hardware is available. Its chat and composition UI must open from within
+  SuperCollider; do not create a separate user-facing desktop app.
+- Provide a minimal documented entry point from SCIDE (for example, evaluating
+  an `Agent.gui` class method). Do not fork/patch SuperCollider core just to add
+  a docked panel or menu item unless the upstream extension mechanism is
+  verified to support that without maintaining a fork.
 - Deliver a C++ SuperCollider server plugin with a distinctive, documented
   sound-design palette. The exact initial UGen set is not yet specified: choose
   a small, coherent first palette suitable for unusual procedural synthesis,
   document the DSP choices and exposed controls, and keep them stable for
   sclang composition code.
-- Do not put chat, OpenAI API calls, file access, or other blocking work in a
+- Do not put chat, provider API calls, file access, or other blocking work in a
   UGen/audio callback. The plugin performs DSP only. Test its intended use in
   both offline rendering and real-time audition.
+- Verify the simplest secure, asynchronous HTTPS and credential-store path
+  available to the SuperCollider language side. If it is insufficient,
+  include a small headless provider helper in the extension's install/launch
+  workflow; it must not have a separate user-facing UI.
 - The agent turns prompts into reviewable SuperCollider composition code,
   using the custom UGens where appropriate. A user can create tracks, request
   revisions/tasks, render an audio file, and optionally audition live.
 - Prefer file-based `.scd` composition and SuperCollider NRT `Score` rendering
-  for the MVP. Live control/OSC/Quark integration is optional unless required
-  by an implemented workflow. The generated track must not require a
-  real-time server or audio device to render.
+  for the MVP. The Quark/extension GUI is the primary user interface. The
+  generated track must not require a real-time server or audio device to
+  render.
 - Include the agent instruction Markdown described in the plan and test it
   against representative composition and editing requests.
 - Support independently managed OpenAI and Anthropic (Claude) API keys. Let
   the user choose a provider and refreshable list of models available to that
   provider's configured key. Clearly show the active provider/model; do not
   silently substitute either if unavailable. Use separate provider adapters
-  behind a common app interface.
+  behind a common extension interface.
 - Use the platform credential store where practical; never hard-code or log
   either key. Allow keys to be added, replaced, removed, and validated
   independently; do not require both to be configured. Disclose API usage,
@@ -79,18 +91,20 @@ PRODUCT REQUIREMENTS
   ask for clear user approval before executing generated code or applying a
   candidate to the original project. Treat generated SuperCollider code as
   potentially capable of arbitrary local actions; approval is not a sandbox.
-- Keep the app, Quark (if any), and plugin independently installable/updateable.
-  Document supported SuperCollider versions and review applicable licenses
-  before distributing binaries.
+- Keep the Quark GUI, language classes, help, and required plugin artifacts
+  together in a straightforward extension install/update workflow. Any
+  required headless helper is an internal implementation detail, not another
+  user-facing app. Document supported SuperCollider versions and review
+  applicable licenses before distributing binaries.
 
 IMPLEMENTATION METHOD
 
 - First inventory the project and identify its actual language, tooling, and
-  test/build commands. The workspace may not yet contain an app scaffold. Do
-  not assume a framework or overwrite user files; select and justify a
-  maintainable cross-platform stack before broad implementation.
-- Break the plan into small vertical slices: plugin and first UGen; an
-  sclang/NRT composition-render prototype using that UGen; app/API workflow;
+  test/build commands. The workspace may not yet contain an extension
+  scaffold. Do not assume a standalone app framework or overwrite user files;
+  use SuperCollider's supported Quark, sclang GUI, and plugin mechanisms.
+- Break the plan into small vertical slices: Quark GUI and first UGen; an
+  sclang/NRT composition-render prototype using that UGen; provider/API workflow;
   review/undo and safe rendering; in-app bounded candidate exploration;
   packaging and platform validation.
 - Keep state across iterations in `RALPH_PROGRESS.md` at the workspace root.
@@ -122,7 +136,7 @@ IMPLEMENTATION METHOD
   different platform.
 - Handle errors explicitly. Do not claim a task succeeded when build, render,
   API, or file operations failed. Do not silently skip a plan requirement.
-- Do not implement or run an unbounded in-app sampling session during
+- Do not implement or run an unbounded in-SuperCollider sampling session during
   development. Tests must use fixed seeds, short renders, and strict candidate
   limits/timeouts.
 
@@ -131,8 +145,9 @@ DEFINITION OF DONE
 Do not declare completion until every applicable acceptance criterion in
 IMPLEMENTATION_PLAN.md is implemented and verified, including:
 
-1. The companion app, secure provider-key workflows, provider switching, and
-   available-model selection for OpenAI and Anthropic.
+1. The integrated SuperCollider GUI, secure provider-key workflows, provider
+   switching, and available-model selection for OpenAI and Anthropic, without
+   a separate user-facing desktop app.
 2. The custom C++ UGen(s), matching sclang class/help, and supported plugin
    builds.
 3. A procedural composition using the custom UGen(s) rendered to a playable

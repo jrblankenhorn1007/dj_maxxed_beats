@@ -12,23 +12,31 @@ API keys, and lets the user choose a provider and an available model.
 
 ## Recommended architecture
 
-Treat this as a small, coordinated system rather than putting the AI agent
-inside a server plugin:
+Make the user experience live inside SuperCollider, while keeping network
+requests and DSP in the appropriate processes:
 
-1. **Agent companion app** — owns the chat UI, provider/model selection,
-   provider-specific API requests and credentials, project context, change
-   previews, and approval flow. It asks the selected model to write or edit
-   SuperCollider composition code.
-2. **SuperCollider composition/rendering** — `sclang` runs the composition
-   logic and can create a `Score`; `scsynth` renders that score to an audio file
-   in non-real-time (NRT) mode. The user can optionally audition material
-   through a real-time server.
-3. **SuperCollider language package (optional)** — a Quark can provide reusable
-   composition helpers or an OSC bridge if the companion app needs to inspect
-   or control a running session.
-4. **C++ server plugin (core audio component)** — supplies the distinctive,
-   custom sound-design UGens. Their controls are exposed to sclang so generated
-   compositions can use them. It is not the agent, chat UI, or OpenAI client.
+1. **SuperCollider extension (primary product):** an installable Quark provides
+   the in-SuperCollider agent window, language classes, help, composition
+   helpers, and platform-specific plugin binaries. The user opens it from the
+   SuperCollider IDE; there is no separate user-facing companion app.
+2. **C++ server plugin (core audio component):** supplies the distinctive
+   sound-design UGens, exposed to sclang for procedural compositions. It
+   performs DSP only, not chat or web requests.
+3. **Provider/API bridge (implementation detail):** first check whether the
+   supported SuperCollider language environment can make secure asynchronous
+   HTTPS requests and use the platform credential stores. If it cannot, bundle
+   a small headless helper with the extension to handle provider API calls and
+   credentials. It has no separate user-facing UI and communicates locally
+   with the SuperCollider language client.
+4. **Composition/rendering:** `sclang` builds the composition and NRT `Score`;
+   `scsynth` renders audio to a file. Live audition is optional.
+
+Keep the extension self-contained from the user's point of view: one
+SuperCollider installation workflow and one agent window. Do not fork or modify
+SuperCollider core for the initial version. Launch the UI from the IDE through
+a simple documented entry point (for example, an `Agent.gui` class method);
+defer a docked IDE panel or core menu changes unless the upstream extension
+surface is verified to support them without maintaining a core fork.
 
 Custom C++ sound design is a core requirement. The first sound-design phase
 will define a distinctive palette and choose the initial UGen(s); examples to
@@ -37,16 +45,17 @@ custom distortion or spectral processing. The agent should compose with a
 stable, tested set of UGen controls rather than generate new C++ source for
 each track. SuperCollider's *Writing Unit Generators* guide explains that
 UGens run in the audio server's real-time context, where blocking calls are
-unsafe. Therefore, model calls and project editing stay in the companion app;
-the UGen performs audio DSP only. The same composition can be auditioned live
-or rendered offline.
+unsafe. Therefore, model calls and project editing stay in the sclang-side
+agent workflow or a headless provider helper; the UGen performs audio DSP only.
+The same composition can be auditioned live or rendered offline.
 
 ## Proposed user workflow
 
-1. The user describes a track or opens an existing SuperCollider project.
+1. From the SuperCollider IDE, the user opens the agent window and describes a
+   track or selects an existing `.scd` project.
 2. The user configures an OpenAI or Anthropic API key, selects that provider,
-   and chooses an available model. The app explains that prompts and selected
-   project context are sent to the selected provider.
+   and chooses an available model. The extension explains that prompts and
+   selected project context are sent to that provider.
 3. The agent proposes a musical plan (for example, sections, tempo, motifs,
    instruments, and duration) and generates or edits `.scd` composition code
    that can use the custom sound-design UGens.
@@ -61,10 +70,10 @@ or rendered offline.
 
 These are distinct features with different jobs:
 
-1. **Development Ralph loop (outside the app):** repeatedly implements and
+1. **Development Ralph loop (outside SuperCollider):** repeatedly implements and
    verifies the product against this plan and
    [`RALPH_IMPLEMENTATION_PROMPT.md`](./RALPH_IMPLEMENTATION_PROMPT.md). It
-   changes application code; it does not generate music as its task. Each
+   changes extension/plugin code; it does not generate music as its task. Each
    completed iteration ends in its own validated commit pushed to the
    configured project GitHub repository.
 2. **In-app music exploration loop:** when the user explicitly starts a
@@ -84,18 +93,21 @@ does not mean slicing or classifying a user's imported audio samples.
 
 ## Component responsibilities
 
-### Companion app
+### In-SuperCollider agent GUI
 
-- Manage conversations and the selected project.
+- This is an in-SuperCollider GUI, not a separate desktop app. Provide a small
+  documented entry point to open it from SCIDE and a workflow that does not
+  require editing SuperCollider core.
+- Manage conversations and the selected project in the agent window.
 - Send prompts and only the project context explicitly selected or needed for
   the task to the provider selected by the user.
 - Provide provider adapters for OpenAI and Anthropic (Claude), with a common
-  app-facing interface for supported chat, streaming, and structured-edit
+  extension-facing interface for supported chat, streaming, and structured-edit
   capabilities. Keep provider-specific API behavior behind these adapters.
 - Fetch and refresh each configured provider's available model list using its
   model-list API; show provider and model IDs clearly, and persist the selected
   model separately for each provider. Filter or label models according to
-  capabilities the app requires. Do not silently substitute a model if the
+  capabilities the extension requires. Do not silently substitute a model if the
   selected model is unavailable.
 - Produce reviewable composition/code changes, preserve backups/undo, and
   avoid modifying files outside the selected project.
@@ -105,6 +117,9 @@ does not mean slicing or classifying a user's imported audio samples.
   an unsuccessful action as completed.
 - Keep provider/API details behind an interface so a provider or model can be
   changed without changing the SuperCollider integration.
+- Keep HTTP work asynchronous and off the audio thread. If a headless helper is
+  necessary, package/start/stop it as part of the extension so users do not
+  install or operate a separate UI application.
 
 ### Provider and API-key handling
 
@@ -124,15 +139,19 @@ does not mean slicing or classifying a user's imported audio samples.
 
 ### SuperCollider Quark / language bridge
 
-- Prefer generating ordinary `.scd` files for the first version; a Quark is
-  optional unless shared composition helpers or in-session control are needed.
-- If a bridge is needed, provide a minimal, documented protocol for connection
-  status and approved project actions. Use OSC for local app-to-sclang
-  communication where it fits.
+- Make the Quark/extension the primary user-facing integration. It includes
+  the GUI, language classes, help, and the plugin artifacts needed for the
+  supported platform. Prefer ordinary `.scd` project files for generated
+  compositions.
+- Verify the simplest secure, asynchronous provider-request path available to
+  sclang. If a helper is necessary, keep it headless, bundled, and limited to
+  model/key operations; use a minimal documented local IPC protocol.
+- Use OSC only when it is a suitable part of the selected local communication
+  design; do not add an extra bridge process without need.
 - Bind to loopback only by default, validate message shape and size, and avoid
   accepting commands from arbitrary network peers.
-- Keep the bridge optional: code generation and offline rendering should work
-  without an already-running interactive SuperCollider session.
+- Code generation and offline rendering must not depend on a separate
+  user-facing desktop application.
 - Separate proposing code from evaluating code; require an explicit user
   approval before executing generated composition code or starting a render.
 
@@ -175,7 +194,10 @@ change important behavior.
 ### 0. Confirm the product boundary
 
 - Identify the first supported SuperCollider release(s), project format, and
-  whether the agent edits files through a companion window or inside SC IDE.
+  the exact Quark entry point and supported way to open its GUI from SCIDE.
+- Verify whether sclang can provide secure asynchronous HTTPS and OS
+  credential-store access. Select the smallest supported implementation; only
+  add a bundled headless helper if the language-side route is insufficient.
 - Define the first render target (for example, stereo WAV, sample rate, and
   bit depth) and whether live preview is part of the MVP.
 - Decide how generated arrangements are represented: direct `.scd` code,
@@ -191,18 +213,21 @@ change important behavior.
 - Build a minimal C++ UGen with its sclang class and help, then use it in a
   procedural composition, convert that composition to a `Score`, and
   successfully render a WAV using NRT mode.
+- Install a minimal Quark/extension and open a small GUI from SCIDE without
+  changing SuperCollider core.
 - Verify the workflow does not need a running real-time server or audio device.
 - Verify the custom UGen also works in a real-time audition.
-- Prototype a minimal Quark/OSC handshake only if the selected workflow
-  requires in-session control.
-- Confirm where optional extensions are installed and how users restart/reload
-  the language and server.
+- Prototype the provider-request path and local helper IPC only if required by
+  the selected networking/credential implementation.
+- Confirm where the extension is installed and how users restart/reload the
+  language and server.
 - Document exact supported SC versions and plugin binary compatibility.
 
 ### 2. Implement the safe agent workflow
 
-- Add prompt submission, display of the proposed musical plan, response
-  streaming/status, and token management.
+- Add the in-SuperCollider agent window with prompt submission, the proposed
+  musical plan, response streaming/status, provider/model selection, and
+  secure key management.
 - Generate a composition and reviewable file edits; validate paths remain
   under the selected project and show a diff before writing.
 - Add backups/undo and clear handling for malformed responses, API errors,
@@ -210,21 +235,21 @@ change important behavior.
 - Add explicit confirmation before evaluating generated code and generating
   audio.
 
-### 3. Complete core sound-design plugin and optional live bridge
+### 3. Complete the integrated extension and core sound-design plugin
 
-- Implement and package the initial C++ sound-design UGen(s), sclang classes,
-  parameter documentation, and test SynthDefs together.
-- Implement local OSC and a Quark only if needed for optional live audition,
-  status, or approved in-session actions; test malformed, oversized, and
-  unauthorized messages.
+- Package the Quark GUI, sclang classes, help, provider client, and initial C++
+  sound-design UGen(s) as one straightforward SuperCollider extension. Keep
+  any required headless helper internal to that install/launch workflow.
+- Test malformed, oversized, and unauthorized local requests if the selected
+  architecture uses local IPC.
 - Keep slow or unpredictable work outside the real-time audio thread.
 
 ### 4. Package, document, and release
 
 - Provide installation, provider/API-key setup and removal, privacy, API-cost,
   troubleshooting, and uninstall instructions.
-- Package the companion app, Quark (if used), and required plugin as distinct
-  components so users can update or remove them independently.
+- Make the extension and its required plugin/helper artifacts simple to
+  install, update, and remove together; document platform-specific prerequisites.
 - Review licensing for SuperCollider, any reused example/plugin code,
   dependencies, and distributed binaries before release. SuperCollider itself
   is GPL-3.0; this plan does not assume that generated audio is GPL-licensed.
@@ -232,12 +257,15 @@ change important behavior.
 ## Validation and acceptance criteria
 
 - **Windows 10 x64:** install, launch, save/remove provider keys, choose a
-  provider/model, connect to the chosen SC version, generate a composition,
+  provider/model, open the agent window from SCIDE, generate a composition,
   render/play the output file, apply/undo an edit, and handle API/render
-  failures.
+  failures without a separate user-facing app.
 - **MacBook Neo:** verify the actual macOS version and Apple Silicon build,
   then repeat the same workflow. Do not infer device-specific compatibility
   solely from generic macOS support.
+- **SuperCollider integration:** install the extension through the documented
+  Quark/extension workflow; open its GUI from SCIDE without patching/forking
+  SuperCollider core.
 - **Offline audio:** a prompt can produce a valid composition using the custom
   UGen(s) and a playable audio file without a real-time server or audio device;
   the output duration and format match the selected render settings.
@@ -250,9 +278,10 @@ change important behavior.
   compositions.
 - **Real-time audition:** the same custom UGen(s) run without audio dropouts
   under representative live workloads on both target platforms.
-- **Optional SuperCollider integration:** Quark installs cleanly; OSC uses
-  loopback by default; valid requests work; invalid/untrusted requests are
-  rejected.
+- **Local provider bridge (if needed):** runs asynchronously, stays on
+  loopback or another appropriately restricted local IPC transport, validates
+  requests, and keeps API keys out of logs and audio processing; it does not
+  require a separate user-facing desktop application.
 - **Audio safety:** the UGen produces stable output under real-time load and
   does no network or blocking I/O.
 - **Data safety:** provider API keys are absent from project files, logs,
@@ -281,6 +310,10 @@ change important behavior.
 - NRT rendering is appropriate when all timed events can be prepared in
   advance. Compositions that depend on live user input or server replies need
   real-time mode instead.
+- SuperCollider provides extension folders, Quarks, sclang GUI classes, and
+  loadable server plugins. Secure HTTPS/model APIs and OS credential-store
+  access must be verified; avoid a core fork if a Quark GUI plus a minimal
+  headless helper provides the required integrated workflow.
 - Review the GPL-3.0 and third-party dependency terms before distributing
   SuperCollider binaries, modified SuperCollider, or derived plugin code.
 
