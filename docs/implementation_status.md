@@ -10,21 +10,22 @@
 - **Completed implementation iteration:** `3`
 - **Iteration commit:** [`70fb4c2`](https://github.com/jrblankenhorn1007/dj_maxxed_beats/commit/70fb4c257e701b8adcb4c107ae5f95f1251f6f25)
 - **Lines changed:** `+143 / -70` (Git numstat; text files; includes documentation; binary files excluded)
-- **Loop state:** Iteration 3's implementation is ready for the runner-managed status commit and remote review. The project-wide next task remains SuperCollider language/NRT integration.
+- **Loop state:** Iteration 4's implementation is ready for the runner-managed status commit and remote review. The next task is runtime-backed SuperCollider/NRT integration.
 
 ## Overall state
 
 The project-facing documents are organized in `docs/` (plugin notes in
 `docs/plugin/`); the root README is a short entry point. The product has a
-unit-tested ChaosOsc DSP core and a thin C++ server-plugin wrapper that builds
-against the pinned SuperCollider API headers. Audio-rate `chaosAmount` values
-are applied per sample, `seed` is captured at UGen construction, and NaN
-controls/seeds now use deterministic safe fallbacks. The local environment
-does not have `sclang` or `scsynth`, so plugin loading, sclang classes/help,
-NRT rendering, and real-time audition remain unimplemented or unverified.
-The runner uses a fresh branch/worktree per iteration, opens a pull request,
-requests the configured GitHub merge process, and verifies the remote merge
-before reporting completion.
+unit-tested ChaosOsc DSP core, a thin C++ server-plugin wrapper that builds
+against the pinned SuperCollider API headers, and the audio-rate sclang class
+and help source. Audio-rate `chaosAmount` values are applied per sample,
+`seed` is captured at UGen construction, and NaN controls/seeds use
+deterministic safe fallbacks. The language source contract and DSP core pass
+their tests. The local environment has neither `sclang` nor `scsynth`, so
+SuperCollider loading and rendering remain unverified. The runner uses a
+fresh branch/worktree per iteration, opens a pull request, requests the
+configured GitHub merge process, and verifies the remote merge before
+reporting completion.
 
 ## Component status
 
@@ -32,7 +33,7 @@ before reporting completion.
 | --- | --- | --- |
 | Product architecture and acceptance criteria | Documented | Quark-first, in-SuperCollider experience; no SuperCollider core fork planned. |
 | Development process | Set up | Canonical TDD/Ralph instructions and the `ralph-loop` agent live in the shared `copilot_skills` repository. The runner checks a clean synchronized `main`, selects the shared agent/model, creates a fresh branch/worktree, opens a PR, requests the configured merge, and verifies its merge commit on `origin/main`. Mocked tests cover preflight, pending checks, remote merge verification, marker ordering, and blocker reporting. |
-| Custom C++ server plugin / UGen palette | In progress | ChaosOsc DSP core and `SCUnit` wrapper exist (`plugin/ChaosOsc/Source/`). The wrapper reads audio-rate controls per sample and captures the seed at construction. Finite out-of-range controls are clamped; NaN controls and seeds use deterministic fallbacks. DSP tests pass and the plugin compiles against the pinned API headers with `_load` exported. sclang class/help, runtime loading, NRT, and real-time audition are not implemented/validated. |
+| Custom C++ server plugin / UGen palette | In progress | ChaosOsc DSP core and `SCUnit` wrapper exist (`plugin/ChaosOsc/Source/`). The wrapper reads audio-rate controls per sample and captures the seed at construction. Finite out-of-range controls are clamped; NaN controls and seeds use deterministic fallbacks. The `ChaosOsc.ar` sclang class and help source exist and pass source-contract tests. DSP tests pass and the plugin compiles against pinned API headers with `_load` exported. Loading, NRT, and real-time audition remain unverified. |
 | Quark packaging and SCIDE entry point | Not started | No Quark classes or GUI exist. |
 | sclang composition and NRT rendering | Not started | No composition generation or render workflow exists; blocked on the missing SuperCollider toolchain. |
 | OpenAI and Anthropic providers/model selection | Not started | No API adapters, model discovery, or user settings exist. |
@@ -50,6 +51,10 @@ before reporting completion.
   finite clamping, fixed-point escape, per-sample block controls, NaN control
   fallback to the minimum parameter, and NaN seed fallback to the default
   midpoint. Verified with the available C++17 compiler on macOS/arm64.
+- **ChaosOsc language source:** `PYTHONDONTWRITEBYTECODE=1 python3
+  tests/test_chaososc_language_contract.py` passed (2 tests), checking the
+  `ChaosOsc.ar` signature/defaults, audio-rate construction, and help
+  descriptions. This is source-contract coverage, not `sclang` execution.
 - **Plugin build:** `bash
   plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh` fetched/resolved 30 pinned
   SuperCollider API headers, built `ChaosOsc.scx`, and verified `_load`. It
@@ -63,28 +68,35 @@ before reporting completion.
   refresh, runner-owned main-worktree preflight, PR merges, retrying pending
   requirements, merge-SHA verification, marker ordering, and closed-PR
   blocker reporting.
-- **Current iteration:** `bash plugin/ChaosOsc/Tests/run_tests.sh` passed after
-  the implementation and documentation update; `git diff --check` passed.
+- **Current iteration:** `PYTHONDONTWRITEBYTECODE=1 python3
+  tests/test_chaososc_language_contract.py` and
+  `bash plugin/ChaosOsc/Tests/run_tests.sh` passed. `bash
+  plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh` built the plugin against
+  30 pinned API headers and verified `_load` (one unused-parameter warning in
+  an upstream header); `git diff --check` passed.
 - **Windows 10 x64:** Not validated.
 - **MacBook Neo:** Not validated; a generic Apple Silicon build is not device-
   specific evidence.
 - **SuperCollider plugin runtime, sclang class/help, NRT render, and GUI:** Not
-  implemented or validated. `sclang`/`scsynth` are not installed; no local
-  upstream `supercollider/` checkout is present in this worktree.
+  runtime-validated. The class/help sources exist, but `sclang`/`scsynth` are
+  not installed; no local upstream `supercollider/` checkout is present in
+  this worktree.
 - **Native GUI screenshots:** Not available; the application/GUI has not yet
   been implemented.
 
 ## Blockers and risks
 
-- No SuperCollider runtime (`sclang`/`scsynth`) or local reference source
-  checkout is available in this development environment. This blocks loading
-  and testing the plugin in `scsynth`, sclang classes, NRT rendering, and the
-  GUI. The C++ compile against public headers is not runtime evidence.
+- No SuperCollider runtime (`sclang`/`scsynth`) or package installer (`brew`,
+  `port`, or `nix`) is available in this development environment. The
+  audio-rate sclang class/help source has been added but cannot be loaded or
+  exercised; this blocks plugin runtime validation and NRT rendering. The C++
+  compile against public headers and source-contract test are not runtime
+  evidence.
 
 ## Open questions and next task
 
 - Provision and verify `sclang`/`scsynth`, then write a failing integration
-  test for the ChaosOsc sclang class/help and deterministic NRT render before
-  implementing that language-side interface.
+  test that loads the ChaosOsc plugin/class and renders a deterministic short
+  NRT Score before expanding the language-side interface.
 - Verify the secure asynchronous HTTPS and credential-store options available
   to sclang; use the planned headless helper only if needed.

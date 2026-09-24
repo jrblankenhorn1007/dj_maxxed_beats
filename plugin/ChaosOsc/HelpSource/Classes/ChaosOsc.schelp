@@ -1,0 +1,37 @@
+TITLE:: ChaosOsc
+categories:: UGens>Generators
+summary:: Logistic-map chaotic oscillator.
+
+DESCRIPTION::
+ChaosOsc generates a deterministic chaotic signal using a logistic map. It is
+provided by the ChaosOsc server plugin and produces an audio-rate signal in
+the range -1 to 1.
+
+The constructor is ::ChaosOsc.ar(chaosAmount, seed)::.
+
+CLASSMETHODS::
+
+METHOD:: ar
+Create an audio-rate chaotic oscillator.
+
+ARGUMENT:: chaosAmount
+The logistic-map growth rate, clamped by the plugin to the range 3.57 to 3.999.
+Defaults to 3.9. The input is read for every sample and can be modulated at
+audio rate.
+
+ARGUMENT:: seed
+The initial map state, normally in the open interval 0 to 1. Defaults to 0.5.
+The seed is captured when the Synth is created; changing the input afterward
+does not reseed the oscillator.
+
+RETURNS::
+An audio-rate UGen.
+
+EXAMPLES::
+
+code::
+{
+    var signal = ChaosOsc.ar(3.9, 0.37);
+    (signal * 0.1) ! 2
+}.play;
+::
