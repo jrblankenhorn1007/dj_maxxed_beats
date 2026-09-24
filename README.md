@@ -31,6 +31,7 @@ language environment cannot provide secure asynchronous API access.
 - [Copilot CLI Ralph runner](./scripts/ralph-loop.sh)
 - [TDD skill](./.github/skills/tdd/SKILL.md)
 - [Decision log](./decision_log.md)
+- [Current implementation status](./implementation_status.md)
 
 The development loop builds and tests the extension. The in-app music loop
 generates and renders a limited set of musical variations; these are separate
@@ -46,9 +47,17 @@ scripts/ralph-loop.sh --check
 ```
 
 The runner reads `RALPH_IMPLEMENTATION_PROMPT.md` on each pass and starts one
-non-interactive Copilot CLI iteration at a time. There is no iteration-count
-limit: it continues until Copilot reports verified completion or a blocker, a
-real error occurs, or you stop it with Ctrl-C:
+non-interactive Copilot CLI iteration at a time. Each pass rewrites
+[`implementation_status.md`](./implementation_status.md) as a current-state
+snapshot, not an append-only history. Copilot creates one implementation
+commit; after validating it, the runner stamps that commit's link and text-line
+additions/deletions into the snapshot, creates a status-only commit, and pushes
+both commits. Detailed test evidence remains in `RALPH_PROGRESS.md`; decisions
+remain in `decision_log.md`.
+
+There is no iteration-count limit: the runner continues until Copilot reports
+verified completion or a blocker, a real error occurs, or you stop it with
+Ctrl-C:
 
 ```bash
 scripts/ralph-loop.sh --auto
@@ -59,11 +68,18 @@ scripts/ralph-loop.sh --auto
 that affect files outside the repository. The runner does not enable
 `--allow-all-paths`, but that flag alone would not contain shell commands.
 Review the prompt and run only in a trusted environment. It requires a clean
-working tree, one new commit per pass, and a successful push to `origin`; it
-stops on the prompt's `RALPH_COMPLETE` or `RALPH_BLOCKED` marker or an invalid
+working tree, one implementation commit plus the runner-generated status
+commit per pass, and a successful push of both to `origin`. The runner stops
+on the prompt's `RALPH_COMPLETE` or `RALPH_BLOCKED` marker or an invalid
 iteration. Each pass can consume Copilot usage. Review the final changes and
 tests yourself; a model's completion marker is not independent proof that
 every requirement is met.
+
+Validate the runner's status-report workflow without making API calls:
+
+```bash
+bash tests/ralph-status-reporting.sh
+```
 
 The in-SuperCollider music-variation loop is a product feature and is not
 launched by this development runner.

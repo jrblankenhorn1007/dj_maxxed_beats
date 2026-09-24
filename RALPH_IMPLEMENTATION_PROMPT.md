@@ -28,8 +28,21 @@ production code before the relevant failing test has been observed.
 
 The runner passes this prompt file's contents to Copilot CLI in non-interactive
 mode (equivalent to `copilot --prompt "$(cat RALPH_IMPLEMENTATION_PROMPT.md)"`).
-Each invocation is exactly one implementation iteration. The runner, not the
-agent, checks the iteration boundary and pushes the commit.
+Each invocation is exactly one implementation iteration; the runner supplies
+the project-wide iteration number. Copilot creates one implementation commit.
+The runner then finalizes the status metadata in a separate status-only commit
+and pushes both commits.
+
+Read `implementation_status.md` at the start of each iteration. Rewrite it as
+a concise current-state snapshot during every iteration; do not append an
+iteration history. Update the component state, verification/platform coverage,
+blockers, and next task as appropriate. The runner requires the status file to
+change in the implementation commit. Preserve these exact runner-managed
+fields for the runner to replace after that commit:
+
+- `Completed implementation iteration`
+- `Iteration commit`
+- `Lines changed`
 
 The local `supercollider/` checkout is an upstream reference at the revision
 recorded in IMPLEMENTATION_PLAN.md. Treat it as read-only. Do not patch or
@@ -134,21 +147,34 @@ IMPLEMENTATION METHOD
   slices with evidence, exact test/build results, current blockers,
   decisions/assumptions, and the single best next task. Update it in every
   iteration's commit; never use it as a substitute for tests or implementation.
+- Keep [`implementation_status.md`](./implementation_status.md) at the
+  workspace root as a single current-state snapshot, not an append-only log.
+  Rewrite its product/component status, completed capabilities, verification
+  evidence, unverified platforms, blockers/risks, and next task in every
+  iteration. Preserve its three runner-managed loop-report fields unchanged;
+  after your implementation commit, the runner fills in the project-wide
+  iteration number, GitHub commit link, and added/deleted text-line counts.
+  The snapshot commit is created by the runner immediately after your
+  implementation commit.
 - Maintain the append-only [`decision_log.md`](./decision_log.md) in the
   workspace root. Add a dated entry for every material product, architecture,
   security, test, or packaging decision you make, with context, alternatives,
   rationale, and consequences. Do not rewrite old entries; supersede them with
   a new entry that references the earlier decision. Keep secrets out. Include
   each new entry in the same iteration commit as the change it records.
-- Make exactly one new commit for each iteration on the current project branch,
-  including its progress update. Use a specific commit message and include the
-  required `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`
-  trailer. Do not push; the runner validates and pushes the iteration commit.
-  Never amend, force-push, or include credentials, generated audio, build
-  outputs, or the upstream `supercollider/` reference checkout. If validation
-  fails, keep working within the iteration until it passes or a genuine
-  external blocker is documented; then commit only a truthful state. The
-  runner stops if there is not exactly one new commit or if the tree is dirty.
+- Make exactly one new implementation commit for each iteration on the current
+  project branch, including its progress update, status snapshot, and any
+  decision-log entry. Use a specific commit message and include the required
+  `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>` trailer.
+  Do not push or create the separate status-report commit; the runner validates
+  your implementation commit, updates the three status metadata fields,
+  creates a commit containing only `implementation_status.md`, and pushes both
+  commits. Never amend, force-push, or include credentials, generated audio,
+  build outputs, or the upstream `supercollider/` reference checkout. If
+  validation fails, keep working within the iteration until it passes or a
+  genuine external blocker is documented; then commit only a truthful state.
+  The runner stops if the implementation commit is not a direct child, does not
+  update the status snapshot, or leaves the tree dirty.
 - Before changing files, inspect the current changes. Preserve user work.
   Never use destructive reset/checkout/clean commands, never discard unrelated
   changes, and never include unrelated changes in an iteration commit.
@@ -170,10 +196,11 @@ IMPLEMENTATION METHOD
   non-interactive mode with `--allow-all-tools`; shell commands can still
   affect paths outside the project. Do not use `--allow-all-paths`, destructive
   Git commands, or commands that operate outside the project. The runner
-  requires a clean tree, one commit per pass, and a successful push. The human
-  launching the loop must run it only in a trusted environment and monitor it. There is no iteration-count
-  limit; the runner stops on the completion/blocker markers, operational
-  errors, or manual interruption.
+  requires a clean tree, one implementation commit plus one status-report
+  commit per pass, and a successful push of both. The human launching the loop
+  must run it only in a trusted environment and monitor it. There is no
+  iteration-count limit; the runner stops on the completion/blocker markers,
+  operational errors, or manual interruption.
 
 DEFINITION OF DONE
 
@@ -196,8 +223,10 @@ IMPLEMENTATION_PLAN.md is implemented and verified, including:
    per-request/session credit and dollar usage displays, and licensing review
    notes.
 
-At the end of each iteration, update RALPH_PROGRESS.md. If all criteria pass,
-report completion with test evidence and the remaining platform caveats, set
+At the end of each iteration, update RALPH_PROGRESS.md and rewrite
+implementation_status.md before creating the implementation commit. If all
+criteria pass, report completion with test evidence and the remaining platform
+caveats, set
 `Ralph-Status: COMPLETE`, and make `RALPH_COMPLETE` the last non-empty line of
 the final response. If blocked, report the specific blocker, what was tried,
 and the next actionable step, set `Ralph-Status: BLOCKED`, and end with

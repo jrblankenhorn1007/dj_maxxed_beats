@@ -75,8 +75,13 @@ These are distinct features with different jobs:
    [`RALPH_IMPLEMENTATION_PROMPT.md`](./RALPH_IMPLEMENTATION_PROMPT.md), using
    [the Copilot CLI runner](./scripts/ralph-loop.sh). It changes
    extension/plugin code; it does not generate music as its task. Each CLI
-   invocation is one discrete iteration and ends in one validated commit
-   pushed to the configured project GitHub repository.
+   invocation is one discrete iteration. Copilot creates one implementation
+   commit; the runner verifies it, updates the current-state
+   [`implementation_status.md`](./implementation_status.md) snapshot with its
+   commit link and text-line additions/deletions, creates a status-only
+   follow-up commit, and pushes both commits to the configured project GitHub
+   repository. The status file is rewritten each pass, not used as a history
+   log.
 2. **In-app music exploration loop:** when the user explicitly starts a
    sampling session, generate and render a bounded set of alternative musical
    candidates using the custom UGens. Keep each candidate and its settings
@@ -97,6 +102,11 @@ the implementation prompt on each pass, checks the commit/push boundary, and
 continues without an iteration-count limit until explicit completion,
 blockage, an error, or manual interruption. Non-interactive mode grants tool
 approval automatically; inspect the prompt and monitor Copilot usage.
+
+The status snapshot is linked from the
+[README](./README.md#project-documents). Run
+`bash tests/ralph-status-reporting.sh` to exercise the commit/report/push flow
+with a mocked Copilot CLI and a local Git remote.
 
 ## Decision log
 

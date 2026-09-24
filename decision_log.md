@@ -112,3 +112,26 @@ credentials and private user data out of this file.
 - **Consequences:** Automatic tool approval is not a sandbox; shell commands
   may affect paths outside the repository. Review the prompt and run only in a
   trusted environment. The user may stop the no-count-cap loop with Ctrl-C.
+
+### DEC-008 — Maintain a rewritten implementation-status snapshot per iteration
+
+- **Context:** The implementation loop needs an at-a-glance view of current
+  feature state, verification, platform coverage, and blockers, with a
+  verifiable link and line-count summary for each completed iteration.
+  Supersedes DEC-007's single-commit-per-iteration detail.
+- **Decision:** Maintain `implementation_status.md` as a current-state
+  snapshot rewritten in place on every implementation iteration. Copilot
+  commits the implementation and updated snapshot; the loop runner then stamps
+  the implementation commit link and Git numstat totals and creates a
+  status-only follow-up commit.
+- **Alternatives:** Append status entries indefinitely, or ask Copilot to
+  include the hash and LOC of a commit in the same commit that contains the
+  status file.
+- **Rationale:** A snapshot remains concise and reflects the latest project
+  state. A commit cannot contain its own final SHA in one of its files, so a
+  runner-generated follow-up commit can accurately reference the already
+  created implementation commit and its line counts.
+- **Consequences:** Each loop pass produces one implementation commit plus
+  one runner-generated status commit; both are pushed together. The report
+  counts added/deleted text lines, including documentation, and excludes
+  binary changes.
