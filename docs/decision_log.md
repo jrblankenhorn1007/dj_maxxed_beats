@@ -296,3 +296,31 @@ credentials and private user data out of this file.
 - **Consequences:** The runner, prompts, tests, and internal links use `docs/`
   paths. Any future documentation moves must keep the runner's file paths and
   the Copilot skill location synchronized.
+
+### DEC-016 — Complete each Ralph iteration through the configured remote merge
+
+- **Context:** DEC-013 introduced per-iteration branches but used a local
+  merge and direct push to `main`. The project requires the repository's
+  configured remote merge process, including protected-branch checks or a
+  merge queue when enabled. The incoming `main` branch also added this gate as
+  DEC-010; DEC-016 preserves that requirement without reusing an existing
+  decision number.
+- **Decision:** After pushing an iteration branch, create a pull request and
+  invoke `gh pr merge --auto` without forcing a merge strategy. Wait for GitHub
+  to report the pull request merged, fetch `origin/main`, and verify that the
+  reported PR merge commit is contained in remote main before emitting a final
+  Ralph marker or starting another iteration. Use `RALPH_READY_CONTINUE` and
+  `RALPH_READY_COMPLETE` as pre-merge handoff markers; only the runner emits
+  `RALPH_CONTINUE` or `RALPH_COMPLETE` after verification.
+- **Alternatives:** Merge locally and push directly, consider a pushed branch
+  or open pull request complete, or force one merge strategy regardless of
+  repository settings.
+- **Rationale:** Only the remote merge process applies the repository's
+  protections and configured merge policy. Verifying the PR merge commit also
+  supports squash merges and merge queues without falsely requiring iteration
+  commits to remain ancestors of `main`.
+- **Consequences:** The runner requires an authenticated GitHub CLI, and its
+  tests simulate a squash merge. If the PR is closed, merge processing times
+  out, or remote verification fails, the runner records and verifies a BLOCKED
+  status commit on the preserved iteration branch when possible, then emits
+  only `RALPH_BLOCKED`.

@@ -125,12 +125,12 @@ Ralph-Status: IN_PROGRESS
   runner. It first failed because the CLI did not receive `--model gpt-6-luna`;
   after pinning that model, it failed because Copilot still ran on `main`
   rather than in a fresh iteration worktree.
-- **Runner Green:** Reworked `scripts/ralph-loop.sh` to require a clean,
+- **Initial runner Green (superseded):** Reworked `scripts/ralph-loop.sh` to require a clean,
   synchronized `main`, create a per-iteration branch/worktree, push the
   iteration branch, merge and push `main`, verify `origin/main`, then remove
   the successful local worktree/branch. `bash tests/ralph-status-reporting.sh`
   passed its two-iteration mock, verifying GPT-6 Luna selection, distinct
-  branches/worktrees, updated main bases, pushed merges, and cleanup.
+  branches/worktrees, updated main bases, local merges/pushes, and cleanup.
 - **Refactor verification:** `bash -n scripts/ralph-loop.sh
   tests/ralph-status-reporting.sh tests/ralph-iteration-worktrees.sh
   plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh
@@ -144,8 +144,43 @@ Ralph-Status: IN_PROGRESS
   `bash plugin/ChaosOsc/Tests/run_tests.sh`,
   `bash plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh`, shell syntax checks,
   and `git diff --check` passed after the docs/path changes.
-- **Next task:** Commit the validated recovery, incorporate the concurrent
-  `origin/main` GPT-6 Luna commit, merge the legacy
-  `agents/ralph-loop-implementation-check-files` branch to `main`, remove its
-  clean local worktree/branch, and relaunch the new runner from `main` in a
-  visible Terminal window.
+- **Configured remote-merge gate Red:** Extended
+  `tests/ralph-iteration-worktrees.sh` to require GitHub CLI authentication,
+  create a pull request for each iteration, exercise the configured auto-merge
+  process with a simulated squash merge, and verify that final Ralph markers
+  follow remote-main verification. Before the runner change,
+  `bash -n scripts/ralph-loop.sh && bash -n tests/ralph-iteration-worktrees.sh
+  && bash tests/ralph-iteration-worktrees.sh` failed as expected with
+  `FAIL: --check did not verify the GitHub CLI prerequisite.`
+- **Configured remote-merge gate Green:** Updated the runner to use
+  `gh pr create` and `gh pr merge --auto`, wait for GitHub's merged state,
+  fetch `origin/main`, and verify the reported PR merge commit is present
+  there. The model's `RALPH_READY_*` handoff marker is withheld; only the
+  runner emits final `RALPH_CONTINUE`/`RALPH_COMPLETE` after that verification.
+  `bash -n scripts/ralph-loop.sh && bash -n
+  tests/ralph-iteration-worktrees.sh && bash
+  tests/ralph-iteration-worktrees.sh` passed two mocked iterations using
+  squash merges, checked marker ordering, and verified local worktree/branch
+  cleanup.
+- **Closed-PR Red:** Added a third mocked iteration whose pull request closes
+  without merging. `bash -n tests/ralph-iteration-worktrees.sh && bash
+  tests/ralph-status-reporting.sh` failed because the runner stopped without
+  recording `Ralph-Status: BLOCKED` or emitting the required `RALPH_BLOCKED`.
+- **Closed-PR Green:** Added a runner-owned blocker update that changes the
+  progress marker to BLOCKED, updates the current status summary, commits and
+  pushes that record to the preserved iteration branch, and emits only
+  `RALPH_BLOCKED`. Re-ran `bash -n scripts/ralph-loop.sh && bash -n
+  tests/ralph-iteration-worktrees.sh && bash tests/ralph-status-reporting.sh`;
+  both successful squash-merge iterations and the closed-PR blocker path
+  passed. The test verifies the blocker commit matches the remote branch and
+  that no final success marker is emitted for the unmerged PR.
+- **Remote merge coverage:** The test uses a fake GitHub CLI and temporary
+  bare remote; it does not exercise live GitHub authentication, branch
+  protection, checks, or a merge queue. GitHub CLI 2.101.0 is now installed
+  from the official arm64 release (checksum verified) and
+  `gh auth status --hostname github.com` passes. A live runner preflight from
+  clean `main` and real remote PR merge remain to be verified.
+- **Next task:** Commit and push the resolved migration branch, merge it into
+  `main` through the configured PR/merge-queue process, verify its merge
+  commit, remove the clean legacy worktree/branch, then restart the runner
+  from synchronized `main` in a visible Terminal window.

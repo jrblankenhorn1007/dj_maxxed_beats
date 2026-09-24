@@ -12,7 +12,8 @@
 - **Iteration commit:** [`9d2c1ef`](https://github.com/jrblankenhorn1007/dj_maxxed_beats/commit/9d2c1ef73b01181767a7e57d4f9dffc83a404a09)
 - **Lines changed:** `+1233 / -683` (Git numstat; text files; includes documentation; binary files excluded)
 - **Loop state:** Iteration 2 is committed and validated on the legacy branch;
-  merge to `main` and legacy worktree cleanup are pending.
+  migration to `main` through the configured GitHub merge process and legacy
+  worktree cleanup are pending.
 
 ## Overall state
 
@@ -24,16 +25,18 @@ wrapper that builds against the pinned SuperCollider API headers. Audio-rate
 construction. The local environment has no `sclang` or `scsynth`, so plugin
 loading, sclang classes/help, NRT rendering, and real-time audition remain
 unverified. Iteration 2's implementation and runner changes have passed
-focused tests but are still on the legacy feature branch pending merge to
-`main`. The runner now pins GPT-6 Luna and uses a fresh branch/worktree per
-iteration, merging and pushing each validated increment to `main`.
+focused tests but are still on the legacy feature branch pending a verified
+remote merge to `main`. The runner pins GPT-6 Luna, uses a fresh
+branch/worktree per iteration, opens a pull request, requests the configured
+GitHub merge process, waits for the merged state, and verifies the merge commit
+on `origin/main` before emitting a final marker.
 
 ## Component status
 
 | Area | Status | Current state |
 | --- | --- | --- |
 | Product architecture and acceptance criteria | Documented | Quark-first, in-SuperCollider experience; no SuperCollider core fork planned. |
-| Development process | Set up | The runner pins `gpt-6-luna`, creates one branch/worktree per iteration, pushes the branch, merges and verifies `origin/main`, then removes the successful local worktree/branch. The mocked two-iteration test verifies model selection, branch isolation, main merges/pushes, and cleanup. |
+| Development process | Set up | The runner pins `gpt-6-luna`, creates one branch/worktree per iteration, opens and merges a PR through GitHub CLI auto-merge, verifies the reported merge commit on `origin/main`, then removes the successful local worktree/branch. The mocked test simulates squash merges and a closed-PR blocker, verifying branch isolation, remote verification, marker ordering, blocker-commit persistence, and cleanup. |
 | Custom C++ server plugin / UGen palette | In progress | ChaosOsc DSP core and `SCUnit` wrapper exist (`plugin/ChaosOsc/Source/`); the wrapper reads audio-rate controls per sample and captures the seed at construction. DSP tests pass and the plugin compiles against the pinned API headers with `_load` exported. sclang class/help, runtime loading, NRT, and real-time audition are not implemented/validated. |
 | Quark packaging and SCIDE entry point | Not started | No Quark classes or GUI exist. |
 | sclang composition and NRT rendering | Not started | No composition generation or render workflow exists; blocked on the same missing SC toolchain. |
@@ -53,22 +56,29 @@ iteration, merging and pushing each validated increment to `main`.
   out-of-range `chaosAmount`; escape from the fixed-point seed. Verified with
   Apple clang 17.0.0 on macOS/arm64 only.
 - **Ralph branch/merge workflow:** `bash tests/ralph-status-reporting.sh`
-  passed after the documentation move. It rejects an out-of-sync main, then
-  exercises two mocked iterations and verifies GPT-6 Luna selection, fresh
-  branches/worktrees, status commits, merge/push to `origin/main`, and cleanup.
+  passed after the documentation move and runner update. It rejects an
+  out-of-sync main, then exercises two mocked iterations, including PR
+  creation, configured auto-merge, squash-merge verification on `origin/main`,
+  status commits, marker ordering, cleanup, and a third iteration whose closed
+  PR is recorded as a pushed `BLOCKED` status without a success marker.
 - **Plugin-header fetch error path:** `PYTHONDONTWRITEBYTECODE=1 python3
   tests/test_fetch_sc_plugin_api.py` passed (4 tests), covering mocked
   `URLError`/HTTP 503 propagation, 404 candidate resolution, and indented
   includes. The smoke build fetched 30 pinned headers and verified `_load`.
 - **Per-iteration branch/worktree workflow:** `bash
   tests/ralph-status-reporting.sh` passed two mocked iterations. It verified
-  `gpt-6-luna`, fresh branches/worktrees from updated `main`, pushes/merges to
-  `origin/main`, status reports, local worktree/branch cleanup, and a clean
-  final main worktree.
+  `gpt-6-luna`, fresh branches/worktrees from updated `main`, PR-based squash
+  merges through the mocked GitHub CLI, remote merge-commit verification,
+  status reports, local worktree/branch cleanup, and a clean final main
+  worktree. Live GitHub authentication and branch-protection behavior are not
+  covered by this local mock.
 - **Copilot CLI runner:** `bash -n scripts/ralph-loop.sh` and
   `bash -n tests/ralph-status-reporting.sh`,
   `bash -n tests/ralph-iteration-worktrees.sh`, plugin test script syntax,
-  `scripts/ralph-loop.sh --check` in the fixture, and `git diff --check` passed.
+  `--check` in the mocked fixture, and `git diff --check` passed. The local
+  GitHub CLI is installed and authenticated, but a live
+  `scripts/ralph-loop.sh --check` from clean `main` and an authenticated remote
+  PR merge have not yet been run.
 - **Legacy branch migration:** The current plugin/runner changes are validated
   but not yet merged from `agents/ralph-loop-implementation-check-files` to
   `main`; merge and local worktree cleanup are the next operational steps.
@@ -91,9 +101,11 @@ iteration, merging and pushing each validated increment to `main`.
 
 ## Open questions and next task
 
-- Merge the verified legacy feature branch to `main`, remove its clean local
-  worktree/branch, then restart the new runner from the synchronized main
-  worktree in a visible Terminal window.
+- Merge the legacy feature branch into `main` through the configured GitHub
+  pull-request/merge-queue process, verify its merge commit on `origin/main`,
+  remove its clean local worktree/branch, then restart the new runner from the
+  synchronized main worktree in a visible Terminal window. GitHub CLI
+  authentication is available.
 - Implement the ChaosOsc sclang class/help and an NRT integration test
   test-first; an actual `scsynth` installation is still needed to validate
   runtime loading/rendering.

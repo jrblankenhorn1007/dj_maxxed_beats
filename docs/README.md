@@ -46,9 +46,11 @@ loops.
 
 ## Running the development Ralph loop
 
-Install and authenticate [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/install-copilot-cli).
-Run the loop from the clean `main` worktree tracking `origin/main`, then check
-the local prerequisites:
+Install and authenticate [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/install-copilot-cli)
+and [GitHub CLI](https://cli.github.com/). The GitHub CLI must be authenticated
+for the repository that receives iteration pull requests. Run the loop from
+the clean `main` worktree tracking `origin/main`, then check the local
+prerequisites:
 
 ```bash
 scripts/ralph-loop.sh --check
@@ -62,11 +64,32 @@ non-interactive iteration. For each pass, it creates a fresh
 `main` tip. Copilot creates one implementation commit there; the runner stamps
 its commit link and text-line counts into
 [`implementation_status.md`](./implementation_status.md), then creates a
-status-only commit. It pushes the iteration branch, merges it to `main`,
-pushes `origin/main`, and verifies the remote tip before the next iteration.
-Only after that verification does it remove the successful local worktree and
-branch. The remote iteration branch remains for audit; both commits are also
-reachable from `main`.
+status-only commit. It pushes the iteration branch, opens a pull request to
+`main`, and invokes `gh pr merge --auto` without selecting a merge method so
+GitHub applies the repository's configured merge method or merge queue. The
+runner waits for GitHub to report the PR as merged, fetches `origin/main`, and
+verifies the PR merge commit is contained in that remote branch. Only then
+does it fast-forward local `main`, remove the successful local worktree and
+branch, and emit a final Ralph marker. The remote iteration branch remains
+for audit; repositories configured for squash merging may not retain the
+iteration commits as ancestors of `main`.
+
+### Required iteration integration
+
+An iteration is not complete merely because its tests pass, its branch is
+pushed, a pull request is open, or a local merge exists. Each iteration must
+reach remote `origin/main` through the repository's configured merge process.
+The runner waits for the remote pull request/merge queue to report merged and
+checks that the reported merge commit is present on `origin/main` before
+advancing or reporting `RALPH_CONTINUE`/`RALPH_COMPLETE`. If the GitHub CLI is
+missing or unauthenticated, preflight fails before an iteration starts. If a
+published PR is closed, times out, or cannot be verified, the runner records a
+`Ralph-Status: BLOCKED` progress/status update on the iteration branch,
+pushes and verifies that blocker commit when possible, preserves the
+worktree/branch, and emits only `RALPH_BLOCKED`.
+`scripts/ralph-loop.sh --check` verifies prerequisites only; it does not merge
+an iteration. `RALPH_MERGE_TIMEOUT_SECONDS` can override the default one-hour
+wait for required checks or merge-queue processing.
 
 Iteration state is the committed repository files, not transient Copilot
 conversation state: implementation, tests, `RALPH_PROGRESS.md`,
@@ -100,23 +123,26 @@ scripts/ralph-loop.sh --auto
 `--allow-all-tools`. This is not a sandbox: Copilot can run shell commands
 that affect files outside the repository. The runner does not enable
 `--allow-all-paths`, but that flag alone would not contain shell commands.
-Review the prompt and run only in a trusted environment. Each pass must
-successfully push its iteration branch, merge it into `main`, and verify
-`origin/main` before proceeding. A failed iteration is preserved for manual
+Review the prompt and run only in a trusted environment. A successful pass
+must publish its branch, merge the PR through the configured GitHub process,
+and verify `origin/main` before proceeding. The model emits a
+`RALPH_READY_CONTINUE` or `RALPH_READY_COMPLETE` handoff; the runner withholds
+the final `RALPH_CONTINUE` or `RALPH_COMPLETE` marker until the remote merge is
+verified. A blocked, failed, or interrupted iteration is preserved for manual
 recovery; successful local iteration worktrees and branches are removed after
-the merge. The runner stops on an out-of-sync main branch, push/merge failure,
-the prompt's `RALPH_COMPLETE` or `RALPH_BLOCKED` marker, or an invalid
-iteration. Each pass can consume Copilot usage. Review the final changes and
+the merge. Each pass can consume Copilot usage. Review the final changes and
 tests yourself; a model's completion marker is not independent proof that
 every requirement is met.
 
 When migrating an existing single-branch Ralph worktree, stop its runner,
-preserve and commit any pending work, push that legacy branch, merge it into
-`main`, push `origin/main`, then remove only that verified, clean worktree and
-its local branch. Start the new per-iteration loop from the clean main
-worktree; do not try to run it from a legacy feature branch.
+preserve and commit any pending work, push that legacy branch, open a pull
+request, and merge it through the configured GitHub process. Verify the merge
+on `origin/main`, then remove only that verified, clean worktree and its local
+branch. Start the new per-iteration loop from the clean main worktree; do not
+try to run it from a legacy feature branch.
 
-Validate the runner's status-report workflow without making API calls:
+Validate the runner's PR/merge workflow without making API calls; the test
+simulates two successful squash merges and a third closed-PR blocker:
 
 ```bash
 bash tests/ralph-status-reporting.sh
@@ -131,9 +157,11 @@ are not sufficient.
 The in-SuperCollider music-variation loop is a product feature and is not
 launched by this development runner.
 
-Copilot CLI references:
+CLI references:
 
 - [Install Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/install-copilot-cli)
+- [GitHub CLI manual](https://cli.github.com/manual/)
+- [Merge queue documentation](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue)
 - [Copilot CLI best practices](https://docs.github.com/en/copilot/how-tos/copilot-cli/cli-best-practices)
 - [Copilot CLI reference](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-programmatic-reference)
 - [Supported Copilot models](https://docs.github.com/en/copilot/reference/ai-models/supported-models)

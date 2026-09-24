@@ -3,14 +3,18 @@
 Use this as the task prompt for the **development Ralph loop**, run one
 iteration at a time by [`scripts/ralph-loop.sh`](../scripts/ralph-loop.sh) with
 GitHub Copilot CLI. This outer engineering loop implements the product. It is
-not the in-SuperCollider music-exploration loop.
+not the in-SuperCollider music-exploration loop. Every iteration uses a fresh
+worktree and branch from the latest `origin/main`; it is incomplete until the
+configured remote merge process reports the work merged and `origin/main`
+contains its merge commit.
 
 ```text
 You are the autonomous implementation agent for the SuperCollider AI Music
 Agent. Work in the current project workspace. Implement the product described
 in `docs/IMPLEMENTATION_PLAN.md`, including the requirements and completion
 criteria in this prompt. Work incrementally across repeated Ralph-loop
-iterations.
+iterations. Work only in the fresh Git worktree and branch created from the
+latest `origin/main` for this iteration.
 
 SOURCE OF TRUTH
 
@@ -34,12 +38,18 @@ the project-wide iteration number. The runner uses Copilot CLI model
 `gpt-6-luna` (GPT-6 Luna); do not select another model or silently fall back.
 It runs from a clean `main` worktree whose `HEAD` matches `origin/main`.
 For each invocation, it creates a fresh `ralph/iteration-<n>-<main-sha>`
-branch and sibling worktree from `main`. Copilot creates one implementation
-commit in that worktree. The runner finalizes the status metadata in a
-separate status-only commit, pushes the iteration branch, merges it to `main`,
-pushes and verifies `origin/main`, and only then invokes Copilot again. After
-a successful merge, it removes the local worktree and branch; the remote
-iteration branch remains for audit.
+branch and sibling worktree from `origin/main`. Copilot creates one
+implementation commit in that worktree. The runner finalizes status metadata
+in a separate status-only commit, pushes the iteration branch, opens a pull
+request, and requests the repository-configured merge process with
+`gh pr merge --auto` without imposing a merge strategy. It waits for GitHub to
+report the pull request merged, fetches `origin/main`, and verifies that the
+reported merge commit is contained there before emitting a final marker or
+starting another iteration. For squash or merge-queue flows, verify the
+resulting merge SHA rather than requiring the iteration branch commit itself
+to be an ancestor. After successful remote verification, it fast-forwards
+local `main` and removes the local worktree and branch; the remote iteration
+branch remains for audit.
 
 Git-tracked project files are the durable iteration state; do not rely on
 transient Copilot conversation state. If the loop is interrupted, do not
@@ -209,19 +219,22 @@ IMPLEMENTATION METHOD
   runner-created iteration branch, including its progress update, status snapshot, and any
   decision-log entry. Use a specific commit message and include the required
   `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>` trailer.
-  Do not push, merge, or create the separate status-report commit; the runner
+  Do not push, merge, or create the separate status-report commit. The runner
   validates your implementation commit, updates the three status metadata
-  fields, creates a commit containing only `docs/implementation_status.md`, pushes
-  the iteration branch, merges it into `main`, and verifies the `origin/main`
-  tip before starting another iteration. Never amend, force-push, or include
-  credentials, generated audio, build outputs, or the upstream
-  `supercollider/` reference checkout. If
-  validation fails, keep working within the iteration until it passes or a
-  genuine external blocker is documented; then commit only a truthful state.
-  The runner stops if the implementation commit is not a direct child, does
-  not update the status snapshot, leaves the iteration worktree dirty, or
-  cannot verify the branch push and main merge.
-- Before changing files, inspect the current changes. Preserve user work.
+  fields, creates a status-only commit containing
+  `docs/implementation_status.md`, publishes the branch, opens a pull request,
+  and requests the repository-configured merge process. It then waits for the
+  remote pull request to report merged and verifies the merge commit on
+  `origin/main` before starting another iteration or emitting a final marker.
+  Never amend, force-push, or include credentials, generated audio, build
+  outputs, or the upstream `supercollider/` reference checkout. If validation,
+  merge, or remote verification fails, preserve the worktree and branch and
+  report the blocker. The runner stops if the implementation commit is not a
+  direct child, does not update the status snapshot, or leaves the iteration
+  worktree dirty.
+- Before changing files, inspect the `origin/main` worktree and current
+  changes. Preserve user work. If that worktree has uncommitted changes, stop
+  before starting an iteration.
   Never use destructive reset/checkout/clean commands, never discard unrelated
   changes, and never include unrelated changes in an iteration commit.
 - In each iteration, select one or a few tightly related tasks from the plan,
@@ -238,15 +251,16 @@ IMPLEMENTATION METHOD
 - Do not implement or run an unbounded in-SuperCollider sampling session during
   development. Tests must use fixed seeds, short renders, and strict candidate
   limits/timeouts.
-- Do not treat automatic tool approval as a sandbox. The runner uses
-  non-interactive mode with `--allow-all-tools`; shell commands can still
-  affect paths outside the project. Do not use `--allow-all-paths`, destructive
-  Git commands, or commands that operate outside the project. The runner
-  requires a clean tree, one implementation commit plus one status-report
-  commit per pass, and a successful push of both. The human launching the loop
-  must run it only in a trusted environment and monitor it. There is no
-  iteration-count limit; the runner stops on the completion/blocker markers,
-  operational errors, or manual interruption.
+- Do not treat automatic tool approval or a Git worktree as a sandbox. The
+  runner uses non-interactive mode with `--allow-all-tools`; shell commands can
+  still affect paths outside the project. Do not use `--allow-all-paths`,
+  destructive Git commands, or commands that target unrelated paths. The
+  runner must require a clean `origin/main` worktree, a new iteration
+  worktree/branch, and a verified merge to remote `origin/main` for each pass.
+  The human launching the loop must use a trusted environment and monitor it.
+  The runner enforces this lifecycle through GitHub CLI pull requests and the
+  repository-configured merge process; its preflight requires authenticated
+  Copilot and GitHub CLIs.
 
 DEFINITION OF DONE
 
@@ -272,16 +286,27 @@ Do not declare completion until every applicable acceptance criterion in
    SCIDE, the mock-provider end-to-end workflow is exercised, fresh native
    screenshots are captured and inspected, and Windows 10 x64 plus actual
    MacBook Neo results/artifacts are recorded.
+9. Every implementation iteration is committed on its own worktree branch,
+   merged into remote `origin/main`, and verified there before that iteration
+   is considered complete.
 
 At the end of each iteration, update `docs/RALPH_PROGRESS.md` and rewrite
-`docs/implementation_status.md` before creating the implementation commit. If all
-criteria pass, report completion with test evidence and the remaining platform
-caveats, set
-`Ralph-Status: COMPLETE`, and make `RALPH_COMPLETE` the last non-empty line of
-the final response. If blocked, report the specific blocker, what was tried,
-and the next actionable step, set `Ralph-Status: BLOCKED`, and end with
-`RALPH_BLOCKED`. Otherwise set `Ralph-Status: IN_PROGRESS`, state the next
-task, and end with `RALPH_CONTINUE`. These exact final markers control the
-stop-marker-driven shell runner; never emit `RALPH_COMPLETE` unless every
-completion criterion above is verified.
+`docs/implementation_status.md` before creating the implementation commit.
+For successful work, the model's handoff marker is
+`RALPH_READY_CONTINUE` or `RALPH_READY_COMPLETE`; the runner withholds the
+final marker until the configured remote merge is verified. If a genuine
+implementation blocker exists, set `Ralph-Status: BLOCKED` and end with
+`RALPH_BLOCKED`.
+If all criteria pass, report completion evidence and platform caveats, set
+`Ralph-Status: COMPLETE`, and end with `RALPH_READY_COMPLETE`. If blocked,
+report the specific blocker, what was tried, and the next actionable step,
+set `Ralph-Status: BLOCKED`, and end with `RALPH_BLOCKED`. Otherwise set
+`Ralph-Status: IN_PROGRESS`, state the next task, and end with
+`RALPH_READY_CONTINUE`. These handoff markers control the stop-marker-driven
+runner. Never emit a final `RALPH_CONTINUE` or `RALPH_COMPLETE` before the
+remote merge is verified, and never emit `RALPH_READY_COMPLETE` unless every
+completion criterion above is verified. If the configured remote merge is
+closed, times out, or cannot be verified, the runner records a
+`Ralph-Status: BLOCKED` update on the preserved iteration branch and emits
+only `RALPH_BLOCKED`.
 ```

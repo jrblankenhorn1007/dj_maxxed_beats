@@ -73,7 +73,7 @@ These are distinct features with different jobs:
 1. **Development Ralph loop (outside SuperCollider):** repeatedly implements and
    verifies the product against this plan and
    [`RALPH_IMPLEMENTATION_PROMPT.md`](./RALPH_IMPLEMENTATION_PROMPT.md), using
-   [the Copilot CLI runner](./scripts/ralph-loop.sh). It changes
+   [the Copilot CLI runner](../scripts/ralph-loop.sh). It changes
    extension/plugin code; it does not generate music as its task. It pins
    Copilot CLI to GPT-6 Luna (`gpt-6-luna`). Before starting, the runner
    requires a clean `main` worktree whose `HEAD` matches `origin/main`. Every
@@ -82,11 +82,15 @@ These are distinct features with different jobs:
    commit; the runner updates the current-state
    [`implementation_status.md`](./implementation_status.md) with its commit
    link and text-line additions/deletions, then creates a status-only commit.
-   It pushes the iteration branch, merges it to `main`, pushes and verifies
-   `origin/main`, and only then starts another iteration. After a successful
-   merge, it removes that local iteration worktree and branch; the pushed
-   iteration branch remains on origin for audit. The status file is rewritten
-   each pass, not used as a history log.
+   It publishes the iteration branch, opens a pull request, and requests the
+   repository-configured merge process with GitHub CLI auto-merge. It waits
+   until GitHub reports the pull request merged, fetches `origin/main`, and
+   verifies the reported merge commit is contained there before emitting a
+   final iteration marker or advancing. A local merge, pushed branch, or open
+   pull request alone is insufficient. Only after remote verification does
+   the runner fast-forward its local `main` and remove the successful local
+   worktree and branch; the remote iteration branch remains for audit. The
+   status file is rewritten each pass, not used as a history log.
 2. **In-app music exploration loop:** when the user explicitly starts a
    sampling session, generate and render a bounded set of alternative musical
    candidates using the custom UGens. Keep each candidate and its settings
@@ -106,13 +110,18 @@ Run the development loop from the clean, synchronized `main` worktree with
 `scripts/ralph-loop.sh --auto`. It continues without an iteration-count limit
 until explicit completion, blockage, an error, or manual interruption. A
 failed pass leaves its iteration branch/worktree for review; never discard it
-to restart. Non-interactive mode grants tool approval automatically; inspect
-the prompt and monitor Copilot usage.
+to restart. The `--check` mode verifies GitHub CLI authentication and
+repository prerequisites. Non-interactive mode grants tool approval
+automatically; inspect the prompt and monitor Copilot usage. Final
+`RALPH_CONTINUE` and `RALPH_COMPLETE` markers are emitted only after
+`origin/main` contains the verified pull-request merge commit.
 
 The status snapshot is linked from the
 [README](./README.md#project-documents). Run
-`bash tests/ralph-status-reporting.sh` to exercise the commit/report/push flow
-with a mocked Copilot CLI and a local Git remote.
+`bash tests/ralph-status-reporting.sh` to exercise two successful mocked
+iterations plus a closed-PR blocker case, including fresh worktrees, GitHub
+CLI pull-request merges, squash-merge verification, blocked-status reporting,
+and cleanup against a local Git remote.
 
 ## Decision log
 
@@ -306,7 +315,7 @@ change important behavior.
 
 ## Test plan: TDD
 
-Use the repository skill at [`.github/skills/tdd/SKILL.md`](./.github/skills/tdd/SKILL.md)
+Use the repository skill at [`.github/skills/tdd/SKILL.md`](../.github/skills/tdd/SKILL.md)
 for every behavior-changing implementation slice, and the
 [visual application test plan](./VISUAL_TEST_PLAN.md) for GUI acceptance.
 Work one observable behavior at a time:

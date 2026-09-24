@@ -9,9 +9,11 @@ main_worktree="$test_root/main"
 remote="$test_root/remote.git"
 fake_bin="$test_root/bin"
 copilot_call_log="$test_root/copilot-calls"
+gh_call_log="$test_root/gh-calls"
+gh_state_dir="$test_root/gh-state"
 
 mkdir -p "$main_worktree/scripts" "$main_worktree/docs" \
-    "$fake_bin" "$test_root/home"
+    "$fake_bin" "$test_root/home" "$gh_state_dir"
 git init --bare --initial-branch=main "$remote" >/dev/null
 git init --initial-branch=main "$main_worktree" >/dev/null
 git -C "$main_worktree" config user.name "Ralph Worktree Test"
@@ -35,6 +37,7 @@ cat > "$main_worktree/docs/implementation_status.md" <<'EOF'
 - **Completed implementation iteration:** `0`
 - **Iteration commit:** `baseline`
 - **Lines changed:** `+0 / -0`
+- **Loop state:** No iterations have run.
 
 ## Current state
 
@@ -98,11 +101,15 @@ completed_iteration="$(
 if [[ "$completed_iteration" == "0" ]]; then
     next_state="one mocked implementation slice."
     progress_status="IN_PROGRESS"
-    marker="RALPH_CONTINUE"
+    marker="RALPH_READY_CONTINUE"
 elif [[ "$completed_iteration" == "1" ]]; then
     next_state="two mocked implementation slices."
     progress_status="COMPLETE"
-    marker="RALPH_COMPLETE"
+    marker="RALPH_READY_COMPLETE"
+elif [[ "$completed_iteration" == "2" ]]; then
+    next_state="three mocked implementation slices."
+    progress_status="IN_PROGRESS"
+    marker="RALPH_READY_CONTINUE"
 else
     printf 'Unexpected mocked iteration %s.\n' "$completed_iteration" >&2
     exit 1
@@ -135,15 +142,142 @@ printf '%s\n' "$marker"
 EOF
 chmod +x "$fake_bin/copilot"
 
+cat > "$fake_bin/gh" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${1:-}" == "--version" ]]; then
+    printf 'Mock GitHub CLI 2.0\n'
+    exit 0
+fi
+if [[ "${1:-}" == "auth" && "${2:-}" == "status" ]]; then
+    exit 0
+fi
+if [[ "${1:-}" != "pr" ]]; then
+    printf 'Unexpected gh command: %s\n' "$*" >&2
+    exit 1
+fi
+
+subcommand="$2"
+shift 2
+case "$subcommand" in
+    create)
+        head_branch=""
+        while [[ "$#" -gt 0 ]]; do
+            if [[ "$1" == "--head" ]]; then
+                shift
+                head_branch="$1"
+            fi
+            shift
+        done
+        if [[ -z "$head_branch" ]]; then
+            printf 'gh pr create did not specify a head branch.\n' >&2
+            exit 1
+        fi
+        if [[ -f "$GH_STATE_DIR/next-pr" ]]; then
+            read -r pr_id < "$GH_STATE_DIR/next-pr"
+        else
+            pr_id=0
+        fi
+        pr_id=$((pr_id + 1))
+        printf '%s\n' "$pr_id" > "$GH_STATE_DIR/next-pr"
+        printf '%s\n' "$head_branch" > "$GH_STATE_DIR/pr-$pr_id.branch"
+        printf 'create|%s\n' "$head_branch" >> "$GH_CALL_LOG"
+        printf 'https://github.com/example/ralph-worktree-test/pull/%s\n' "$pr_id"
+        ;;
+    merge)
+        pr_url="$1"
+        shift
+        if [[ "${1:-}" != "--auto" ]]; then
+            printf 'gh pr merge did not use the configured auto-merge process: %s\n' \
+                "$*" >&2
+            exit 1
+        fi
+        pr_id="${pr_url##*/}"
+        branch_file="$GH_STATE_DIR/pr-$pr_id.branch"
+        if [[ ! -f "$branch_file" ]]; then
+            printf 'Unknown pull request: %s\n' "$pr_url" >&2
+            exit 1
+        fi
+        read -r iteration_branch < "$branch_file"
+        if [[ "${GH_MERGE_STATE:-}" == "CLOSED" ]]; then
+            : > "$GH_STATE_DIR/pr-$pr_id.closed"
+            printf 'merge|%s\n' "$iteration_branch" >> "$GH_CALL_LOG"
+            exit 0
+        fi
+        merge_repo="$GH_STATE_DIR/remote-process-$pr_id"
+        git clone --quiet "$REMOTE_GIT_DIR" "$merge_repo"
+        git -C "$merge_repo" config user.name "Mock Remote Merge"
+        git -C "$merge_repo" config user.email "mock-remote-merge@example.invalid"
+        git -C "$merge_repo" fetch --quiet origin \
+            "refs/heads/$iteration_branch:refs/remotes/origin/$iteration_branch"
+        git -C "$merge_repo" merge --squash --quiet \
+            "refs/remotes/origin/$iteration_branch" >/dev/null 2>&1
+        git -C "$merge_repo" commit -m "Mock PR merge: $iteration_branch" >/dev/null
+        git -C "$merge_repo" push --quiet origin main
+        git -C "$merge_repo" rev-parse HEAD > "$GH_STATE_DIR/pr-$pr_id.merge"
+        printf 'merge|%s\n' "$iteration_branch" >> "$GH_CALL_LOG"
+        ;;
+    view)
+        pr_url="$1"
+        shift
+        pr_id="${pr_url##*/}"
+        fields=""
+        while [[ "$#" -gt 0 ]]; do
+            if [[ "$1" == "--json" ]]; then
+                shift
+                fields="$1"
+            fi
+            shift
+        done
+        case "$fields" in
+            state,mergedAt)
+                if [[ -f "$GH_STATE_DIR/pr-$pr_id.closed" ]]; then
+                    printf 'CLOSED\n'
+                elif [[ -f "$GH_STATE_DIR/pr-$pr_id.merge" ]]; then
+                    printf 'MERGED\n'
+                else
+                    printf 'OPEN\n'
+                fi
+                ;;
+            mergeCommit)
+                if [[ ! -f "$GH_STATE_DIR/pr-$pr_id.merge" ]]; then
+                    printf 'The pull request has no merge commit.\n' >&2
+                    exit 1
+                fi
+                read -r merge_commit < "$GH_STATE_DIR/pr-$pr_id.merge"
+                printf '%s\n' "$merge_commit"
+                ;;
+            *)
+                printf 'Unexpected gh pr view fields: %s\n' "$fields" >&2
+                exit 1
+                ;;
+        esac
+        ;;
+    *)
+        printf 'Unexpected gh pr subcommand: %s\n' "$subcommand" >&2
+        exit 1
+        ;;
+esac
+EOF
+chmod +x "$fake_bin/gh"
+
 check_output="$(
     cd "$main_worktree"
     HOME="$test_root/home" \
+        GH_STATE_DIR="$gh_state_dir" \
+        GH_CALL_LOG="$gh_call_log" \
+        REMOTE_GIT_DIR="$remote" \
         PATH="$fake_bin:/usr/bin:/bin" \
         scripts/ralph-loop.sh --check
 )"
 if ! printf '%s\n' "$check_output" |
     grep -Fq 'Model: GPT-6 Luna (gpt-6-luna)'; then
     printf 'FAIL: --check did not report the configured GPT-6 Luna model.\n' >&2
+    exit 1
+fi
+if ! printf '%s\n' "$check_output" | grep -Fq 'GitHub CLI:'; then
+    printf 'FAIL: --check did not verify the GitHub CLI prerequisite.\n' >&2
     exit 1
 fi
 
@@ -155,6 +289,9 @@ if unsynced_output="$(
     HOME="$test_root/home" \
         MAIN_WORKTREE="$main_worktree" \
         COPILOT_CALL_LOG="$copilot_call_log" \
+        GH_STATE_DIR="$gh_state_dir" \
+        GH_CALL_LOG="$gh_call_log" \
+        REMOTE_GIT_DIR="$remote" \
         PATH="$fake_bin:/usr/bin:/bin" \
         scripts/ralph-loop.sh --auto 2>&1
 )"; then
@@ -178,6 +315,9 @@ if loop_output="$(
     HOME="$test_root/home" \
         MAIN_WORKTREE="$main_worktree" \
         COPILOT_CALL_LOG="$copilot_call_log" \
+        GH_STATE_DIR="$gh_state_dir" \
+        GH_CALL_LOG="$gh_call_log" \
+        REMOTE_GIT_DIR="$remote" \
         PATH="$fake_bin:/usr/bin:/bin" \
         scripts/ralph-loop.sh --auto 2>&1
 )"; then
@@ -238,9 +378,38 @@ status_report_count="$(
         }
         END { print count + 0 }'
 )"
-merge_count="$(git -C "$main_worktree" log --merges --format=%H | wc -l | tr -d ' ')"
+merge_count="$(
+    git -C "$main_worktree" log --format=%s |
+        awk '/^Mock PR merge: ralph\/iteration-/ { count++ }
+            END { print count + 0 }'
+)"
 if [[ "$status_report_count" != "2" || "$merge_count" != "2" ]]; then
-    printf 'FAIL: main is missing per-iteration status or merge commits.\n' >&2
+    printf 'FAIL: main is missing per-iteration status or configured PR merge commits.\n' >&2
+    exit 1
+fi
+
+pr_create_count="$(awk -F'|' '$1 == "create" { count++ } END { print count + 0 }' "$gh_call_log")"
+pr_merge_count="$(awk -F'|' '$1 == "merge" { count++ } END { print count + 0 }' "$gh_call_log")"
+if [[ "$pr_create_count" != "2" || "$pr_merge_count" != "2" ]]; then
+    printf 'FAIL: each iteration must create and merge a pull request.\n' >&2
+    exit 1
+fi
+if ! awk '
+    /origin\/main verified/ { verified[++verified_count] = NR }
+    /^RALPH_CONTINUE$/ { continued = NR }
+    /^RALPH_COMPLETE$/ { completed = NR }
+    END {
+        if (verified_count != 2 || !(verified[1] < continued &&
+            continued < verified[2] && verified[2] < completed)) {
+            exit 1
+        }
+    }
+' <<< "$loop_output"; then
+    printf 'FAIL: final Ralph markers preceded their remote-main verification barriers.\n' >&2
+    exit 1
+fi
+if printf '%s\n' "$loop_output" | grep -Eq '^RALPH_READY_(CONTINUE|COMPLETE)$'; then
+    printf 'FAIL: an iteration-ready marker escaped before remote merge verification.\n' >&2
     exit 1
 fi
 
@@ -267,4 +436,62 @@ if ! printf '%s\n' "$loop_output" |
     exit 1
 fi
 
-printf 'Ralph per-iteration worktree, merge, status, and cleanup test passed.\n'
+awk 'NR == 1 { print "Ralph-Status: IN_PROGRESS"; next } { print }' \
+    "$main_worktree/docs/RALPH_PROGRESS.md" \
+    > "$main_worktree/docs/RALPH_PROGRESS.md.tmp"
+mv "$main_worktree/docs/RALPH_PROGRESS.md.tmp" \
+    "$main_worktree/docs/RALPH_PROGRESS.md"
+git -C "$main_worktree" add docs/RALPH_PROGRESS.md
+git -C "$main_worktree" commit -m "test: prepare blocked merge fixture" >/dev/null
+git -C "$main_worktree" push --quiet origin main
+
+if blocked_output="$(
+    cd "$main_worktree"
+    HOME="$test_root/home" \
+        MAIN_WORKTREE="$main_worktree" \
+        COPILOT_CALL_LOG="$copilot_call_log" \
+        GH_STATE_DIR="$gh_state_dir" \
+        GH_CALL_LOG="$gh_call_log" \
+        REMOTE_GIT_DIR="$remote" \
+        GH_MERGE_STATE=CLOSED \
+        PATH="$fake_bin:/usr/bin:/bin" \
+        scripts/ralph-loop.sh --auto 2>&1
+)"; then
+    printf 'FAIL: the runner treated a closed, unmerged PR as a completed iteration.\n' >&2
+    exit 1
+fi
+if [[ "$(printf '%s\n' "$blocked_output" | awk 'NF { last = $0 } END { print last }')" != \
+    "RALPH_BLOCKED" ]]; then
+    printf 'FAIL: the runner did not report the unmerged PR as blocked.\n' >&2
+    printf '%s\n' "$blocked_output" >&2
+    exit 1
+fi
+if printf '%s\n' "$blocked_output" | grep -Eq '^RALPH_(CONTINUE|COMPLETE)$'; then
+    printf 'FAIL: the runner emitted a success marker for an unmerged PR.\n' >&2
+    exit 1
+fi
+blocked_branch="$(awk -F'|' 'NR == 3 { print $2 }' "$copilot_call_log")"
+blocked_worktree="$(awk -F'|' 'NR == 3 { print $3 }' "$copilot_call_log")"
+if [[ ! -d "$blocked_worktree" ]] ||
+    ! grep -Fq 'Ralph-Status: BLOCKED' "$blocked_worktree/docs/RALPH_PROGRESS.md" ||
+    ! grep -Fq 'Remote merge blocker (iteration 3)' \
+        "$blocked_worktree/docs/RALPH_PROGRESS.md"; then
+    printf 'FAIL: the blocked iteration worktree/status was not preserved.\n' >&2
+    exit 1
+fi
+blocked_local_head="$(git -C "$main_worktree" rev-parse "$blocked_branch")"
+blocked_remote_head="$(
+    git --git-dir="$remote" rev-parse "refs/heads/$blocked_branch"
+)"
+if [[ "$blocked_local_head" != "$blocked_remote_head" ]]; then
+    printf 'FAIL: the blocked state was not committed and pushed to its iteration branch.\n' >&2
+    printf 'Local: %s\nRemote: %s\n%s\n' \
+        "$blocked_local_head" "$blocked_remote_head" "$blocked_output" >&2
+    exit 1
+fi
+if [[ -n "$(git -C "$main_worktree" status --porcelain)" ]]; then
+    printf 'FAIL: the main worktree became dirty after the blocked PR.\n' >&2
+    exit 1
+fi
+
+printf 'Ralph per-iteration worktree, PR merge, blocker, status, and cleanup test passed.\n'
