@@ -156,18 +156,6 @@ Ralph-Status: IN_PROGRESS
   two squash-merged iterations and the closed-PR blocker scenario passed.
   The existing user-level agent profile is available at the documented
   Copilot path; the mock verifies runner argument selection.
-- **Shared-agent Red:** Extended the mocked runner test to require
-  `--agent ralph-loop` and verify the agent prerequisite in `--check`.
-  `bash -n tests/ralph-iteration-worktrees.sh && bash
-  tests/ralph-status-reporting.sh` failed as expected because `--check` did not
-  report the shared Ralph Loop agent.
-- **Shared-agent Green:** The runner now requires the canonical user-level
-  agent file, selects it with `--agent ralph-loop`, and reports the configured
-  agent during `--check`. Re-ran `bash -n scripts/ralph-loop.sh
-  tests/ralph-iteration-worktrees.sh && bash tests/ralph-status-reporting.sh`;
-  two squash-merged iterations and the closed-PR blocker scenario passed.
-  The existing user-level agent profile is available at the documented
-  Copilot path; the mock verifies runner argument selection.
 - **Post-move verification:** `bash tests/ralph-status-reporting.sh`,
   `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_fetch_sc_plugin_api.py`,
   `bash plugin/ChaosOsc/Tests/run_tests.sh`,
@@ -175,14 +163,14 @@ Ralph-Status: IN_PROGRESS
   and `git diff --check` passed after the docs/path changes.
 - **Configured remote-merge gate Red:** Extended
   `tests/ralph-iteration-worktrees.sh` to require GitHub CLI authentication,
-  create a pull request for each iteration, exercise the configured auto-merge
-  process with a simulated squash merge, and verify that final Ralph markers
+  create a pull request for each iteration, exercise remote PR merging with a
+  simulated squash merge, and verify that final Ralph markers
   follow remote-main verification. Before the runner change,
   `bash -n scripts/ralph-loop.sh && bash -n tests/ralph-iteration-worktrees.sh
   && bash tests/ralph-iteration-worktrees.sh` failed as expected with
   `FAIL: --check did not verify the GitHub CLI prerequisite.`
-- **Configured remote-merge gate Green:** Updated the runner to use
-  `gh pr create` and `gh pr merge --auto`, wait for GitHub's merged state,
+- **Configured remote-merge gate Green (later superseded):** Updated the runner
+  to use `gh pr create` and initially `gh pr merge --auto`, wait for GitHub's merged state,
   fetch `origin/main`, and verify the reported PR merge commit is present
   there. The model's `RALPH_READY_*` handoff marker is withheld; only the
   runner emits final `RALPH_CONTINUE`/`RALPH_COMPLETE` after that verification.
@@ -190,7 +178,9 @@ Ralph-Status: IN_PROGRESS
   tests/ralph-iteration-worktrees.sh && bash
   tests/ralph-iteration-worktrees.sh` passed two mocked iterations using
   squash merges, checked marker ordering, and verified local worktree/branch
-  cleanup.
+  cleanup. Live GitHub later rejected `--auto` because repository auto-merge
+  is disabled; the corrected method and pending-requirements retry are recorded
+  below.
 - **Closed-PR Red:** Added a third mocked iteration whose pull request closes
   without merging. `bash -n tests/ralph-iteration-worktrees.sh && bash
   tests/ralph-status-reporting.sh` failed because the runner stopped without
@@ -203,6 +193,26 @@ Ralph-Status: IN_PROGRESS
   both successful squash-merge iterations and the closed-PR blocker path
   passed. The test verifies the blocker commit matches the remote branch and
   that no final success marker is emitted for the unmerged PR.
+- **Merge-method Red/Green:** The live `gh pr merge 1 --auto` request failed
+  because auto-merge is disabled and the non-interactive CLI requires an
+  explicit merge method. Changed the runner and its mock to request
+  `gh pr merge --merge`, consistent with this repository's merge-commit
+  history and allowed settings. The lifecycle test checks the requested
+  method and verifies the reported remote merge SHA rather than assuming
+  branch ancestry.
+- **Pending-requirements retry Red:** Extended the mock so the first PR merge
+  request reports pending requirements and a later request succeeds. Before
+  implementing retries, `bash -n tests/ralph-iteration-worktrees.sh &&
+  bash tests/ralph-status-reporting.sh` failed as expected: the runner
+  recorded a BLOCKED state immediately instead of waiting for the PR.
+- **Pending-requirements retry Green:** The runner now polls while the PR is
+  open and retries the configured merge request every 30 seconds until GitHub
+  accepts it or `RALPH_MERGE_TIMEOUT_SECONDS` expires. Re-ran `bash -n
+  scripts/ralph-loop.sh tests/ralph-iteration-worktrees.sh && bash
+  tests/ralph-status-reporting.sh`; two mocked iterations passed, including
+  the initial pending response and successful retry, merge-commit and
+  squash-style remote-SHA verification, marker ordering and cleanup, plus the
+  closed-PR blocker case.
 - **Remote merge coverage:** The test uses a fake GitHub CLI and temporary
   bare remote; it does not exercise live GitHub authentication, branch
   protection, checks, or a merge queue. GitHub CLI 2.101.0 is now installed

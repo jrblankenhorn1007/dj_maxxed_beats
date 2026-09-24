@@ -81,14 +81,16 @@ For each pass, it creates a fresh
 its commit link and text-line counts into
 [`implementation_status.md`](./implementation_status.md), then creates a
 status-only commit. It pushes the iteration branch, opens a pull request to
-`main`, and invokes `gh pr merge --auto` without selecting a merge method so
-GitHub applies the repository's configured merge method or merge queue. The
-runner waits for GitHub to report the PR as merged, fetches `origin/main`, and
-verifies the PR merge commit is contained in that remote branch. Only then
-does it fast-forward local `main`, remove the successful local worktree and
-branch, and emit a final Ralph marker. The remote iteration branch remains
-for audit; repositories configured for squash merging may not retain the
-iteration commits as ancestors of `main`.
+`main`, and requests a GitHub merge commit with `gh pr merge --merge`, matching
+the project's prior merge-commit history. If a merge queue is required,
+GitHub's queue controls the final merge. When branch requirements are pending,
+the runner polls the PR and retries the merge request until it is merged or
+the configured timeout expires. It then fetches `origin/main` and verifies the
+reported PR merge commit is contained in that remote branch. Only after
+verification does it fast-forward local `main`, remove the successful local
+worktree and branch, and emit a final Ralph marker. The remote iteration
+branch remains for audit; squash or queue merges may not retain the iteration
+commits as ancestors of `main`.
 
 ### Required iteration integration
 
@@ -104,8 +106,9 @@ published PR is closed, times out, or cannot be verified, the runner records a
 pushes and verifies that blocker commit when possible, preserves the
 worktree/branch, and emits only `RALPH_BLOCKED`.
 `scripts/ralph-loop.sh --check` verifies prerequisites only; it does not merge
-an iteration. `RALPH_MERGE_TIMEOUT_SECONDS` can override the default one-hour
-wait for required checks or merge-queue processing.
+an iteration. The runner retries a rejected merge request every 30 seconds while
+the PR remains open. `RALPH_MERGE_TIMEOUT_SECONDS` can override the default
+one-hour wait for required checks or merge-queue processing.
 
 Iteration state is the committed repository files, not transient Copilot
 conversation state: implementation, tests, `RALPH_PROGRESS.md`,
@@ -158,7 +161,8 @@ branch. Start the new per-iteration loop from the clean main worktree; do not
 try to run it from a legacy feature branch.
 
 Validate the runner's PR/merge workflow without making API calls; the test
-simulates two successful squash merges and a third closed-PR blocker:
+simulates a pending-then-accepted merge request, merge-commit and squash-style
+results, and a third closed-PR blocker:
 
 ```bash
 bash tests/ralph-status-reporting.sh

@@ -192,8 +192,9 @@ case "$subcommand" in
     merge)
         pr_url="$1"
         shift
-        if [[ "${1:-}" != "--auto" ]]; then
-            printf 'gh pr merge did not use the configured auto-merge process: %s\n' \
+        merge_method="$1"
+        if [[ "$merge_method" != "--merge" ]]; then
+            printf 'gh pr merge did not use the configured merge-commit method: %s\n' \
                 "$*" >&2
             exit 1
         fi
@@ -204,9 +205,18 @@ case "$subcommand" in
             exit 1
         fi
         read -r iteration_branch < "$branch_file"
+        if [[ "$pr_id" == "1" &&
+            ! -f "$GH_STATE_DIR/pr-$pr_id.retry" ]]; then
+            : > "$GH_STATE_DIR/pr-$pr_id.retry"
+            printf 'merge-retry|%s|%s\n' "$iteration_branch" "$merge_method" \
+                >> "$GH_CALL_LOG"
+            printf 'Mock merge requirements are still pending.\n' >&2
+            exit 1
+        fi
         if [[ "${GH_MERGE_STATE:-}" == "CLOSED" ]]; then
             : > "$GH_STATE_DIR/pr-$pr_id.closed"
-            printf 'merge|%s\n' "$iteration_branch" >> "$GH_CALL_LOG"
+            printf 'merge|%s|%s\n' "$iteration_branch" "$merge_method" \
+                >> "$GH_CALL_LOG"
             exit 0
         fi
         merge_repo="$GH_STATE_DIR/remote-process-$pr_id"
@@ -215,12 +225,20 @@ case "$subcommand" in
         git -C "$merge_repo" config user.email "mock-remote-merge@example.invalid"
         git -C "$merge_repo" fetch --quiet origin \
             "refs/heads/$iteration_branch:refs/remotes/origin/$iteration_branch"
-        git -C "$merge_repo" merge --squash --quiet \
-            "refs/remotes/origin/$iteration_branch" >/dev/null 2>&1
-        git -C "$merge_repo" commit -m "Mock PR merge: $iteration_branch" >/dev/null
+        if [[ "$pr_id" == "2" ]]; then
+            git -C "$merge_repo" merge --squash --quiet \
+                "refs/remotes/origin/$iteration_branch" >/dev/null 2>&1
+            git -C "$merge_repo" commit \
+                -m "Mock PR squash merge: $iteration_branch" >/dev/null
+        else
+            git -C "$merge_repo" merge --no-ff --no-edit \
+                -m "Mock PR merge: $iteration_branch" \
+                "refs/remotes/origin/$iteration_branch" >/dev/null 2>&1
+        fi
         git -C "$merge_repo" push --quiet origin main
         git -C "$merge_repo" rev-parse HEAD > "$GH_STATE_DIR/pr-$pr_id.merge"
-        printf 'merge|%s\n' "$iteration_branch" >> "$GH_CALL_LOG"
+        printf 'merge|%s|%s\n' "$iteration_branch" "$merge_method" \
+            >> "$GH_CALL_LOG"
         ;;
     view)
         pr_url="$1"
@@ -265,6 +283,12 @@ case "$subcommand" in
 esac
 EOF
 chmod +x "$fake_bin/gh"
+
+cat > "$fake_bin/sleep" <<'EOF'
+#!/usr/bin/env bash
+exit 0
+EOF
+chmod +x "$fake_bin/sleep"
 
 check_output="$(
     cd "$main_worktree"
@@ -392,7 +416,13 @@ merge_count="$(
         awk '/^Mock PR merge: ralph\/iteration-/ { count++ }
             END { print count + 0 }'
 )"
-if [[ "$status_report_count" != "2" || "$merge_count" != "2" ]]; then
+queue_squash_count="$(
+    git -C "$main_worktree" log --format=%s |
+        awk '/^Mock PR squash merge: ralph\/iteration-/ { count++ }
+            END { print count + 0 }'
+)"
+if [[ "$status_report_count" != "2" || "$merge_count" != "1" ||
+    "$queue_squash_count" != "1" ]]; then
     printf 'FAIL: main is missing per-iteration status or configured PR merge commits.\n' >&2
     exit 1
 fi
@@ -401,6 +431,16 @@ pr_create_count="$(awk -F'|' '$1 == "create" { count++ } END { print count + 0 }
 pr_merge_count="$(awk -F'|' '$1 == "merge" { count++ } END { print count + 0 }' "$gh_call_log")"
 if [[ "$pr_create_count" != "2" || "$pr_merge_count" != "2" ]]; then
     printf 'FAIL: each iteration must create and merge a pull request.\n' >&2
+    exit 1
+fi
+if [[ "$(awk -F'|' '$1 == "merge-retry" { count++ }
+    END { print count + 0 }' "$gh_call_log")" != "1" ]]; then
+    printf 'FAIL: the runner did not retry the merge after pending requirements.\n' >&2
+    exit 1
+fi
+if [[ "$(awk -F'|' '$1 == "merge" && $3 != "--merge" { count++ }
+    END { print count + 0 }' "$gh_call_log")" != "0" ]]; then
+    printf 'FAIL: the runner did not request the configured merge-commit method.\n' >&2
     exit 1
 fi
 if ! awk '
@@ -503,4 +543,4 @@ if [[ -n "$(git -C "$main_worktree" status --porcelain)" ]]; then
     exit 1
 fi
 
-printf 'Ralph per-iteration worktree, PR merge, blocker, status, and cleanup test passed.\n'
+printf 'Ralph per-iteration worktree, PR/queue merge, blocker, status, and cleanup test passed.\n'

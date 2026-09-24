@@ -348,3 +348,28 @@ credentials and private user data out of this file.
   selects it by name. It remains a project-specific integration point and must
   continue to meet the shared fresh-worktree and verified-remote-merge
   requirements.
+
+### DEC-018 — Request a supported PR merge method and retry pending checks
+
+- **Date:** 2026-09-24
+- **Context:** The repository does not have GitHub auto-merge enabled or a
+  merge queue. A live `gh pr merge --auto` request failed because the
+  non-interactive CLI requires an explicit method; a PR whose checks are still
+  pending can also reject an early merge request.
+- **Decision:** Supersede DEC-016's `--auto` invocation with
+  `gh pr merge --merge`, consistent with this repository's prior merge-commit
+  history and enabled settings. While the pull request remains open, retry a
+  rejected merge request every 30 seconds and continue polling until merge
+  verification succeeds or the configured timeout expires. Keep checking the
+  GitHub-reported merge SHA on `origin/main` before advancing.
+- **Alternatives:** Enable auto-merge administratively, use another allowed
+  merge strategy, or treat the first rejected request as a blocker.
+- **Rationale:** An explicit allowed merge method works with the current
+  repository settings, while bounded retries accommodate checks that become
+  satisfied after the initial request. Remote merge-SHA verification remains
+  required regardless of the resulting merge topology.
+- **Consequences:** The runner no longer depends on repository auto-merge
+  configuration. Mocked lifecycle tests cover a pending first request followed
+  by a successful retry, as well as merge-commit and squash-style remote merge
+  results. A PR that remains open and unmergeable until timeout is recorded as
+  BLOCKED and cannot advance the loop.

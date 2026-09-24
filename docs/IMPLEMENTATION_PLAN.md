@@ -112,8 +112,9 @@ The status snapshot is linked from the
 [README](./README.md#project-documents). Run
 `bash tests/ralph-status-reporting.sh` to exercise two successful mocked
 iterations plus a closed-PR blocker case, including fresh worktrees, GitHub
-CLI pull-request merges, squash-merge verification, blocked-status reporting,
-and cleanup against a local Git remote.
+CLI pull-request merges, a retried pending merge request, merge-SHA verification
+for merge-commit and squash-style results, blocked-status reporting, and
+cleanup against a local Git remote.
 
 ## Decision log
 

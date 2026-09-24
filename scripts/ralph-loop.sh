@@ -27,6 +27,7 @@ if [[ ! "$merge_timeout_seconds" =~ ^[0-9]+$ ]] ||
     exit 64
 fi
 merge_poll_interval=5
+merge_retry_interval=30
 
 if [[ -x "$HOME/.local/node-v24.21.0/bin/node" ]]; then
     PATH="$HOME/.local/node-v24.21.0/bin:$PATH"
@@ -400,10 +401,11 @@ implementation commit. Preserve the three runner-managed status fields; the
 runner creates the status-only follow-up commit.
 Do not push or merge. The runner publishes this branch and opens a pull
 request to main. It requests the repository-configured merge process with
-gh pr merge --auto, waits until GitHub reports the pull request merged, then
-fetches and verifies the merge commit on origin/main. Only after that remote
-verification does it clean up this successful local worktree and branch or
-emit a final Ralph marker. Do not switch branches or alter the main worktree.
+gh pr merge --merge, retries while branch requirements are pending, and waits
+until GitHub reports the pull request merged. It then fetches and verifies the
+merge commit on origin/main. Only after that remote verification does it clean
+up this successful local worktree and branch or emit a final Ralph marker. Do
+not switch branches or alter the main worktree.
 The project-wide iteration number for this pass is $iteration.
 For successful work, end with RALPH_READY_CONTINUE or RALPH_READY_COMPLETE
 according to the prompt's status-marker rules. Use RALPH_BLOCKED only for an
@@ -589,8 +591,16 @@ has verified the remote merge, then emits RALPH_CONTINUE or RALPH_COMPLETE."
         record_remote_merge_blocker "GitHub CLI returned no pull-request URL"
     fi
     printf 'Iteration %d pull request opened: %s\n' "$iteration" "$pr_url"
-    if ! gh pr merge "$pr_url" --auto; then
-        record_remote_merge_blocker "GitHub could not start the configured merge process for $pr_url"
+    merge_requested=0
+    if merge_request_output="$(gh pr merge "$pr_url" --merge 2>&1)"; then
+        merge_requested=1
+        if [[ -n "$merge_request_output" ]]; then
+            printf '%s\n' "$merge_request_output"
+        fi
+    else
+        printf '%s\n' "$merge_request_output" >&2
+        printf 'Merge requirements are not satisfied yet; waiting for %s.\n' \
+            "$pr_url" >&2
     fi
 
     merge_waited=0
@@ -617,6 +627,19 @@ has verified the remote merge, then emits RALPH_CONTINUE or RALPH_COMPLETE."
                 fi
                 sleep "$merge_poll_interval"
                 merge_waited=$((merge_waited + merge_poll_interval))
+                if [[ "$merge_requested" == "0" ]] &&
+                    [[ "$((merge_waited % merge_retry_interval))" == "0" ]]; then
+                    if merge_request_output="$(gh pr merge "$pr_url" --merge 2>&1)"; then
+                        merge_requested=1
+                        if [[ -n "$merge_request_output" ]]; then
+                            printf '%s\n' "$merge_request_output"
+                        fi
+                    else
+                        printf '%s\n' "$merge_request_output" >&2
+                        printf 'Merge requirements remain pending for %s; retrying.\n' \
+                            "$pr_url" >&2
+                    fi
+                fi
                 ;;
             CLOSED)
                 record_remote_merge_blocker "$pr_url closed without merging"

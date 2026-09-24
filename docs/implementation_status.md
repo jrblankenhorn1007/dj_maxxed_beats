@@ -35,7 +35,7 @@ on `origin/main` before emitting a final marker.
 | Area | Status | Current state |
 | --- | --- | --- |
 | Product architecture and acceptance criteria | Documented | Quark-first, in-SuperCollider experience; no SuperCollider core fork planned. |
-| Development process | Set up | Canonical TDD/Ralph instructions and the `ralph-loop` agent live in the shared `copilot_skills` repository; local skill/prompt files are redirect pointers. The runner selects that agent, pins `gpt-6-luna`, creates one branch/worktree per iteration, opens and merges a PR through GitHub CLI auto-merge, verifies the reported merge commit on `origin/main`, then removes the successful local worktree/branch. The mocked test simulates squash merges and a closed-PR blocker, verifying agent/model selection, branch isolation, remote verification, marker ordering, blocker-commit persistence, and cleanup. |
+| Development process | Set up | Canonical TDD/Ralph instructions and the `ralph-loop` agent live in the shared `copilot_skills` repository; local skill/prompt files are redirect pointers. The runner selects that agent, pins `gpt-6-luna`, creates one branch/worktree per iteration, opens a PR, requests a merge commit with `gh pr merge --merge`, retries while requirements are pending, verifies the reported merge commit on `origin/main`, then removes the successful local worktree/branch. The mocked test covers merge-commit and squash-style results, a retried pending-requirements response, and a closed-PR blocker, verifying agent/model selection, branch isolation, remote verification, marker ordering, blocker-commit persistence, and cleanup. |
 | Custom C++ server plugin / UGen palette | In progress | ChaosOsc DSP core and `SCUnit` wrapper exist (`plugin/ChaosOsc/Source/`); the wrapper reads audio-rate controls per sample and captures the seed at construction. DSP tests pass and the plugin compiles against the pinned API headers with `_load` exported. sclang class/help, runtime loading, NRT, and real-time audition are not implemented/validated. |
 | Quark packaging and SCIDE entry point | Not started | No Quark classes or GUI exist. |
 | sclang composition and NRT rendering | Not started | No composition generation or render workflow exists; blocked on the same missing SC toolchain. |
@@ -57,21 +57,23 @@ on `origin/main` before emitting a final marker.
 - **Ralph branch/merge workflow:** `bash tests/ralph-status-reporting.sh`
   passed after the documentation move and runner update. It rejects an
   out-of-sync main, then exercises two mocked iterations, including PR
-  creation, configured auto-merge, squash-merge verification on `origin/main`,
-  status commits, shared-agent/model selection, marker ordering, cleanup, and
-  a third iteration whose closed PR is recorded as a pushed `BLOCKED` status
-  without a success marker.
+  creation, a merge-commit request, a retried pending-requirements response,
+  merge-commit and squash-style verification on `origin/main`, status commits,
+  shared-agent/model selection, marker ordering, cleanup, and a third
+  iteration whose closed PR is recorded as a pushed `BLOCKED` status without
+  a success marker.
 - **Plugin-header fetch error path:** `PYTHONDONTWRITEBYTECODE=1 python3
   tests/test_fetch_sc_plugin_api.py` passed (4 tests), covering mocked
   `URLError`/HTTP 503 propagation, 404 candidate resolution, and indented
   includes. The smoke build fetched 30 pinned headers and verified `_load`.
 - **Per-iteration branch/worktree workflow:** `bash
   tests/ralph-status-reporting.sh` passed two mocked iterations. It verified
-  `gpt-6-luna`, fresh branches/worktrees from updated `main`, PR-based squash
-  merges through the mocked GitHub CLI, remote merge-commit verification,
-  status reports, local worktree/branch cleanup, and a clean final main
-  worktree. Live GitHub authentication and branch-protection behavior are not
-  covered by this local mock.
+  `gpt-6-luna`, fresh branches/worktrees from updated `main`, PR merges through
+  the mocked GitHub CLI, retrying a pending merge request, remote merge-SHA
+  verification for merge-commit and squash-style results, status reports,
+  local worktree/branch cleanup, and a clean final main worktree. Live GitHub
+  authentication and branch-protection behavior are not covered by this local
+  mock.
 - **Copilot CLI runner:** `bash -n scripts/ralph-loop.sh` and
   `bash -n tests/ralph-status-reporting.sh`,
   `bash -n tests/ralph-iteration-worktrees.sh`, plugin test script syntax,
