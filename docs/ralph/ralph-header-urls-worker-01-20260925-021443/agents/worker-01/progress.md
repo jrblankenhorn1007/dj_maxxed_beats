@@ -7,7 +7,8 @@
 - **Branch:** `ralph/header-urls-worker-01-20260925-021443`
 - **Worktree:** `/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-header-urls-worker-01-20260925-021443`
 - **Base:** `origin/main` at `f9e1bb3edafff1cc6d24c640a8e0ed38f5bf49fe`
-- **Current state:** `IN_PROGRESS`; awaiting commit, publication, and PR creation.
+- **Current state:** `IN_PROGRESS`; implementation commit is ready, awaiting
+  publication and PR creation.
 
 ### Finding and implementation
 
@@ -49,6 +50,24 @@ added.
   `git -C /Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-header-urls-worker-01-20260925-021443 diff --check`
   — passed.
 
+### Rebase after origin/main advanced
+
+- Before publication, `origin/main` advanced from
+  `f9e1bb3edafff1cc6d24c640a8e0ed38f5bf49fe` to
+  `0736add11eae7b7f745d7b7bf9806c116d72eed6` (PR #10). Its changed paths
+  were project documentation and the local TDD pointer; none overlapped the
+  worker-owned implementation, test, or leaf-record paths.
+- **Rebase:** `git -C /Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-header-urls-worker-01-20260925-021443 rebase origin/main`
+  — passed without conflicts. The implementation commit changed from
+  `4e2073a83dee29bac5eba0571c86832f79d0dbdf` to
+  `694329fcf7022c9b0958d3a12f72fbaea5b8f2b0`.
+- **Post-rebase check:**
+  `cd /Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-header-urls-worker-01-20260925-021443 && PYTHONDONTWRITEBYTECODE=1 python3 tests/test_fetch_sc_plugin_api.py`
+  — passed all 7 tests.
+- **Post-rebase diff check:**
+  `git -C /Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-header-urls-worker-01-20260925-021443 diff --check origin/main...HEAD`
+  — passed.
+
 ### Coverage gaps and next action
 
 - No native Windows 10 x64 run was available; Windows separator behavior is
@@ -57,9 +76,8 @@ added.
   that device.
 - No live `raw.githubusercontent.com` download was needed or performed for
   the regression check.
-- **Next:** review the final diff, commit, fetch/rebase/retest if
-  `origin/main` moved, publish the branch, open a PR, and wait for explicit
-  coordinator authorization before merging.
+- **Next:** fetch `origin` again, publish the branch, open a PR, and wait for
+  explicit coordinator authorization before merging.
 
 ### Worker sign-off
 

@@ -8,7 +8,10 @@
 - **Worktree:** `/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-header-urls-worker-01-20260925-021443`
 - **Base `origin/main`:**
   `f9e1bb3edafff1cc6d24c640a8e0ed38f5bf49fe`
-- **Implementation commit:** pending
+- **Rebased onto `origin/main`:**
+  `0736add11eae7b7f745d7b7bf9806c116d72eed6`
+- **Implementation commit:**
+  `694329fcf7022c9b0958d3a12f72fbaea5b8f2b0`
 - **PR:** pending; the normal integration path is a worker-owned PR.
 
 ## Finding
