@@ -1,7 +1,7 @@
 schema_version: 1
 snapshot_path: "docs/ralph-status.md"
 snapshot_revision: 3
-updated_at_utc: "2026-09-25T02:48:28Z"
+updated_at_utc: "2026-09-25T02:49:44Z"
 overall_status: IN_PROGRESS
 current_run_ids:
   - "skills-routing-20260925-0108"
@@ -43,12 +43,12 @@ runs:
     current_origin_main_sha: "0736add11eae7b7f745d7b7bf9806c116d72eed6"
     verified_origin_main_sha: "0736add11eae7b7f745d7b7bf9806c116d72eed6"
     created_at_utc: "2026-09-25T01:08:16Z"
-    updated_at_utc: "2026-09-25T02:48:28Z"
+    updated_at_utc: "2026-09-25T02:49:44Z"
     coordinator_scope: "Route active shared-skill references through the Maxxed Beats Ralph prompt and synchronize both repository status records."
     coordinator_branch: "ralph/skills-routing-status-followup-20260925-023214"
     coordinator_status_path: "docs/ralph/ralph-skills-routing-status-followup-20260925-023214/agents/coordinator/status.md"
     coordinator_progress_path: "docs/ralph/ralph-skills-routing-status-followup-20260925-023214/agents/coordinator/progress.md"
-    next_action: "The Maxxed Beats PR is merged and verified; shared-skill changes remain locally integrated only, awaiting explicit approval to publish to the canonical repository."
+    next_action: "Publish the validated Maxxed status follow-up through its normal PR path; the overall run still awaits authorization to publish the canonical shared-skill fast-forward."
     split_plan:
       - task_id: "retire-maxxed-local-tdd-skill"
         worker_id: "worker-01"
@@ -149,7 +149,7 @@ branch_agent_index:
     branch_slug: "ralph-skills-routing-status-followup-20260925-023214"
     status: IN_PROGRESS
     iteration: 1
-    implementation_commit_sha: null
+    implementation_commit_sha: "80a331985d70004fefdefc45342fe7229a07cde0"
     pull_request:
       status: PENDING
       number: null

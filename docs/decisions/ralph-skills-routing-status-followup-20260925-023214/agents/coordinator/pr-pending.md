@@ -27,7 +27,9 @@ canonical shared-skill change without explicit authorization.
 
 ## Current state
 
-The records are being validated on the local status-follow-up branch. Remote
-integration of this status-only branch has not been attempted. The overall run
-remains incomplete until the shared-skill change is authorized, published, and
+The validated records are committed locally in implementation commit
+`80a331985d70004fefdefc45342fe7229a07cde0`. Fetched Maxxed `origin/main`
+remains at `0736add11eae7b7f745d7b7bf9806c116d72eed6`; the status-follow-up
+branch has not yet been published or integrated. The overall run remains
+incomplete until the shared-skill change is authorized, published, and
 verified on canonical `origin/main`, followed by its required memory review.
