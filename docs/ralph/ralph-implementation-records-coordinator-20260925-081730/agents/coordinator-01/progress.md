@@ -141,3 +141,17 @@
 - **Next action:** Stage and commit the verified archive updates, then
   publish the parent PR and complete its independent review and normal merge
   gates.
+
+## Archive content commit — 2026-09-25T09:41:04Z
+
+- **Commit:** `42ac69454a2f14b94adc25fe54b3f4fb375fd52a`
+  (`docs: archive portable plugin branch evidence`).
+- **Base:** rebased `origin/main` at
+  `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6`.
+- The commit adds the verified PR #24 branch dossier and review/archive
+  status, updates the 19-branch index, numbers PR #24's decision record, and
+  records the rebase and validation evidence.
+- `git diff --cached --check` and `git diff --check` passed before commit.
+- The branch is still unpublished; the next action is to publish it, open
+  the parent PR, record its exact SHA pair and reviewer prompt, and run the
+  independent review.
