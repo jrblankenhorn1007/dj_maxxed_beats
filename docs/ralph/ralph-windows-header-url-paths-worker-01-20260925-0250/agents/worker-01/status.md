@@ -8,10 +8,10 @@ branch: "ralph/windows-header-url-paths-worker-01-20260925-0250"
 branch_slug: "ralph-windows-header-url-paths-worker-01-20260925-0250"
 iteration: 1
 status: IN_PROGRESS
-updated_at_utc: "2026-09-25T03:08:59Z"
+updated_at_utc: "2026-09-25T03:11:40Z"
 base_origin_main_sha: "0736add11eae7b7f745d7b7bf9806c116d72eed6"
 rebased_onto_origin_main_sha: null
-implementation_commit_sha: null
+implementation_commit_sha: "bc7ca3bf8065d142043848c0777c09583bbf5f71"
 pull_request:
   status: PENDING
   number: null
@@ -44,8 +44,11 @@ checks:
     result: PASS
   - command: "git diff --cached --check"
     result: PASS
+  - command: "git fetch origin"
+    result: PASS
+    note: "origin/main remained 0736add11eae7b7f745d7b7bf9806c116d72eed6; no rebase required."
 blockers: []
-next_action: "Commit the scoped implementation, regression, leaf records, and pending decision record; then record the exact SHA before publishing."
+next_action: "Publish the unpublished branch and create a new pull request through the configured GitHub CLI."
 worker_sign_off:
   status: PENDING
   attestation_kind: SELF_ATTESTATION

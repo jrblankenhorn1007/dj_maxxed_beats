@@ -8,8 +8,8 @@
 - **Branch slug:** `ralph-windows-header-url-paths-worker-01-20260925-0250`
 - **Base `origin/main`:**
   `0736add11eae7b7f745d7b7bf9806c116d72eed6`
-- **Implementation commit:** Pending creation; record its exact SHA before
-  publishing the branch.
+- **Implementation commit:**
+  `bc7ca3bf8065d142043848c0777c09583bbf5f71`
 - **PR record:** [worker-01 pending PR](agents/worker-01/pr-pending.md)
 
 ## Append-only decisions

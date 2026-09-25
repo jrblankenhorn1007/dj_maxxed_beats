@@ -8,8 +8,8 @@
 - **Worktree:** `/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-windows-header-url-paths-worker-01-20260925-0250`
 - **Base `origin/main`:**
   `0736add11eae7b7f745d7b7bf9806c116d72eed6`
-- **Implementation commit:** Pending creation; update to the exact full SHA
-  before first publish.
+- **Implementation commit:**
+  `bc7ca3bf8065d142043848c0777c09583bbf5f71`
 - **Pull request:** Pending; no number or URL assigned yet.
 - **Merge actor:** `worker-01` only after coordinator authorization of this
   exact PR.
@@ -57,7 +57,7 @@
 ## Integration protocol
 
 This record is pending PR assignment. Before merge, update it to the assigned
-PR number and URL, record the exact implementation commit SHA and PR/check
-state, and update the branch decision index and worker leaf status. Do not
-merge until the coordinator authorizes this exact PR; the branch-owning
-worker then merges only through the repository's normal permitted process.
+PR number and URL, record the PR/check state, and update the branch decision
+index and worker leaf status. Do not merge until the coordinator authorizes
+this exact PR; the branch-owning worker then merges only through the
+repository's normal permitted process.
