@@ -1,65 +1,44 @@
-# dj_maxxed_beats
+# Documentation index
 
-An AI-assisted procedural music and sound-design extension for SuperCollider.
+The repository-root [README](../README.md) is the canonical project landing
+page and describes the prototype's current state. This page indexes project
+documentation rather than repeating the product overview.
 
-## Direction
+## Product plan and verification
 
-The product is designed to run from inside SuperCollider as a Quark/extension:
+- [Implementation plan](./IMPLEMENTATION_PLAN.md) — product requirements,
+  planned architecture, implementation phases, and acceptance criteria.
+- [Visual test plan](./VISUAL_TEST_PLAN.md) — live SuperCollider/SCIDE
+  scenarios and platform-specific visual sign-off requirements.
+- [Current implementation status](./implementation_status.md) — implemented
+  capabilities and verified or unverified coverage.
+- [Progress evidence](./RALPH_PROGRESS.md) — chronological build, test, and
+  runtime results for completed iterations.
+- [Decision log](./decision_log.md) — append-only records of material product
+  and architecture decisions.
 
-- An agent GUI opened from the SuperCollider IDE, with no separate
-  user-facing desktop app.
-- Custom C++ server UGens for distinctive sound design, controlled from
-  SuperCollider language code.
-- Procedural composition rendered to audio offline, with real-time audition
-  available as an option.
-- User-selectable OpenAI and Anthropic (Claude) providers and models.
-- Per-request and per-session provider usage, estimated dollars, and
-  informational, non-billable app credits (initially 100 credits per estimated
-  USD).
-- A user-started, bounded music-variation loop that preserves each candidate
-  for audition and comparison.
+## Branch evidence
 
-This is the planned architecture, not a claim that those features are already
-implemented. The initial approach avoids modifying or forking SuperCollider
-core. A small headless provider helper may be included only if SuperCollider's
-language environment cannot provide secure asynchronous API access.
+- [Implementation archive](./implementation/README.md) — branch-by-branch
+  index of implementation records, prompts, agent handoffs, decisions, and
+  code-review folders.
 
-## Project documents
+## Development and sound design
 
-- [Implementation plan](./IMPLEMENTATION_PLAN.md)
-- [Development Ralph implementation prompt](./RALPH_IMPLEMENTATION_PROMPT.md)
-- [Visual application test plan](./VISUAL_TEST_PLAN.md)
-- [Decision log](./decision_log.md)
-- [Current implementation status](./implementation_status.md)
-- [Sound-design palette](./plugin/SOUND_DESIGN.md)
+- [Ralph implementation prompt](./RALPH_IMPLEMENTATION_PROMPT.md) — the
+  project's shared development-workflow entry point and source-of-truth
+  references.
+- [Sound-design notes](./plugin/SOUND_DESIGN.md) — the ChaosOsc DSP
+  prototype, controls, build state, and open verification gaps.
+- [Quality-check entrypoint](../scripts/run_quality_checks.sh) — shell/Python
+  source checks, Clang analysis, and warning-as-error DSP/plugin builds.
+- [Headless test entrypoint](../scripts/run_headless_tests.sh) — runs quality
+  checks and the full Python suite, including the plugin's SuperCollider NRT
+  check. See the [root README](../README.md#run-the-developer-checks) for
+  prerequisites and commands.
 
-Project-facing documentation is organized under `docs/`, with plugin design
-notes under `docs/plugin/`. The root `README.md` is a short repository landing
-page. The [Ralph implementation prompt](./RALPH_IMPLEMENTATION_PROMPT.md) is
-the project's entry point for shared-skill routing and the local development
-workflow; consult it rather than duplicating those references here. `LICENSE`
-remains at the repository root.
+## Repository-root references
 
-## Running the development Ralph loop
-
-Start a development iteration by using this project's
-[Ralph implementation prompt](./RALPH_IMPLEMENTATION_PROMPT.md) for current
-shared-skill routing and agent configuration.
-
-The shared workflow owns general development-loop mechanics; this project does
-not provide a local shell runner. Product-specific acceptance criteria and
-status sources remain in this repository: the
-[implementation plan](./IMPLEMENTATION_PLAN.md),
-[visual test plan](./VISUAL_TEST_PLAN.md),
-[iteration progress](./RALPH_PROGRESS.md),
-[current implementation status](./implementation_status.md), and
-[append-only decision log](./decision_log.md). The development workflow is
-separate from the in-SuperCollider music-variation feature.
-
-## Product verification
-
-Before declaring the product complete, follow the
-[visual application test plan](./VISUAL_TEST_PLAN.md). A successful build,
-headless test, log message, or mocked window is not visual confirmation; the
-real SuperCollider application must be exercised with native screenshots on
-the specified target platforms.
+- [README](../README.md) — the canonical project overview, developer-check
+  instructions, and current platform coverage.
+- [LICENSE](../LICENSE) — the repository-root license text.

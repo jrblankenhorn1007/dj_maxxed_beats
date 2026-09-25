@@ -77,7 +77,9 @@ These are distinct features with different jobs:
    duplicating those references here. This plan remains the source of truth for
    the product's acceptance criteria; the development loop changes extension
    and plugin code, not music-generation behavior. This project does not
-   provide a local shell runner.
+   provide a local shell runner for the development loop; headless product
+   tests use the separate
+   [headless test suite](../README.md#run-the-developer-checks).
 2. **In-app music exploration loop:** when the user explicitly starts a
    sampling session, generate and render a bounded set of alternative musical
    candidates using the custom UGens. Keep each candidate and its settings
@@ -103,7 +105,9 @@ append-only decisions remain in this repository's
 [`VISUAL_TEST_PLAN.md`](./VISUAL_TEST_PLAN.md),
 [`RALPH_PROGRESS.md`](./RALPH_PROGRESS.md),
 [`implementation_status.md`](./implementation_status.md), and
-[`decision_log.md`](./decision_log.md).
+[`decision_log.md`](./decision_log.md). The branch-centric index for their
+implementation, prompt, handoff, decision, and code-review evidence is the
+[`implementation/` archive](./implementation/README.md).
 
 ## Decision log
 
@@ -320,6 +324,12 @@ the shared Red-Green-Refactor procedure. Use the
   redaction/no persistence in logs and project files.
 - Test variation-session caps, cancellation, candidate isolation, and
   confirmation before applying changes; use fixed seeds and short renders.
+- Require GitHub Actions to pass on every push and pull request. Its canonical
+  `bash scripts/run_headless_tests.sh` entrypoint runs source syntax checks,
+  Clang static analysis, warning-as-error C++ unit/plugin builds, and all
+  Python tests including the SuperCollider NRT integration. The current
+  plugin build and CI coverage are macOS-specific; this gate does not replace
+  Windows or MacBook Neo validation.
 - Use cross-platform CI for Windows 10 x64 and Apple Silicon macOS builds.
   Record any tests that require physical audio hardware as manual checks, and
   never treat subjective listening as a substitute for automated

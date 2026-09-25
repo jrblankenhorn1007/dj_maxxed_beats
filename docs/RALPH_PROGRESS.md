@@ -637,3 +637,419 @@ Ralph-Status: IN_PROGRESS
   reported `OPEN`; GitHub returned `UNKNOWN` for mergeability and merge state
   and reported no check runs. The worker remains `AWAITING_MERGE`; no merge
   was attempted.
+
+## Headless test pipeline — worker-01, iteration 1
+
+- **Run/task:** `headless-integration-tests-20260925-0246` /
+  `implement-headless-test-pipeline`; worker `worker-01 / headless test
+  pipeline`. This is test-infrastructure work and does not advance the
+  product implementation iteration counter (`5`).
+- **Branch/base:** `ralph/headless-integration-tests-worker-01-20260925-0246`,
+  based on fetched `origin/main` at
+  `0736add11eae7b7f745d7b7bf9806c116d72eed6`.
+- **TDD Red:** Before adding the entrypoint or workflow,
+  `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_headless_test_pipeline.py`
+  ran the three new contract tests and failed as expected: the entrypoint
+  `scripts/run_headless_tests.sh` and workflow
+  `.github/workflows/headless-tests.yml` did not yet exist. These were
+  missing required artifacts, not test-runner or dependency failures.
+- **Green:** Added the required C++/Python entrypoint, runtime preflight, and
+  macOS GitHub Actions workflow. The first test rerun exposed a test-fixture
+  issue: this host does not provide `/bin/true`; the fixture was changed to
+  use the available executable found by `shutil.which("bash")`. Then
+  `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_headless_test_pipeline.py`
+  passed all 3 contract tests, including both missing-runtime diagnostics and
+  the workflow trigger/runtime/entrypoint contract.
+- **Refactor:** Extracted the repeated required-file assertion/read into
+  `_read_required_file` in the contract tests. Re-running
+  `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_headless_test_pipeline.py`
+  passed all 3 tests.
+- **Runtime provisioning:** Downloaded the official 3.14.1 universal macOS
+  DMG to ignored `.runtime/` from
+  `https://github.com/supercollider/supercollider/releases/download/Version-3.14.1/SuperCollider-3.14.1-macOS-universal.dmg`;
+  `shasum -a 256 --check` verified
+  `ed264b32752d27fc86e506dd0a7eb36de7c19ebce73c3fdf2ed5514f8c73f02e`.
+  Mounted read-only with `hdiutil attach -readonly -nobrowse -noautoopen`
+  and used only the `SuperCollider.app/Contents/MacOS/sclang` and
+  `Contents/Resources/scsynth` CLI executables. Both reported SuperCollider
+  3.14.1, release commit `426edf6`.
+- **Full headless run with explicit paths:** From the worktree root,
+  `SCLANG=.runtime/mount/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=.runtime/mount/SuperCollider.app/Contents/Resources/scsynth bash
+  scripts/run_headless_tests.sh` passed all 9 DSP C++ assertions and all 12
+  discovered Python tests, including the real ChaosOsc plugin/class NRT
+  integration (`Ran 12 tests in 86.724s`, `OK`).
+- **Full headless run with PATH lookup:** Added ignored `.runtime/bin`
+  symlinks to the same CLI executables, unset `SCLANG` and `SCSYNTH`, then
+  ran `env -u SCLANG -u SCSYNTH PATH="$PWD/.runtime/bin:$PATH" bash
+  scripts/run_headless_tests.sh`. It passed all 9 DSP assertions and all 12
+  Python tests, including NRT (`Ran 12 tests in 16.557s`, `OK`).
+- **Final full-pipeline confirmation:** After strengthening the contract test
+  to require the `test_*.py` discovery pattern, the explicit-path command
+  `SCLANG=.runtime/mount/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=.runtime/mount/SuperCollider.app/Contents/Resources/scsynth bash
+  scripts/run_headless_tests.sh` passed all 9 DSP assertions and all 12
+  Python tests, including NRT (`Ran 12 tests in 90.531s`, `OK`).
+- **Scope and platform:** All complete runs were on macOS 26.5.2 arm64 and
+  ran without SCIDE, a GUI, a real-time server, or audio hardware. The new
+  workflow configures pull-request, push, and manual runs on `macos-14`,
+  verifies the official runtime digest, sets the CLI executable paths, and
+  invokes the same entrypoint. GitHub-hosted workflow execution is not
+  claimed by the local checks. Windows 10 x64 and MacBook Neo remain
+  unverified; no Windows coverage is claimed.
+- **Additional checks:** `bash -n scripts/run_headless_tests.sh`,
+  `ruby -e 'require "yaml"; YAML.load_file(".github/workflows/headless-tests.yml"); puts "YAML syntax: OK"'`,
+  and `git diff --cached --check` passed.
+- **Decision:** Added DEC-025 for the required headless unit/NRT pipeline and
+  its separate visual-test boundary.
+- **Integration state:** Awaiting normal PR publication/review; no merge or
+  `origin/main` integration is claimed here.
+
+## Portable plugin load-symbol validation — worker-01, iteration 2
+
+- **Run/task:** `ralph-cross-platform-finish-20260925-0607` /
+  `portable-plugin-load-symbol-check`; stable worker
+  `worker-01 / portable ChaosOsc symbol check (fresh-main continuation)`.
+  This build-validation/test-infrastructure continuation leaves the product
+  implementation counter at `5`.
+- **Base and branch:** The coordinator-assigned base was
+  `1926bdab3c358088f359cf73f0d8025a66c7d0d0`. The required fast-forward
+  refresh of the clean project main advanced `origin/main` to
+  `7523a9a0b87ffc5304686e2e64509fc4a6941bb7`; this newer SHA was reported
+  before proceeding. A fresh branch/worktree was created from that latest
+  SHA (no rebase of the old branch):
+  `ralph/portable-plugin-load-symbol-check-worker-01-20260925-074130-refresh-7523a9a`
+  at
+  `/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-portable-plugin-load-symbol-check-worker-01-20260925-074130-refresh-7523a9a`.
+- **Recovered prior integration issue:** PR #21 remains open and stale. Its
+  recorded base is `9c8c1b679b765ace2b4ae1dac49c1ed827f43171` and head is
+  `54153d6591e0e263674e1806e055260179db81c7`; the prior worker's later
+  status-record push was rejected with `GH013: Code coverage checks require
+  merging via API or UI`. The old branch, worktree, and PR were preserved.
+  Ruleset `23973625` remains active; no direct-main write, force push, ruleset
+  bypass, or repeated push attempt was made. This is a recovered integration
+  issue, not an unresolved product blocker.
+- **Behavior under test:** inspect only the actual platform's exact loader
+  export (`_load` on Darwin, `load` on ELF and Windows x64), and accept it
+  only as a global defined text (`T`) symbol. Cover CRLF, similar and
+  undefined names, `nm` invocation diagnostics, and the deliberate warning
+  when `nm` is unavailable. The NRT output assertion accepts exactly one of
+  the two complete reported lines.
+- **TDD Red:** Before changing production code, ran
+  `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_plugin_smoke_symbol_check.py`
+  against the unchanged Darwin-only script. Result: `Ran 8 tests in 0.540s`,
+  `FAILED (failures=5)`. The Darwin/ELF/Windows export cases and command-
+  failure diagnostic case exposed the existing incorrect behavior; the
+  similar/undefined-name and missing-`nm` behavior checks passed on baseline.
+  This was an expected behavior Red, not a setup failure.
+- **Recovered test-harness corrections:** The first post-implementation run
+  exposed that the mocked `nm` had not removed its option arguments before
+  validating the library path; five failures with mock status `66` were
+  fixture failures, not product Red. After correcting the fixture, one
+  assertion expected the words `nm invocation failed` contiguously while the
+  useful diagnostic included the selected `-gU` arguments. The assertion was
+  corrected to check the failure status, exact command flags, and forwarded
+  diagnostic; coverage was not weakened.
+- **TDD Green:** Re-ran
+  `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_plugin_smoke_symbol_check.py`;
+  all eight mocked cases passed.
+- **Refactor:** Extracted the exact global-defined-text predicate into
+  `has_exported_load_symbol` without changing behavior. Re-ran
+  `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_plugin_smoke_symbol_check.py
+  && bash -n plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh
+  && git diff --check`; all eight tests passed, and Bash syntax/diff checks
+  passed.
+- **Real macOS build:** Reused the previously verified pinned SuperCollider
+  3.14.1 API-header cache in this fresh worktree. From the worktree root,
+  `bash plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh` passed, resolved 29
+  headers, built an arm64 Mach-O plugin, and reported
+  `Verified exported plugin load symbol: _load`. An additional
+  `bash -x plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh` trace also
+  completed successfully and showed the exact `nm -gU` invocation and symbol.
+- **NRT integration:** With the cached official SuperCollider 3.14.1 runtime
+  (`sclang` and `scsynth` both report tag `Version-3.14.1`, commit
+  `426edf6`), ran
+  `SCLANG=/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-headless-integration-tests-worker-01-20260925-0246/.runtime/mount/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-headless-integration-tests-worker-01-20260925-0246/.runtime/mount/SuperCollider.app/Contents/Resources/scsynth
+  PYTHONDONTWRITEBYTECODE=1 python3 tests/test_chaososc_nrt.py`; result:
+  `Ran 1 test in 52.724s`, `OK`.
+- **Final headless pipeline:** From this branch, ran
+  `SCLANG=/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-headless-integration-tests-worker-01-20260925-0246/.runtime/mount/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-headless-integration-tests-worker-01-20260925-0246/.runtime/mount/SuperCollider.app/Contents/Resources/scsynth
+  bash scripts/run_headless_tests.sh`; result: all nine DSP assertions and
+  all 21 Python tests passed (`Ran 21 tests in 11.722s`, `OK`), including
+  NRT and the new mocked platform-symbol cases.
+- **Platform gaps:** Verified locally on Darwin arm64 / macOS 26.5.2 only.
+  ELF and Windows x64 symbol cases (including Windows CRLF) are mocked, not
+  native ELF or Windows 10 x64 build/runtime checks. An actual MacBook Neo,
+  GUI/SCIDE, and real-time audition were not tested. The GitHub Actions
+  workflow remains macOS-only; no hosted CI result is claimed here.
+- **Implementation commit:** `4cb936134e7ccef09c248de7fe761783891fa6ec`.
+  The worker-owned status/decision records are committed before first branch
+  publication. The aggregate `docs/ralph-status.md` remains
+  coordinator-owned and was not edited. Post-merge memory review remains
+  pending for the coordinator; no memory update is made before merge.
+
+### Final pre-publication verification — 2026-09-25T08:15:20Z
+
+- After completing and committing all worker-owned pre-publication records,
+  reran the final branch command:
+  `SCLANG=/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-headless-integration-tests-worker-01-20260925-0246/.runtime/mount/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-headless-integration-tests-worker-01-20260925-0246/.runtime/mount/SuperCollider.app/Contents/Resources/scsynth
+  bash scripts/run_headless_tests.sh`.
+- Result: all nine DSP assertions and all 21 Python tests passed, including
+  ChaosOsc NRT and all eight new mocked symbol tests (`Ran 21 tests in
+  57.623s`, `OK`). This later full-suite result is the final pre-publication
+  verification; no implementation source or test changes followed it.
+
+## PR #24 integration and post-merge memory review — coordinator
+
+- **Implementation PR:** PR #24 merged through the worker-owned normal CLI
+  path, `gh -R jrblankenhorn1007/dj_maxxed_beats pr merge 24 --merge`, by
+  `worker-01` at `2026-09-25T09:08:38Z`. GitHub integration SHA:
+  `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6`.
+- **Independent review:** Ralph Code Reviewer and Ralph Security Reviewer
+  both reported `CLEAN` for exact base
+  `7523a9a0b87ffc5304686e2e64509fc4a6941bb7` and head
+  `ca94e4a4cddbe086ce13b10a17739bb6a5e53cce` (round 1 of 2; zero
+  unresolved findings). These independent reports do not replace required
+  repository checks or approvals.
+- **Hosted checks:** `headless-tests` runs `36112124375` and `36112177699`
+  both completed successfully. The worker also reported the final local
+  `bash scripts/run_headless_tests.sh` pass: nine DSP assertions and 21
+  Python tests, including NRT; the eight mocked symbol tests, native Darwin
+  arm64 build, and SuperCollider 3.14.1 NRT test passed.
+- **Coordinator remote verification:** After fetching `origin`, the fetched
+  `origin/main` was `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6`.
+  `git merge-base --is-ancestor ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6 origin/main`
+  and
+  `git merge-base --is-ancestor c448dae05f792ef868557e7d67a0a1becb7e6895 origin/main`
+  both passed. Thus PR #24's implementation merge and PR #13's earlier
+  header-URL merge are reachable from current fetched main.
+- **Superseded duplicates:** After verifying PR #24 on main, PRs #14, #18,
+  and #21 were closed via the normal GitHub CLI with comments identifying
+  PR #24 as the replacement. Their branches/worktrees were not modified or
+  deleted. PRs #11, #12, #15, and #16 were not touched.
+- **Recovered worker-record sync:** PR #24's post-publication worker-record
+  push received GH013; one `createCommitOnBranch` API attempt also exited
+  nonzero without moving the remote ref. No repeat push/API attempt was
+  made. The published branch, worktree, and local numbered record were
+  preserved. The coordinator is reconciling the final numbered record and
+  aggregate snapshot on a separate fresh follow-up branch, not changing the
+  reviewed PR head or writing directly to main.
+- **PR #13 memory review:** Reviewed the merged implementation, its Windows
+  `ntpath` simulation in
+  `tests/test_fetch_sc_plugin_api.py::test_header_urls_use_posix_paths_with_windows_normalization`,
+  and the recorded failure mode: host `os.path.normpath` produced
+  backslash-separated URL candidates that received expected 404s and were
+  silently omitted. The durable rule is to normalize URL/protocol paths with
+  protocol semantics (POSIX URL separators), independently of host filesystem
+  conventions. The categorized `.github/memory/cross-platform.md` entry and
+  index link were merged in PR #25 at
+  `ba59eb507e03bff97a1c9e9d54a93a0c88265a25` and verified on fetched
+  `origin/main`.
+- **TDD for this follow-up:** Not applicable; this branch changes categorized
+  memory and coordination/status records only. Documentation and YAML
+  integrity checks will be recorded before publication.
+- **Completion gate:** The implementation and required memory merge are
+  verified. The Ralph run's final worker/coordinator snapshot and decision
+  record are being synchronized through this separate documentation-only PR;
+  unrelated legacy runs remain in progress in the aggregate dashboard.
+
+## PR #25 memory follow-up integration — coordinator
+
+- **Memory update:** The durable PR #13 URL-path lesson was merged in PR #25
+  on branch `ralph/portable-symbol-memory-status-20260925-0917-ffbb4a3`.
+  The memory implementation commit was
+  `2e2c57a4b6f96722d381df00fee40774557134b9`.
+- **Independent review:** Ralph Code Reviewer reported `CLEAN` for PR #25's
+  exact base `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6` and head
+  `e89a2f2ee596a98fa79ef6f92fd7addbe85a5597` (round 1 of 2, no findings).
+- **Hosted checks:** `headless-tests` runs `36119118272` and `36119169173`
+  both completed successfully.
+- **Merge:** The coordinator used
+  `gh -R jrblankenhorn1007/dj_maxxed_beats pr merge 25 --merge`;
+  GitHub reported merge SHA
+  `ba59eb507e03bff97a1c9e9d54a93a0c88265a25` at
+  `2026-09-25T09:42:04Z`.
+- **Remote verification:** After the post-merge `git pull --ff-only`,
+  `origin/main` was `ba59eb507e03bff97a1c9e9d54a93a0c88265a25`.
+  Ancestry checks confirmed PR #25's merge SHA, PR #24's implementation
+  merge `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6`, and PR #13's header
+  merge `c448dae05f792ef868557e7d67a0a1becb7e6895` are all reachable from
+  fetched `origin/main`.
+- **Disposition:** `DURABLE_LESSON_CAPTURED`; `.github/memory/README.md`
+  indexes `.github/memory/cross-platform.md`, which records the POSIX URL
+  path rule and evidence from the Windows `ntpath` simulation. No separate
+  new lesson was inferred from mocked ELF/Windows symbol outputs.
+- **Final aggregate record:** A fresh status-only coordinator branch from
+  `ba59eb507e03bff97a1c9e9d54a93a0c88265a25` is carrying the final
+  `docs/ralph-status.md`, worker/coordinator leaf, and PR decision-record
+  reconciliation through its own normal PR. This is a records-only
+  continuation; it does not trigger another Project Memory review.
+
+## Final aggregate status validation — 2026-09-25T09:51:22Z
+
+- **Branch/base:** `ralph/portable-symbol-final-status-20260925-0943-ba59eb5`,
+  created from PR #25 merge `ba59eb507e03bff97a1c9e9d54a93a0c88265a25`.
+- **TDD Red/Green/Refactor:** Not applicable; the branch changes only
+  progress, status, and decision records, not runtime behavior.
+- **Supporting regression:** `PYTHONDONTWRITEBYTECODE=1 python3
+  tests/test_fetch_sc_plugin_api.py` — PASS (7 tests). This reconfirms the
+  merged PR #13 Windows URL-path case that supports the memory lesson.
+- **Status format:** `ruby -e 'require "yaml";
+  YAML.load_file("docs/ralph-status.md");
+  puts "docs/ralph-status.md YAML syntax: OK"'` — PASS.
+- **Diff hygiene:** `git diff --check` — PASS.
+- **Platform gaps:** No new platform build/runtime was performed by this
+  records-only continuation. Native ELF and Windows x64 remain unvalidated;
+  the symbol behaviors there are mocked as recorded above.
+## CI quality gate expansion — 2026-09-25
+
+- **Task:** Extend the existing push/PR headless workflow with warning-as-error
+  builds and static checks, then update contributor and Ralph-role guidance.
+  This is workflow maintenance; product implementation iteration `5` is
+  unchanged.
+- **Branch/base:** `ralph/ci-quality-pipeline-20260925-0412`, initially based
+  on `origin/main` at `c448dae05f792ef868557e7d67a0a1becb7e6895`. After
+  `origin/main` advanced, the branch was rebased onto
+  `9c8c1b679b765ace2b4ae1dac49c1ed827f43171`; all checks below ran after that
+  rebase.
+- **TDD Red — initial quality contract:** Added contract tests for a required
+  quality entrypoint, source-analysis steps, and warning-as-error builds
+  before implementing the gate. From the parent worktree,
+  `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_headless_test_pipeline.HeadlessTestPipelineContractTests.test_entrypoint_runs_quality_checks_and_discovers_all_python_tests tests.test_headless_test_pipeline.HeadlessTestPipelineContractTests.test_quality_checks_cover_source_syntax_analysis_and_builds tests.test_headless_test_pipeline.HeadlessTestPipelineContractTests.test_cpp_builds_fail_on_project_warnings -v`
+  failed because the new entrypoint and strict build flags were absent. An
+  initial invocation from a different worktree loaded the old test module and
+  returned test-discovery `AttributeError`s; that was a command-context
+  mistake, not Red, and the test was rerun from the assigned parent worktree.
+- **TDD Green — quality gate:** Added
+  `scripts/run_quality_checks.sh`, wired it into
+  `scripts/run_headless_tests.sh`, and made C++ unit/plugin builds use
+  `-Wall -Wextra -Werror`. The plugin build runs Clang static analysis and
+  treats pinned external API headers as system headers so upstream-only
+  warnings do not mask warnings in project code. Missing `clang++` or `nm`
+  now fails with an explicit error instead of skipping analysis or symbol
+  verification.
+- **TDD Red/Green — analyzer artifacts:** The first analyzer run emitted
+  `ChaosOsc.plist` and `test_chaos_osc_core.plist` into the repository root.
+  A contract test failed while `-analyzer-output=text` was absent. Added
+  `-Xanalyzer -analyzer-output=text` to both analyzer invocations; rerunning
+  the quality gate passed without generating either artifact.
+- **TDD Red/Green — Python warnings:** Added contract assertions that the
+  quality and full-suite entrypoints set `PYTHONWARNINGS=error`. The tests
+  failed before that setting was wired in, then passed after Python
+  compilation and the discovered test suite were configured to treat warnings
+  as errors.
+- **Targeted verification:**
+  `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_headless_test_pipeline -v`
+  passed all 5 pipeline contract tests.
+- **Quality verification:** `bash scripts/run_quality_checks.sh` passed Bash
+  syntax checks, Python compilation, Clang static analysis, all 9 DSP
+  assertions, and the pinned-header plugin build. The plugin build emitted no
+  compiler warnings and verified the exported `_load` symbol.
+- **Full regression verification:** With the already SHA-verified official
+  SuperCollider 3.14.1 CLI runtime, the following command passed all 9 DSP
+  assertions and all 15 discovered Python tests, including plugin loading and
+  the NRT render:
+
+  ```sh
+  SCLANG=/path/to/SuperCollider.app/Contents/MacOS/sclang \
+  SCSYNTH=/path/to/SuperCollider.app/Contents/Resources/scsynth \
+  bash scripts/run_headless_tests.sh
+  ```
+
+  The placeholders above represent the exact SHA-verified SuperCollider
+  3.14.1 executables used locally; their machine-specific path is omitted.
+  Result: `Ran 15 tests in 81.435s`, `OK`; no compiler warnings or analyzer
+  plist artifacts. The Ruby standard-library YAML parse of
+  `.github/workflows/headless-tests.yml` and `git diff --check` also passed.
+- **Documentation:** The root README and docs index describe both check
+  commands; `RALPH_IMPLEMENTATION_PROMPT.md` makes the full check mandatory
+  for implementation workers and requires reviewers/coordinators to verify
+  green checks on the exact PR head and after integration/rebase.
+- **Coverage limits:** The local run used macOS arm64. The updated GitHub
+  Actions workflow is configured for pushes, pull requests, and manual
+  dispatch on macOS 14, but its hosted run on this branch has not been
+  observed. Windows 10 x64, an actual MacBook Neo, GUI/SCIDE, and real-time
+  audio remain outside this CI gate.
+- **Integration state:** No PR or remote merge is claimed.
+
+## CI quality gate — latest-base retest — 2026-09-25
+
+- **Rebase:** Fetched `origin/main` at
+  `1926bdab3c358088f359cf73f0d8025a66c7d0d0` and rebased
+  `ralph/ci-quality-pipeline-20260925-0412` onto it without conflicts.
+  Upstream changes were limited to Git workflow memory and README follow-up
+  records.
+- **Implementation commit after rebase:**
+  `0ed695472f44c52a0379eb61ee691d45fe590684`.
+- **Full regression command:** `bash scripts/run_headless_tests.sh`, with
+  `SCLANG` and `SCSYNTH` set to the verified SuperCollider 3.14.1 CLI
+  executables. The full quality/build/Python/NRT gate passed: 9 DSP assertions
+  and all 15 discovered Python tests, including plugin loading and NRT render.
+  Result: `Ran 15 tests in 11.239s`, `OK`. Machine-specific runtime paths are
+  intentionally omitted from this repository record.
+- **Integration state:** The task branch is unpublished. No hosted run for the
+  strict quality-gate commits, PR, or remote merge is claimed.
+
+## CI quality gate — post-PR #23 rebase retest — 2026-09-25
+
+- **Rebase:** Fetched `origin/main` at
+  `7523a9a0b87ffc5304686e2e64509fc4a6941bb7` after PR #23 reconciled the
+  Ralph dashboard, then rebased the CI branch without conflicts in the
+  executable gate.
+- **Implementation commit:** `c585ea93bb1c3e819ac63376dc7a0dd1de94b842`.
+- **Full regression:** `bash scripts/run_headless_tests.sh`, with `SCLANG`
+  and `SCSYNTH` set to the verified SuperCollider 3.14.1 CLI executables,
+  passed after this latest rebase: all 9 DSP assertions and all 15 Python
+  tests, including plugin loading and NRT rendering. Result: `Ran 15 tests in
+  82.733s`, `OK`; no compiler warnings or analyzer artifacts.
+- **Integration:** The task branch remains unpublished. No GitHub-hosted run,
+  PR, or remote merge for the strict quality-gate change is claimed.
+
+## CI quality gate — post-PR #26 rebase and authorized integration — 2026-09-25
+
+- **Rebase:** Fetched `origin/main` at
+  `6f2a6c8693634e58282a8b70274664ad316b24e8` and completed the rebase while
+  preserving upstream PR #24-26 implementation, review, and status records.
+  The portable symbol check remains intact alongside strict Clang analysis,
+  `-Werror`, and required `nm` preflight.
+- **Implementation commit:** `16d39c8fedc282a6560e407be1f7b20fc296e156`.
+- **Full regression command:** `bash scripts/run_headless_tests.sh`, with
+  `SCLANG` and `SCSYNTH` set to the verified official SuperCollider 3.14.1
+  executables. Result: PASS — 9 DSP assertions, warning-free plugin analysis
+  and build with exact `_load` export verification, and all 23 Python tests,
+  including NRT plugin integration; `Ran 23 tests in 28.168s`, `OK`.
+  Machine-specific runtime paths are omitted. No compiler warnings or
+  analyzer plist artifacts were produced.
+- **Integration authorization:** The owner explicitly requested that the
+  branch be committed, pushed, and merged. `RALPH_IMPLEMENTATION_PROMPT.md`,
+  `.github/memory/git-workflow.md`, and DEC-028 now require agents to complete
+  that requested sequence and verify the remote merge before reporting
+  completion. They also prohibit retrying a rejected post-publication push;
+  follow-up records must use a fresh branch and PR.
+- **Current state:** The required local gate is green and the user authorized
+  publication. The branch has not yet been published; no hosted run, PR, or
+  remote merge is claimed. Next, finish final records, publish once, open the
+  PR, verify checks on its exact head, and merge through the authorized
+  GitHub path.
+
+## CI quality gate — PR #28 hosted verification and merge — 2026-09-25
+
+- **Published branch:** `ralph/ci-quality-pipeline-20260925-0412`, exact PR
+  head `212e1971f5ce8439ea6ca64eeece13f7ab61b5ec`.
+- **Pull request:** [#28](https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/28),
+  based on `origin/main` at
+  `6f2a6c8693634e58282a8b70274664ad316b24e8`.
+- **Hosted CI:** Push run `36144876368` and pull-request run `36144900104`
+  both passed on the exact PR head. Both retained the existing
+  `headless-tests` check identity.
+- **Merge:** `gh pr merge 28 --merge` completed at `2026-09-25T14:04:06Z`;
+  merge commit `3c942fbd6e43dfec39bd1393be1c3ed0dd43b06e`.
+- **Remote verification:** After fetching `origin/main`,
+  `git merge-base --is-ancestor 3c942fbd6e43dfec39bd1393be1c3ed0dd43b06e
+  origin/main` passed, with `origin/main` at that merge commit.
+- **Status synchronization:** The task dashboard, coordinator leaf, and PR
+  decision record are being reconciled on a fresh status-only branch from the
+  verified merge, not by pushing to the published implementation branch.

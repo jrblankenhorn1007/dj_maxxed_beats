@@ -1,0 +1,52 @@
+name: Headless Tests
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  headless-tests:
+    runs-on: macos-14
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Provision SuperCollider 3.14.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          dmg_url="https://github.com/supercollider/supercollider/releases/download/Version-3.14.1/SuperCollider-3.14.1-macOS-universal.dmg"
+          expected_sha256="ed264b32752d27fc86e506dd0a7eb36de7c19ebce73c3fdf2ed5514f8c73f02e"
+          runtime_dir="${GITHUB_WORKSPACE}/.runtime"
+          dmg_path="${runtime_dir}/SuperCollider-3.14.1-macOS-universal.dmg"
+          mount_point="${runtime_dir}/mount"
+
+          mkdir -p "${mount_point}"
+          curl --fail --location --retry 3 --retry-delay 2 \
+            "${dmg_url}" --output "${dmg_path}"
+          printf '%s  %s\n' "${expected_sha256}" "${dmg_path}" \
+            | shasum -a 256 --check
+
+          hdiutil attach -readonly -nobrowse -noautoopen \
+            -mountpoint "${mount_point}" "${dmg_path}"
+
+          sclang_path="${mount_point}/SuperCollider.app/Contents/MacOS/sclang"
+          scsynth_path="${mount_point}/SuperCollider.app/Contents/Resources/scsynth"
+          test -x "${sclang_path}"
+          test -x "${scsynth_path}"
+          "${sclang_path}" -v
+          "${scsynth_path}" -v
+
+      - name: Run quality checks, builds, unit tests, and NRT integration
+        env:
+          SCLANG: ${{ github.workspace }}/.runtime/mount/SuperCollider.app/Contents/MacOS/sclang
+          SCSYNTH: ${{ github.workspace }}/.runtime/mount/SuperCollider.app/Contents/Resources/scsynth
+        run: bash scripts/run_headless_tests.sh
