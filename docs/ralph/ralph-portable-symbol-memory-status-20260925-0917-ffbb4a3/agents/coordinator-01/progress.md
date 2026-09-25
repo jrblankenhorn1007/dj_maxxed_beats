@@ -69,3 +69,15 @@
   simulates Windows `ntpath`.
 - The follow-up branch is still pre-publication. PR number, review result,
   memory merge, and final aggregate completion remain pending.
+
+## Pre-publication commit and base check — 2026-09-25T09:31:30Z
+
+- Committed the memory, project progress/status, and worker record updates in
+  `2e2c57a4b6f96722d381df00fee40774557134b9`
+  (`docs: capture cross-platform path memory and merge status`), including
+  the required Copilot co-author trailer.
+- Fetched `origin` before publication. `origin/main` remains
+  `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6`; no rebase was needed.
+- A pre-publication status commit now records this memory implementation
+  commit and the validation results. The branch remains unpublished while
+  final diff checks run.

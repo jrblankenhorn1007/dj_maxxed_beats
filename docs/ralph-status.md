@@ -1,7 +1,7 @@
 schema_version: 2
 snapshot_path: "docs/ralph-status.md"
 snapshot_revision: 4
-updated_at_utc: "2026-09-25T09:26:07Z"
+updated_at_utc: "2026-09-25T09:31:30Z"
 overall_status: IN_PROGRESS
 current_run_ids:
   - "skills-routing-20260925-0108"
@@ -70,6 +70,7 @@ runs:
         - "tests/test_fetch_sc_plugin_api.py"
         - "plugin/fetch_sc_plugin_api.py"
       followup_branch: "ralph/portable-symbol-memory-status-20260925-0917-ffbb4a3"
+      followup_implementation_commit_sha: "2e2c57a4b6f96722d381df00fee40774557134b9"
 
   - run_id: "readme-refresh-20260925-0248"
     task_ids: ["improve-root-readme"]
@@ -112,7 +113,7 @@ runs:
     active_worker_count: 0
     base_origin_main_sha: "c448dae05f792ef868557e7d67a0a1becb7e6895"
     created_at_utc: "2026-09-25T06:23:53.187Z"
-    updated_at_utc: "2026-09-25T09:18:10Z"
+    updated_at_utc: "2026-09-25T09:31:30Z"
     next_action: "PR #24 implementation is merged and verified; complete the coordinator-owned memory/status follow-up and verify it on fetched origin/main before marking this run complete."
     split_plan:
       - task_id: "portable-plugin-load-symbol-check"
@@ -187,6 +188,7 @@ runs:
         - "plugin/fetch_sc_plugin_api.py"
         - "tests/test_fetch_sc_plugin_api.py"
       followup_branch: "ralph/portable-symbol-memory-status-20260925-0917-ffbb4a3"
+      followup_implementation_commit_sha: "2e2c57a4b6f96722d381df00fee40774557134b9"
       followup_pull_request:
         status: PENDING
         number: null
@@ -462,6 +464,7 @@ branch_agent_index:
     progress_path: "docs/ralph/ralph-portable-symbol-memory-status-20260925-0917-ffbb4a3/agents/coordinator-01/progress.md"
     decision_record_path: "docs/decisions/ralph-portable-symbol-memory-status-20260925-0917-ffbb4a3/agents/coordinator-01/pr-pending.md"
     decision_index_path: "docs/decisions/ralph-portable-symbol-memory-status-20260925-0917-ffbb4a3/README.md"
+    implementation_commit_sha: "2e2c57a4b6f96722d381df00fee40774557134b9"
     pull_request:
       status: PENDING
       number: null
@@ -482,7 +485,7 @@ branch_agent_index:
         rationale: null
         recorded_at_utc: null
     resource_usage:
-      time_spent_seconds: 477
+      time_spent_seconds: 801
       time_basis: WALL_CLOCK_ELAPSED
       token_spend:
         status: NOT_REPORTED
