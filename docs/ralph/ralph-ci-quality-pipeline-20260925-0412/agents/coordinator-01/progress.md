@@ -113,3 +113,18 @@ attestation_kind: SELF_ATTESTATION
 cryptographic_signature_status: NOT_CRYPTOGRAPHICALLY_SIGNED
 statement: "I, coordinator-01, sign off iteration 1 for add-ci-quality-gates at exact implementation commit c585ea93bb1c3e819ac63376dc7a0dd1de94b842. The full quality/build/Python/NRT suite passed after rebase onto origin/main 7523a9a0b87ffc5304686e2e64509fc4a6941bb7; the task branch is unpublished and no hosted run or merge is claimed."
 ```
+
+## PR #28 integration — 2026-09-25
+
+- Published `ralph/ci-quality-pipeline-20260925-0412` once after all known
+  implementation, test, and guidance changes were committed.
+- PR #28 was opened from base
+  `6f2a6c8693634e58282a8b70274664ad316b24e8` with exact head
+  `212e1971f5ce8439ea6ca64eeece13f7ab61b5ec`.
+- The push run `36144876368` and pull-request run `36144900104` both passed
+  on that exact head.
+- Merged through `gh pr merge 28 --merge` at `2026-09-25T14:04:06Z`;
+  merge commit `3c942fbd6e43dfec39bd1393be1c3ed0dd43b06e`.
+- Fetched `origin/main` and verified the merge commit as an ancestor of the
+  remote main ref. The fresh status-only follow-up records this completed
+  integration without changing the published implementation branch.

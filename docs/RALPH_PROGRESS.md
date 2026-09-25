@@ -1034,3 +1034,22 @@ Ralph-Status: IN_PROGRESS
   remote merge is claimed. Next, finish final records, publish once, open the
   PR, verify checks on its exact head, and merge through the authorized
   GitHub path.
+
+## CI quality gate — PR #28 hosted verification and merge — 2026-09-25
+
+- **Published branch:** `ralph/ci-quality-pipeline-20260925-0412`, exact PR
+  head `212e1971f5ce8439ea6ca64eeece13f7ab61b5ec`.
+- **Pull request:** [#28](https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/28),
+  based on `origin/main` at
+  `6f2a6c8693634e58282a8b70274664ad316b24e8`.
+- **Hosted CI:** Push run `36144876368` and pull-request run `36144900104`
+  both passed on the exact PR head. Both retained the existing
+  `headless-tests` check identity.
+- **Merge:** `gh pr merge 28 --merge` completed at `2026-09-25T14:04:06Z`;
+  merge commit `3c942fbd6e43dfec39bd1393be1c3ed0dd43b06e`.
+- **Remote verification:** After fetching `origin/main`,
+  `git merge-base --is-ancestor 3c942fbd6e43dfec39bd1393be1c3ed0dd43b06e
+  origin/main` passed, with `origin/main` at that merge commit.
+- **Status synchronization:** The task dashboard, coordinator leaf, and PR
+  decision record are being reconciled on a fresh status-only branch from the
+  verified merge, not by pushing to the published implementation branch.
