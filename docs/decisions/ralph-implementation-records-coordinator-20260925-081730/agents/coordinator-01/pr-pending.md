@@ -6,8 +6,8 @@
 - **Runtime/session ID:** `ac00179e-f9e2-4693-8f9f-710a82b06af9`
 - **Branch:** `ralph/implementation-records-coordinator-20260925-081730`
 - **Base `origin/main`:** `7523a9a0b87ffc5304686e2e64509fc4a6941bb7`
-- **Rebased onto `origin/main`:** `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6`
-- **Implementation commit:** `42ac69454a2f14b94adc25fe54b3f4fb375fd52a`
+- **Rebased onto `origin/main`:** `6f2a6c8693634e58282a8b70274664ad316b24e8`
+- **Implementation commit:** `3f82142369c833be370e57037d3a97cc7cad3688`
 - **Pull request:** pending normal publication to `main`.
 - **Review:** pending; launch the independent Ralph Code Reviewer for the
   exact PR base/head SHAs before any merge action. The changes are
@@ -96,3 +96,32 @@ The completed archive update was committed as
 onto `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6`. The staged patch passed
 `git diff --cached --check` and `git diff --check`; the post-commit branch
 remains unpublished pending the parent PR metadata and independent review.
+
+## Decision — Rebase and extend the archive through PR #26
+
+- **Context:** Before publication, `origin/main` advanced from
+  `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6` through PRs #25 and #26 to
+  `6f2a6c8693634e58282a8b70274664ad316b24e8`.
+- **Alternatives:** Publish the older 19-dossier index, stop for a fresh
+  iteration, or rebase the unpublished branch and archive the newly merged
+  PRs using their canonical records.
+- **Decision:** Rebase the unpublished branch onto the latest `origin/main`,
+  add PR #25/#26 dossiers, and finalize PR #25's review summary from its
+  canonical status and decision evidence.
+- **Rationale:** The user requested a branch dossier and code-review folder
+  for each branch. Updating the index through current main avoids omitting
+  branches merged while the archive was in progress and avoids inventing
+  historical reports.
+- **Conflict resolution:** Three rebase stops involved only
+  `docs/ralph-status.md`. Kept the fetched main's PR #25/#26 records, restored
+  this run's coordinator entry, and verified the resulting dashboard YAML.
+  No unrelated project records were discarded.
+- **Evidence:** PR #25's canonical status and decision record report one
+  `CLEAN` Ralph Code Reviewer pass for base
+  `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6` and head
+  `e89a2f2ee596a98fa79ef6f92fd7addbe85a5597`. PR #26's GitHub review list
+  is empty; its dossier remains `LEGACY_NOT_ARCHIVED`.
+- **Checks:** `git diff --check origin/main...HEAD` passed. The Ruby archive
+  validator passed for 21 dossiers and 209 local links across 77 Markdown
+  files; the Ruby parse of `docs/ralph-status.md` passed.
+- **Resulting archive commit:** `3f82142369c833be370e57037d3a97cc7cad3688`.
