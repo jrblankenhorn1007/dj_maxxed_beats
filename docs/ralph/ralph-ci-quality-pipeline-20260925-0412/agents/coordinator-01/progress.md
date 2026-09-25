@@ -89,3 +89,27 @@ attestation_kind: SELF_ATTESTATION
 cryptographic_signature_status: NOT_CRYPTOGRAPHICALLY_SIGNED
 statement: "I, coordinator-01, sign off iteration 1 for add-ci-quality-gates at exact implementation commit 0ed695472f44c52a0379eb61ee691d45fe590684. The full quality/build/Python/NRT suite passed after rebase onto origin/main 1926bdab3c358088f359cf73f0d8025a66c7d0d0; the task branch is unpublished and no hosted run or merge is claimed."
 ```
+
+## Follow-up rebase and regression run — 2026-09-25
+
+- **Rebase:** After PR #23 updated the Ralph dashboard, fetched
+  `origin/main` at `7523a9a0b87ffc5304686e2e64509fc4a6941bb7` and rebased
+  the CI branch onto that commit without changing CI code. The upstream
+  dashboard reconciliation was preserved.
+- **Implementation commit:** `c585ea93bb1c3e819ac63376dc7a0dd1de94b842`.
+- **Command:** `bash scripts/run_headless_tests.sh`, with `SCLANG` and
+  `SCSYNTH` set to the SHA-verified SuperCollider 3.14.1 CLI executables.
+- **Result:** PASS — all 9 DSP assertions, warning-free plugin build and
+  `_load` symbol check, and all 15 Python tests including NRT plugin
+  integration; `Ran 15 tests in 82.733s`, `OK`.
+- **Integration:** The strict-gate task branch remains unpublished. No
+  GitHub-hosted Actions run or merge is claimed.
+
+### Updated coordinator sign-off
+
+```yaml
+status: RECEIVED
+attestation_kind: SELF_ATTESTATION
+cryptographic_signature_status: NOT_CRYPTOGRAPHICALLY_SIGNED
+statement: "I, coordinator-01, sign off iteration 1 for add-ci-quality-gates at exact implementation commit c585ea93bb1c3e819ac63376dc7a0dd1de94b842. The full quality/build/Python/NRT suite passed after rebase onto origin/main 7523a9a0b87ffc5304686e2e64509fc4a6941bb7; the task branch is unpublished and no hosted run or merge is claimed."
+```

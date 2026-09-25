@@ -992,3 +992,18 @@ Ralph-Status: IN_PROGRESS
   intentionally omitted from this repository record.
 - **Integration state:** The task branch is unpublished. No hosted run for the
   strict quality-gate commits, PR, or remote merge is claimed.
+
+## CI quality gate — post-PR #23 rebase retest — 2026-09-25
+
+- **Rebase:** Fetched `origin/main` at
+  `7523a9a0b87ffc5304686e2e64509fc4a6941bb7` after PR #23 reconciled the
+  Ralph dashboard, then rebased the CI branch without conflicts in the
+  executable gate.
+- **Implementation commit:** `c585ea93bb1c3e819ac63376dc7a0dd1de94b842`.
+- **Full regression:** `bash scripts/run_headless_tests.sh`, with `SCLANG`
+  and `SCSYNTH` set to the verified SuperCollider 3.14.1 CLI executables,
+  passed after this latest rebase: all 9 DSP assertions and all 15 Python
+  tests, including plugin loading and NRT rendering. Result: `Ran 15 tests in
+  82.733s`, `OK`; no compiler warnings or analyzer artifacts.
+- **Integration:** The task branch remains unpublished. No GitHub-hosted run,
+  PR, or remote merge for the strict quality-gate change is claimed.

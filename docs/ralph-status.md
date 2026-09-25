@@ -80,7 +80,7 @@ runs:
       verified_at_utc: null
     checks:
       - command: "bash scripts/run_headless_tests.sh with the verified SuperCollider 3.14.1 CLI executables"
-        result: "PASS after rebase: 9 DSP assertions and all 15 Python tests, including NRT plugin integration."
+        result: "PASS after rebase onto origin/main 7523a9a0b87ffc5304686e2e64509fc4a6941bb7: 9 DSP assertions and all 15 Python tests, including NRT plugin integration; 82.733 seconds."
       - command: "GitHub Actions run for this task branch"
         result: "NOT_RUN — the branch has not been published."
 

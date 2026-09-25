@@ -84,14 +84,14 @@ unimplemented.
   build with `-Wall -Wextra -Werror`; the `_load` symbol was verified. No
   analyzer output artifacts or compiler warnings were produced.
 - **Full local headless suite:** After rebasing the task branch onto fetched
-  `origin/main` at `1926bdab3c358088f359cf73f0d8025a66c7d0d0`, with explicit
+  `origin/main` at `7523a9a0b87ffc5304686e2e64509fc4a6941bb7`, with explicit
   paths to the verified SuperCollider 3.14.1 CLI runtime,
   `bash scripts/run_headless_tests.sh` passed all nine DSP assertions and all
   15 discovered Python tests, including the plugin/NRT render. This local run
-  used macOS 26.5.2 arm64 and launched no GUI, SCIDE, real-time server, or
-  audio hardware. The GitHub Actions workflow is configured for every push,
-  pull request, and manual dispatch on macOS 14; a hosted run of this updated
-  quality gate was not observed.
+  completed in 82.733 seconds on macOS 26.5.2 arm64 and launched no GUI,
+  SCIDE, real-time server, or audio hardware. The GitHub Actions workflow is
+  configured for every push, pull request, and manual dispatch on macOS 14;
+  a hosted run of this updated quality gate was not observed.
 - **Diff/syntax:** The existing build-script check
   `bash -n plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh && git diff --check`
   passed. This pipeline also passed `bash -n scripts/run_headless_tests.sh`,
