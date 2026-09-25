@@ -146,6 +146,9 @@ unverified. Packaging and release support have not been implemented.
   implemented and the current verification/platform coverage.
 - [Progress evidence](./docs/RALPH_PROGRESS.md) — iteration-by-iteration
   build, test, and runtime evidence.
+- [Per-branch implementation archive](./docs/implementation/README.md) —
+  branch-specific prompts, agent handoffs, decision links, and code-review
+  records.
 - [Decision log](./docs/decision_log.md) — dated project and architecture
   decisions.
 - [Ralph implementation prompt](./docs/RALPH_IMPLEMENTATION_PROMPT.md) — the

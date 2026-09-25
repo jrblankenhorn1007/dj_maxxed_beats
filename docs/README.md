@@ -17,6 +17,12 @@ documentation rather than repeating the product overview.
 - [Decision log](./decision_log.md) — append-only records of material product
   and architecture decisions.
 
+## Branch evidence
+
+- [Implementation archive](./implementation/README.md) — branch-by-branch
+  index of implementation records, prompts, agent handoffs, decisions, and
+  code-review folders.
+
 ## Development and sound design
 
 - [Ralph implementation prompt](./RALPH_IMPLEMENTATION_PROMPT.md) — the
