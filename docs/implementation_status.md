@@ -30,7 +30,7 @@ unimplemented.
 | Area | Status | Current state |
 | --- | --- | --- |
 | Product architecture and acceptance criteria | Documented | Quark-first, in-SuperCollider experience; no SuperCollider core fork planned. |
-| Development process | Shared workflow | Invoke the canonical shared `Ralph Loop` agent with `docs/RALPH_IMPLEMENTATION_PROMPT.md` and follow the shared `ralph-loop` skill. The shared workflow owns general iteration mechanics; this project has no local shell runner or runner-only tests. Product acceptance criteria, visual coverage, progress, current status, and decisions remain documented locally. |
+| Development process | Shared workflow | Invoke the canonical shared `Ralph Loop` agent with `docs/RALPH_IMPLEMENTATION_PROMPT.md` and follow the shared `ralph-loop` skill. The shared workflow owns general iteration mechanics; this project has no local Ralph-loop shell runner. Its separate headless DSP/NRT test entrypoint is documented in `docs/README.md`. Product acceptance criteria, visual coverage, progress, current status, and decisions remain documented locally. |
 | Custom C++ server plugin / UGen palette | In progress | ChaosOsc DSP core and `SCUnit` wrapper exist (`plugin/ChaosOsc/Source/`). Audio-rate inputs are read per sample; scalar/control-rate values are broadcast per block; seed is captured at construction. Finite bounds and NaN fallbacks are deterministic. The `ChaosOsc.ar` class/help pass source tests; the plugin compiles against the 3.14.1 API and loads in its matching `scsynth` for NRT rendering. Real-time audition and other platform/release ABIs remain unverified. |
 | Quark packaging and SCIDE entry point | Not started | No Quark classes or GUI exist. |
 | sclang composition and NRT rendering | Prototype verified | A test-only deterministic NRT Score uses `ChaosOsc.ar` and the plugin to produce a short WAV. The end-user composition/render workflow is not implemented. |
@@ -39,7 +39,7 @@ unimplemented.
 | Usage, estimated dollars, and informational credits | Specified | The planned initial conversion is 100 app credits per estimated USD; no metering or display exists. |
 | Review, approval, undo, and candidate isolation | Specified | Safety requirements are planned but not implemented. |
 | In-app variation loop | Specified | User-started, stoppable, isolated, and limited to four candidates by default; not implemented. |
-| Tests, builds, and release packaging | In progress | Nine DSP assertions, two language-source tests, six API-fetcher tests, a release-pinned plugin smoke build, and a runtime NRT integration test pass on macOS arm64. Release packaging is not started. |
+| Tests, builds, and release packaging | In progress | `bash scripts/run_headless_tests.sh` runs the nine DSP assertions and all 12 Python tests, including the release-pinned plugin build and runtime NRT integration, on macOS. GitHub Actions provisions official SuperCollider 3.14.1 and runs the entrypoint on macOS only; Windows coverage is not claimed. Release packaging is not started. |
 | Visual application verification | Planned | `docs/VISUAL_TEST_PLAN.md` requires live SCIDE GUI runs, native screenshots, and image inspection on both target platforms; no app exists to test yet. |
 
 ## Verification and platform coverage
@@ -63,8 +63,8 @@ unimplemented.
   tests/test_fetch_sc_plugin_api.py` passed all 6 tests, including release
   pin and per-revision cache coverage.
 - **Development workflow migration:** The project prompt invokes the shared
-  Ralph Loop agent and canonical skill; runner-only files and active local
-  runner instructions are removed. Exact checks are recorded in
+  Ralph Loop agent and canonical skill. Ralph-loop runner-only files and
+  active local runner instructions were removed; exact checks are recorded in
   `RALPH_PROGRESS.md`.
 - **Current iteration:** `bash plugin/ChaosOsc/Tests/run_tests.sh` passed all
   9 DSP assertions. The NRT command
@@ -76,13 +76,26 @@ unimplemented.
   `0.062326`, and `0.057602`, seed-update difference was `0`, control-rate
   difference before update was `0`, and the post-update maximum difference
   was `0.165870212`.
-- **Diff/syntax:** `bash -n
-  plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh && git diff --check`
-  passed.
+- **Headless pipeline:** `bash scripts/run_headless_tests.sh` passed with
+  explicit `SCLANG`/`SCSYNTH` paths (9/9 DSP assertions and all 12 Python
+  tests, including the ChaosOsc NRT render); a second complete run passed with
+  both variables unset and the CLI executables found on `PATH`. The official
+  SuperCollider 3.14.1 DMG matched the recorded SHA-256 and both CLI tools
+  reported release commit `426edf6`. These runs used macOS 26.5.2 arm64 and
+  launched no GUI, SCIDE, real-time server, or audio hardware. The GitHub
+  Actions workflow is configured for pull requests, pushes, and manual
+  dispatch on macOS 14; its hosted run was not observed in this local check.
+- **Diff/syntax:** The existing build-script check
+  `bash -n plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh && git diff --check`
+  passed. This pipeline also passed `bash -n scripts/run_headless_tests.sh`,
+  a Ruby YAML parse of `.github/workflows/headless-tests.yml`, and
+  `git diff --cached --check`.
 - **Runtime:** The official SuperCollider 3.14.1 universal DMG was verified
   by SHA256 and run locally from ignored `.runtime/`. `sclang` and `scsynth`
   both reported 3.14.1 (release commit `426edf6`).
 - **Windows 10 x64:** Not validated.
+- **Windows CI coverage:** Not provided by the headless workflow; the current
+  plugin smoke build is macOS-specific.
 - **MacBook Neo:** Not validated; this macOS arm64 run is not device-specific.
 - **Real-time audition, GUI/SCIDE, and other SuperCollider releases:** Not
   validated. The NRT integration covers only SuperCollider 3.14.1 on this

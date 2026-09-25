@@ -2,6 +2,10 @@
 
 This plan is maintained at `docs/VISUAL_TEST_PLAN.md`.
 
+Automated DSP and `ChaosOsc` NRT integration coverage is run separately with
+`bash scripts/run_headless_tests.sh` from the repository root. That command
+does not launch SCIDE or a GUI and does not satisfy any visual sign-off here.
+
 The Ralph loop's final acceptance gate is to launch the real SuperCollider
 application workflow, exercise it, capture its actual window, and inspect the
 screenshots. A passing build, headless test, mocked widget, or textual log is

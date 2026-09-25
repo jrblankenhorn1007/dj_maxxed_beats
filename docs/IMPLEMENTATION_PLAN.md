@@ -77,7 +77,9 @@ These are distinct features with different jobs:
    duplicating those references here. This plan remains the source of truth for
    the product's acceptance criteria; the development loop changes extension
    and plugin code, not music-generation behavior. This project does not
-   provide a local shell runner.
+   provide a local shell runner for the development loop; headless product
+   tests use the separate [automated headless test
+   entrypoint](./README.md#automated-headless-tests).
 2. **In-app music exploration loop:** when the user explicitly starts a
    sampling session, generate and render a bounded set of alternative musical
    candidates using the custom UGens. Keep each candidate and its settings
