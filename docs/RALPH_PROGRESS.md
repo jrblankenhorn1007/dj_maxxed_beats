@@ -785,7 +785,7 @@ Ralph-Status: IN_PROGRESS
   GUI/SCIDE, and real-time audition were not tested. The GitHub Actions
   workflow remains macOS-only; no hosted CI result is claimed here.
 - **Implementation commit:** `4cb936134e7ccef09c248de7fe761783891fa6ec`.
-  The worker-owned status/decision records are being committed before first
-  branch publication. The aggregate `docs/ralph-status.md` remains
+  The worker-owned status/decision records are committed before first branch
+  publication. The aggregate `docs/ralph-status.md` remains
   coordinator-owned and was not edited. Post-merge memory review remains
   pending for the coordinator; no memory update is made before merge.
