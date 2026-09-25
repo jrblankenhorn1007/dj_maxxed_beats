@@ -12,7 +12,6 @@
 
 ## Agent / PR records
 
-- [worker-01 / PR pending](agents/worker-01/pr-pending.md)
+- [worker-01 / PR #10](agents/worker-01/pr-10.md)
 
-Move the pending record to a numbered PR record and update this index when
-the normal pull request is opened.
+PR #10 is open; integration has not been attempted.
