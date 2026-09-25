@@ -21,9 +21,11 @@ Ralph-Status: IN_PROGRESS
   The README distinguishes the planned AI-assisted Quark from the existing
   ChaosOsc test prototype, explains developer commands and prerequisites, and
   separates planned targets from verified platform coverage.
-- **Closed initial PR:** PR #17 is closed without merge. Its original branch
-  remains preserved. The local work is carried forward on this fresh branch;
-  the implementation is not yet published or merged.
+- **Initial PR:** PR #17 is closed without merge. Its original branch remains
+  preserved. The README work continued on fresh branch
+  `ralph/readme-documentation-followup-20260925-0412`; replacement PR #20 is
+  merged and verified on `origin/main` at
+  `9c8c1b679b765ace2b4ae1dac49c1ed827f43171`.
 - **Push diagnosis:** GitHub ruleset evaluation `4221447764` identified the
   active `Gate` ruleset's `code_coverage` rule and returned “Code coverage
   checks require merging via API or UI.” This does not establish a measured
@@ -35,12 +37,16 @@ Ralph-Status: IN_PROGRESS
   now targets `../README.md#run-the-developer-checks`.
 - **TDD:** Not applicable; this is documentation and workflow-record work.
   Product behavior was not changed.
-- **Verification:** Targeted Markdown-link/anchor and YAML checks have passed;
-  final diff review and remote integration remain. Product behavior tests are
-  not being run because they do not validate these documentation changes.
-- **Memory:** Pending implementation merge and remote verification. A fresh
-  follow-up branch will record the GitHub `code_coverage` push-rule lesson
-  only after reviewing the project's existing memory categories.
+- **Verification:** Targeted Markdown-link/anchor and YAML checks passed,
+  both PR #20 headless CI checks passed, and its merge SHA is verified on
+  `origin/main`. Product behavior tests were not run because this was a
+  documentation-only change.
+- **Memory review:** Complete after reading the Project Memory skill and the
+  project's existing memory index and Testing category. The GH013 and
+  ruleset evidence supports a durable Git-workflow lesson; the new entry is
+  prepared on fresh branch
+  `ralph/readme-gh013-memory-followup-20260925-9c8c1b6`. Its merge remains
+  pending.
 
 ## Local verification — 2026-09-25
 
@@ -62,5 +68,24 @@ Ralph-Status: IN_PROGRESS
 
 - **Implementation commit:** `908a28c30103c3cbe6f14d81e1c16f4187775ee5`.
 - **Coordinator sign-off:** `SELF_ATTESTATION`, not cryptographically signed,
-  for that exact commit. The replacement PR has not yet been opened, and no
-  merge is claimed.
+  for that exact commit.
+- **PR #20 merge:** Merged at `2026-09-25T06:36:07Z`; merge commit
+  `9c8c1b679b765ace2b4ae1dac49c1ed827f43171` is an ancestor of fetched
+  `origin/main`.
+
+## Post-merge memory review
+
+- **Evidence:** The failed PR #17 handoff push returned GH013. GitHub
+  rule-suite evaluation `4221447764` identified the `Gate` ruleset's
+  `code_coverage` rule and the API/UI-only merge message. No measured coverage
+  percentage was returned. The replacement branch's initial publication
+  succeeded; its CI checks passed, and PR #20 merged through `gh pr merge`.
+- **Disposition:** Added a concise Git-workflow lesson in
+  `.github/memory/git-workflow.md` and indexed it from
+  `.github/memory/README.md`. The lesson records the authorized merge path and
+  warns that this GH013 message is not evidence of a measured coverage
+  shortfall.
+- **Memory follow-up:** Changes are prepared on fresh branch
+  `ralph/readme-gh013-memory-followup-20260925-9c8c1b6` from
+  `origin/main` at `9c8c1b679b765ace2b4ae1dac49c1ed827f43171`. Its PR and merge
+  verification remain pending.

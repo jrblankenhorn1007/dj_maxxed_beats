@@ -6,15 +6,18 @@
 - **Coordinator:** `coordinator-01 / README continuation and integration`
 - **Starting `origin/main`:**
   `c448dae05f792ef868557e7d67a0a1becb7e6895`
-- **Replacement PR:** pending initial publication.
+- **PR #20:** merged at `9c8c1b679b765ace2b4ae1dac49c1ed827f43171`.
+- **Memory follow-up:** pending publication from fresh base
+  `9c8c1b679b765ace2b4ae1dac49c1ed827f43171`.
 
 ## Agent / PR records
 
-- [coordinator-01 / pending replacement PR](agents/coordinator-01/pr-pending.md)
+- [coordinator-01 / PR #20](agents/coordinator-01/pr-20.md)
 - [worker-01 / closed PR #17](../ralph-readme-docs-worker-01-20260925-0248/agents/worker-01/pr-17.md)
 
 The original PR #17 was closed without merge after `origin/main` advanced.
 Its GH013 push rejection is documented in the worker record and was caused by
 the repository's API/UI-only merge rule, not a reported measured coverage
-shortfall. The replacement is prepared on a fresh branch, with all edits
-planned before its first publication.
+shortfall. PR #20 carries the README and link repair and is verified on
+`origin/main`. The post-merge memory review found a durable repository
+workflow lesson; its separate PR is not yet published.
