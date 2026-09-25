@@ -320,3 +320,101 @@ Ralph-Status: IN_PROGRESS
 - **Next task:** Provision a supported SuperCollider runtime, then write and
   run a failing integration test that loads ChaosOsc from sclang and renders
   a short deterministic NRT Score to WAV before extending the product further.
+
+## Iteration 5: runtime-backed ChaosOsc NRT integration
+
+- **Behavior under test:** A fixed-seed `ChaosOsc` graph must load through its
+  sclang class and server plugin, render a short finite/non-silent WAV, repeat
+  deterministically, ignore seed-control changes after Synth construction,
+  and respond to control-rate `chaosAmount` updates.
+- **Runtime provisioning:** No `sclang`, `scsynth`, Homebrew, MacPorts, or Nix
+  executable was available on `PATH`. Provisioned the official
+  `Version-3.14.1` universal macOS DMG into the ignored `.runtime/` directory:
+  `curl -fL --retry 3 --retry-delay 2 -o
+  .runtime/SuperCollider-3.14.1-macOS-universal.dmg
+  https://github.com/supercollider/supercollider/releases/download/Version-3.14.1/SuperCollider-3.14.1-macOS-universal.dmg`.
+  `shasum -a 256
+  .runtime/SuperCollider-3.14.1-macOS-universal.dmg` returned
+  `ed264b32752d27fc86e506dd0a7eb36de7c19ebce73c3fdf2ed5514f8c73f02e`, matching
+  the GitHub release asset digest. Mounted read-only with
+  `hdiutil attach -readonly -nobrowse -noautoopen -mountpoint .runtime/mount
+  .runtime/SuperCollider-3.14.1-macOS-universal.dmg`. Both `sclang -v` and
+  `scsynth -v` reported 3.14.1 from commit `426edf6`. Runtime validation was
+  on macOS 26.5.2, arm64.
+- **NRT Red:** Added `tests/chaososc_nrt_score.scd` and
+  `tests/test_chaososc_nrt.py` before changing the plugin wrapper. From the
+  worktree root, ran
+  `SCLANG=.runtime/mount/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=.runtime/mount/SuperCollider.app/Contents/Resources/scsynth
+  PYTHONDONTWRITEBYTECODE=1 python3 tests/test_chaososc_nrt.py`.
+  `scsynth` aborted with exit `-6`: the plugin built from headers at
+  `ea52528` reported API version 7, while the official 3.14.1 server expected
+  version 3. This was a real plugin/runtime compatibility failure.
+- **Header-pin Red/Green:** Added regression tests first for matching the
+  3.14.1 release commit and scoping cached headers by revision.
+  `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_fetch_sc_plugin_api.py
+  FetchScPluginApiTests.test_headers_are_pinned_to_the_supported_release
+  FetchScPluginApiTests.test_header_cache_is_scoped_to_the_pinned_revision`
+  failed both assertions against the old `ea52528` pin and shared cache path.
+  Pinned the plugin API to release commit
+  `426edf6d8742e1cc3bd85b51ca0c4e595d37a903`, moved headers into a
+  revision-scoped cache, and aligned the build script. Re-running that exact
+  command passed both tests.
+- **Resolved harness issue:** The first run after pinning the release aborted
+  because runtime discovery returned the same built-in plugin directory
+  twice in the `-U` search path. De-duplicated resolved plugin paths and used
+  `scsynth -D 0` so the test does not read a user's synthdef directory.
+  Reproducing the duplicate path directly returned exit 134 with
+  `libc++abi: terminating`; the corrected test harness renders successfully.
+- **Control-rate Red:** With the plugin loading, the NRT test rendered two
+  files but failed the fixed-seed comparison (maximum absolute difference
+  `0.1996920258`); the control-rate `chaosAmount` channel also differed from
+  baseline before its scheduled update. `ChaosOsc::next()` was reading
+  `in(0)` as an `nSamples` audio buffer even when the input was control rate.
+- **Green:** Updated `ChaosOsc::next()` to use `isAudioRateIn(0)`: audio-rate
+  inputs continue through the per-sample `processBlock()` path, while
+  scalar/control-rate inputs use `in0(0)` for each sample in the current
+  block. The update performs no allocation or I/O. The NRT score verifies
+  three aligned channels: fixed-seed baseline, the same seed input changed
+  after construction, and `chaosAmount` changed at 0.5 seconds.
+- **Help-contract Red/Green:** Extended
+  `tests/test_chaososc_language_contract.py` to require documentation for
+  audio-rate and control-rate input semantics. The initial
+  `PYTHONDONTWRITEBYTECODE=1 python3
+  tests/test_chaososc_language_contract.py` failed on both missing phrases;
+  the updated ChaosOsc help and source/design notes now document that
+  audio-rate values are read per sample and control-rate changes take effect
+  on the next block. Re-running the exact command passed both tests.
+- **Refactor/final verification:** Kept the implementation limited to the
+  existing per-sample core path plus a safe control-rate broadcast path. The
+  final NRT command above passed (`Ran 1 test in 108.010s`, exit 0). It
+  rendered IEEE float32 WAV files at 48 kHz with 3 channels and duration
+  `1.001333s`; all samples were finite, channel RMS values were
+  `0.062326`, `0.062326`, and `0.057602`, and both fixed-seed renders had
+  maximum sample difference `0`. Changing seed after Synth creation had
+  maximum channel difference `0`; `chaosAmount` matched baseline before its
+  update (difference `0`) and diverged afterward by up to `0.165870212`.
+  Also passed:
+  - `bash plugin/ChaosOsc/Tests/run_tests.sh` — all 9 DSP assertions.
+  - `PYTHONDONTWRITEBYTECODE=1 python3
+    tests/test_chaososc_language_contract.py` — 2 tests.
+  - `mkdir -p tests/.build/test-tmp && PYTHONDONTWRITEBYTECODE=1
+    TMPDIR="$PWD/tests/.build/test-tmp" python3
+    tests/test_fetch_sc_plugin_api.py` — all 6 tests.
+  - `bash plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh` — fetched 29
+    release-pinned headers, built `ChaosOsc.scx`, verified `_load`.
+  - `bash -n plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh &&
+    git diff --check` — passed.
+- **Decision:** Added DEC-022 to pin the initial runtime/API target to official
+  SuperCollider 3.14.1 and record the input-rate handling contract.
+- **Platform and runtime gaps:** Only macOS 26.5.2 arm64 with SuperCollider
+  3.14.1 was runtime-tested. Windows 10 x64 and an actual MacBook Neo were
+  not tested; generic Apple Silicon is not device-specific evidence.
+  Real-time audition, GUI/SCIDE, and other SuperCollider release versions
+  remain unverified.
+- **Project memory:** No `.github/memory/README.md` or category files exist.
+  The shared Project Memory workflow requires its review after a verified
+  merge, so review is left to the coordinator; no memory entry was added.
+- **Next task:** Implement a minimal user-facing procedural `.scd` composition
+  and offline render workflow on the validated UGen, then test real-time
+  audition and the supported target platforms.

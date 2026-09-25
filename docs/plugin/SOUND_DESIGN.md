@@ -12,14 +12,14 @@ and help file.
 **Status:** DSP core implemented and unit tested
 (`plugin/ChaosOsc/Source/ChaosOscCore.hpp`,
 `plugin/ChaosOsc/Tests/test_chaos_osc_core.cpp`). The C++ server plugin
-wrapper (`plugin/ChaosOsc/Source/ChaosOsc.cpp`) builds against the pinned
-SuperCollider plugin API headers and exports the plugin load symbol. The
-audio-rate sclang class and help file are now present under
-`plugin/ChaosOsc/Classes/` and `plugin/ChaosOsc/HelpSource/`. Their source
-contract is tested, but they have not been loaded in `sclang`; loading in
-`scsynth`, NRT rendering, and real-time audition remain unverified. See
-[`RALPH_PROGRESS.md`](../RALPH_PROGRESS.md) for exact verification evidence
-and [`decision_log.md`](../decision_log.md) for the selection rationale.
+wrapper (`plugin/ChaosOsc/Source/ChaosOsc.cpp`) builds against the
+SuperCollider 3.14.1 plugin API headers and exports the plugin load symbol.
+The audio-rate sclang class and help file are present under
+`plugin/ChaosOsc/Classes/` and `plugin/ChaosOsc/HelpSource/`. The class and
+plugin load and render deterministic NRT audio through SuperCollider 3.14.1
+on macOS arm64; real-time audition and target-platform coverage remain open.
+See [`RALPH_PROGRESS.md`](../RALPH_PROGRESS.md) for exact evidence and
+[`decision_log.md`](../decision_log.md) for the selection rationale.
 
 **DSP:** a logistic-map chaotic oscillator. The map
 `x[n+1] = r * x[n] * (1 - x[n])` is chaotic (non-periodic, sensitive to
@@ -32,9 +32,10 @@ from standard oscillator/noise UGens.
 **Controls:**
 
 - `chaosAmount` — the logistic-map growth rate `r`. Clamped internally to
-  `[3.57, 3.999]`; the C++ wrapper reads it per sample so it can be modulated.
-  Values near the low end sound more tonal/periodic, values near the high end
-  sound noisier and more broadband.
+  `[3.57, 3.999]`; audio-rate values are read per sample, while scalar and
+  control-rate values are broadcast across each audio block and control
+  updates take effect on the next block. Values near the low end sound more
+  tonal/periodic, values near the high end sound noisier and more broadband.
 - `seed` — initial map state in `(0, 1)`, exclusive of the exact fixed points
   `0.0`/`1.0`. Read at UGen construction; changing it after the Synth starts
   does not reseed the oscillator. Selects a specific chaotic trajectory so a
@@ -63,12 +64,14 @@ wrapped in a `UGen::next` callback.
 - Seeding at the map's exact fixed point (`0.0`) still escapes into varying
   output instead of producing silence forever.
 
-**Verified:** the plugin builds as a shared library against the exact
-SuperCollider headers pinned in
-[`IMPLEMENTATION_PLAN.md`](../IMPLEMENTATION_PLAN.md), and the exported
-`_load` symbol is present. This is compile-time smoke coverage only.
+**Verified:** the plugin builds against the API headers for SuperCollider
+3.14.1 (release commit
+`426edf6d8742e1cc3bd85b51ca0c4e595d37a903`), exports `_load`, loads in the
+matching `scsynth`, and produces a deterministic NRT WAV using the
+`ChaosOsc` sclang class. The NRT check verifies duration, finite/non-silent
+output, construction-time seed behavior, and control-rate `chaosAmount`
+updates. This is macOS arm64 runtime coverage only.
 
-**Not yet verified:** loading the plugin into `scsynth`, sclang class behavior,
-NRT rendering, real-time audition without dropouts, or platform/architecture-
-specific plugin ABI compatibility. `sclang` and `scsynth` are not installed in
-the current development environment, so these remain open tasks.
+**Not yet verified:** real-time audition without dropouts, Windows 10 x64 or
+MacBook Neo plugin ABI/runtime compatibility, or compatibility with
+SuperCollider releases other than 3.14.1.

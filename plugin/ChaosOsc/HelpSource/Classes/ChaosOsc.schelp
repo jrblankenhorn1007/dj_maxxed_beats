@@ -16,8 +16,9 @@ Create an audio-rate chaotic oscillator.
 
 ARGUMENT:: chaosAmount
 The logistic-map growth rate, clamped by the plugin to the range 3.57 to 3.999.
-Defaults to 3.9. The input is read for every sample and can be modulated at
-audio rate.
+Defaults to 3.9. Audio-rate inputs are read per sample and can be modulated at
+audio rate. Scalar and control-rate inputs are broadcast across each audio block.
+Control-rate changes take effect on the next block.
 
 ARGUMENT:: seed
 The initial map state, normally in the open interval 0 to 1. Defaults to 0.5.

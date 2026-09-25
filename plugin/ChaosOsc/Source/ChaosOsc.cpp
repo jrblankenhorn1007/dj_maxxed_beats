@@ -10,12 +10,12 @@
 // performs no I/O, allocation, locking, or blocking calls in `next()`, so
 // it is safe to run on the real-time audio thread.
 //
-// sclang-facing controls (see ChaosOsc.sc / ChaosOsc.schelp, not yet
-// written -- tracked as the next task):
+// sclang-facing controls (see ChaosOsc.sc / ChaosOsc.schelp):
 //   ChaosOsc.ar(chaosAmount, seed)
 //     chaosAmount: logistic-map growth rate, clamped internally to
 //                  [3.57, 3.999] (see ChaosOscCore::clampChaosAmount).
-//                  Read at audio rate, so it can be modulated.
+//                  Audio-rate inputs are read per sample; scalar and control-
+//                  rate inputs are broadcast across the current audio block.
 //     seed:        initial map state in (0, 1), read once at Ctor time.
 //                  Not re-read per sample; changing the seed input after
 //                  the synth has started has no effect (this is
@@ -45,9 +45,16 @@ ChaosOsc::ChaosOsc() {
 }
 
 void ChaosOsc::next(int nSamples) {
-    const float* chaosAmounts = in(0);
     float* outBuf = out(0);
-    chaososc::processBlock(mCore, chaosAmounts, outBuf, nSamples);
+    if (isAudioRateIn(0)) {
+        chaososc::processBlock(mCore, in(0), outBuf, nSamples);
+        return;
+    }
+
+    const float chaosAmount = in0(0);
+    for (int i = 0; i < nSamples; ++i) {
+        outBuf[i] = static_cast<float>(mCore.next(chaosAmount));
+    }
 }
 
 PluginLoad(ChaosOscUGens) {

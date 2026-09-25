@@ -446,3 +446,32 @@ credentials and private user data out of this file.
   controls, and help content. Loading the class and plugin, NRT rendering,
   and real-time audition still require a SuperCollider runtime and must not
   be treated as verified.
+
+### DEC-022 — Match ChaosOsc's plugin API and control-rate handling to NRT runtime
+
+- **Date:** 2026-09-24
+- **Context:** The plugin headers pinned to development commit `ea52528`
+  produced API version 7, while the official SuperCollider 3.14.1 release
+  runtime expected API version 3, so `scsynth` refused to load the plugin.
+  After aligning the API, deterministic NRT coverage also exposed that
+  treating a control-rate `chaosAmount` buffer as an audio-rate sample array
+  produced non-deterministic output.
+- **Decision:** Use the official SuperCollider 3.14.1 release commit
+  `426edf6d8742e1cc3bd85b51ca0c4e595d37a903` as the initial runtime/API
+  compatibility target, cache its headers by revision, and have the plugin
+  read audio-rate `chaosAmount` per sample while broadcasting scalar and
+  control-rate values across the current block. Keep `seed` captured at UGen
+  construction as documented in DEC-012 and DEC-021.
+- **Alternatives:** Build a custom development runtime at `ea52528`; leave
+  the mismatch and declare the stable 3.14.1 runtime unsupported; or assume
+  every input is audio-rate and require compositions to avoid control-rate
+  parameters.
+- **Rationale:** Matching the plugin API to an official release prevents the
+  server from rejecting the plugin. Respecting input rate avoids reading past
+  a control-rate buffer and makes fixed-seed NRT output reproducible while
+  preserving per-sample audio-rate modulation.
+- **Consequences:** The release-pinned smoke build and NRT test verify
+  loading, finite/non-silent output, determinism, construction-time seed
+  behavior, and control-rate updates on macOS arm64 with SuperCollider
+  3.14.1. Windows 10 x64, actual MacBook Neo, real-time audition, and other
+  SuperCollider release ABIs remain unverified.
