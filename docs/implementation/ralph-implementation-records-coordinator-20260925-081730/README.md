@@ -7,6 +7,7 @@
 - **Owner:** `coordinator-01`
 - **Base `origin/main`:** `7523a9a0b87ffc5304686e2e64509fc4a6941bb7`
 - **Rebased onto `origin/main`:** `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6`
+- **Implementation commit:** `42ac69454a2f14b94adc25fe54b3f4fb375fd52a`
 - **State:** `IN_PROGRESS`; parent PR not yet opened.
 - **Code review:** [branch review folder](./code-review/README.md)
 - **Prompts:** [user request](./prompts/user-request.md) and

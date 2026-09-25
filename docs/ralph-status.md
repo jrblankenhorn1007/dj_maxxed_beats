@@ -231,8 +231,9 @@ runs:
     coordinator_worktree: "/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-implementation-records-coordinator-20260925-081730"
     coordinator_base_origin_main_sha: "7523a9a0b87ffc5304686e2e64509fc4a6941bb7"
     coordinator_rebased_onto_origin_main_sha: "ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6"
+    coordinator_implementation_commit_sha: "42ac69454a2f14b94adc25fe54b3f4fb375fd52a"
     created_at_utc: "2026-09-25T08:17:30Z"
-    updated_at_utc: "2026-09-25T09:37:42Z"
+    updated_at_utc: "2026-09-25T09:41:04Z"
     next_action: "Coordinator: commit the archive and records, publish the parent PR, then complete the independent review and normal merge gates."
     split_plan:
       - task_id: "document-branch-evidence-dossiers"
@@ -567,6 +568,7 @@ branch_agent_index:
     branch: "ralph/implementation-records-coordinator-20260925-081730"
     branch_slug: "ralph-implementation-records-coordinator-20260925-081730"
     rebased_onto_origin_main_sha: "ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6"
+    implementation_commit_sha: "42ac69454a2f14b94adc25fe54b3f4fb375fd52a"
     status: IN_PROGRESS
     iteration: 1
     merge_actor_worker_id: null
@@ -590,7 +592,7 @@ branch_agent_index:
         rationale: null
         recorded_at_utc: null
     resource_usage:
-      time_spent_seconds: 4812
+      time_spent_seconds: 5014
       time_basis: WALL_CLOCK_ELAPSED
       token_spend:
         status: NOT_REPORTED
