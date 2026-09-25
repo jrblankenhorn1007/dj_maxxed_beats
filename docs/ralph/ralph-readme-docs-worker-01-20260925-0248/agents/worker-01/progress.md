@@ -124,3 +124,25 @@
   update; no further push has been attempted.
 - **Memory:** The coordinator owns the post-merge memory review. This worker
   has not changed the shared memory store.
+
+## Coordinator disposition — 2026-09-25
+
+- PR #17 was closed without merge after `origin/main` advanced; GitHub's
+  current PR listing reports `CLOSED`, with no merge timestamp. Its original
+  branch remains preserved and is not being updated.
+- The authoritative ruleset evaluation for the rejected handoff push is
+  `4221447764`: the active `Gate` ruleset's `code_coverage` rule returned
+  “Code coverage checks require merging via API or UI.” The configured
+  100-percent minimum is not evidence that measured coverage was below the
+  threshold; no coverage percentage was reported. No tests, coverage settings,
+  or policy were changed to work around the rejection.
+- The README and handoff records are continued on fresh branch
+  `ralph/readme-documentation-followup-20260925-0412`, based on
+  `origin/main` at `c448dae05f792ef868557e7d67a0a1becb7e6895`. The replacement
+  branch is prepared locally; its records and documentation will be finalized
+  before its first publication, then merged through the GitHub API/UI.
+- `docs/IMPLEMENTATION_PLAN.md` had a link to the headless-test anchor removed
+  when `docs/README.md` became an index. It now points to the developer-check
+  section of the root README.
+- The shared memory review and aggregate status-snapshot update remain
+  coordinator-owned follow-up work after the implementation merge.

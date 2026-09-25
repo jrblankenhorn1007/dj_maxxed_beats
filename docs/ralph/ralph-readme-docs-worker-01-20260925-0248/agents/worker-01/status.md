@@ -7,21 +7,21 @@ runtime_agent_id: null
 branch: "ralph/readme-docs-worker-01-20260925-0248"
 branch_slug: "ralph-readme-docs-worker-01-20260925-0248"
 iteration: 1
-status: AWAITING_MERGE
+status: CANCELLED
 started_at_utc: "2026-09-25T02:57:33Z"
-updated_at_utc: "2026-09-25T03:39:38Z"
+updated_at_utc: "2026-09-25T06:29:16Z"
 base_origin_main_sha: "0736add11eae7b7f745d7b7bf9806c116d72eed6"
 rebased_onto_origin_main_sha: null
 implementation_commit_sha: "733ca464e6546acd5e392e81ec9414f0b5574071"
 pull_request:
-  status: OPEN
+  status: CLOSED
   number: 17
   url: "https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/17"
 merge_actor_worker_id: null
 decision_record_path: "docs/decisions/ralph-readme-docs-worker-01-20260925-0248/agents/worker-01/pr-17.md"
 decision_index_path: "docs/decisions/ralph-readme-docs-worker-01-20260925-0248/README.md"
 merge:
-  status: PENDING
+  status: NOT_APPLICABLE
   sha: null
   verified_remote_ref: "refs/heads/main"
   verified_origin_main_sha: null
@@ -46,9 +46,12 @@ checks:
     result: "PASS — OPEN; remote head remains implementation commit 733ca464e6546acd5e392e81ec9414f0b5574071"
   - command: "GIT_TERMINAL_PROMPT=0 git push --porcelain --verbose origin ralph/readme-docs-worker-01-20260925-0248"
     result: "BLOCKED — GH013 rejected the handoff-record update; direct updates must use the repository's authorized API/UI merge path"
-blockers:
-  - "The post-PR handoff-record commit bdb342aa98d01444e2c5c9ab0a2b131020362ef6 is local-only: GH013 rejected its push, and the remote PR branch remains at implementation commit 733ca464e6546acd5e392e81ec9414f0b5574071. Coordinator direction is required; no bypass or merge was attempted."
-next_action: "Coordinator: decide the approved next step for the GH013-rejected handoff-record update. Worker-01 will not retry or merge PR #17 without explicit authorization."
+blockers: []
+historical_blockers:
+  - "The post-PR handoff-record push was rejected by GH013. PR #17 was subsequently closed without merge after origin/main advanced; its README work is being carried on a fresh coordinator branch."
+disposition: SUPERSEDED
+superseded_by_branch: "ralph/readme-documentation-followup-20260925-0412"
+next_action: "None; PR #17 is closed without merge and the README work continues on the fresh coordinator branch."
 worker_sign_off:
   status: RECEIVED
   attestation_kind: SELF_ATTESTATION
