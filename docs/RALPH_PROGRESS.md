@@ -418,3 +418,16 @@ Ralph-Status: IN_PROGRESS
 - **Next task:** Implement a minimal user-facing procedural `.scd` composition
   and offline render workflow on the validated UGen, then test real-time
   audition and the supported target platforms.
+
+## Coordinator post-merge review — Iteration 5
+
+- **Merge verification:** PR [#6](https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/6)
+  was merged using the normal merge-commit process. After fetching `origin`,
+  `git merge-base --is-ancestor
+  b1c77ae9192491a86be5d42e86aebc10e3057a2d origin/main` passed; fetched
+  `origin/main` was `b1c77ae9192491a86be5d42e86aebc10e3057a2d`.
+- **Memory review:** The runtime/API mismatch, input-rate over-read, and
+  duplicate plugin-path failures yielded reusable SuperCollider plugin
+  testing lessons. The coordinator recorded them in
+  `.github/memory/testing.md` on a fresh follow-up branch. This memory-only
+  follow-up is part of iteration 5 and does not trigger another memory review.

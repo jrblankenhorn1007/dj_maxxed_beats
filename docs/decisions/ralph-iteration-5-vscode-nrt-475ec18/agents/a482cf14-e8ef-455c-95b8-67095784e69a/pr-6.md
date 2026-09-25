@@ -6,9 +6,12 @@
 - **Base SHA:** `475ec183f262594a6f4ab3d08cf1ee9bec833553`
 - **Implementation commit SHA:** `1a1a8faeb2f4e6a44b9e95af0f4a41f27c688c17`
 - **Pull request:** [#6](https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/6)
-  (open, base `main`; merge not claimed)
-- **Merge method:** Repository allows merge commits; merging is left to the
-  coordinator.
+  (merged, base `main`)
+- **Merge actor:** Copilot VS Code worker session
+  `a482cf14-e8ef-455c-95b8-67095784e69a`
+- **Merge method:** Normal authenticated merge commit via
+  `gh pr merge 6 --repo jrblankenhorn1007/dj_maxxed_beats --merge`.
+- **Merge SHA:** `b1c77ae9192491a86be5d42e86aebc10e3057a2d`
 
 ## Decisions
 
@@ -50,7 +53,14 @@
 
 ## Unresolved coverage
 
-- The PR is intentionally left for coordinator review and the configured
-  merge-commit process; no remote-main merge is claimed.
 - Windows 10 x64, an actual MacBook Neo, real-time audition, and SuperCollider
   releases other than 3.14.1 remain unverified.
+
+## Merge verification
+
+- The worker fetched `origin` after merging and verified that merge SHA
+  `b1c77ae9192491a86be5d42e86aebc10e3057a2d` is reachable from `origin/main`.
+- The coordinator independently fetched `origin` and confirmed
+  `git merge-base --is-ancestor
+  b1c77ae9192491a86be5d42e86aebc10e3057a2d origin/main` passed while
+  `origin/main` pointed to that exact SHA.
