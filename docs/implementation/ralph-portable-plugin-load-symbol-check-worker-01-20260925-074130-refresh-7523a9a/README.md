@@ -19,8 +19,8 @@
   [worker progress](../../ralph/ralph-portable-plugin-load-symbol-check-worker-01-20260925-074130-refresh-7523a9a/agents/worker-01/progress.md),
   and [decision index](../../decisions/ralph-portable-plugin-load-symbol-check-worker-01-20260925-074130-refresh-7523a9a/README.md).
 
-The canonical worker status and progress files were captured before PR
-publication and still show their pre-merge `IN_PROGRESS`/`PENDING` state.
-This dossier records the independently verified PR #24 merge metadata; it
-does not rewrite another run's status or claim that its post-merge memory
-review was completed.
+The canonical worker status and progress record PR #24 as merged and reviewed
+`CLEAN`. The coordinator memory review is complete, its memory update is
+verified through PR #25, and the final status reconciliation is verified
+through PR #26. This dossier links those current records without rewriting
+another run's status.
