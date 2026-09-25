@@ -503,3 +503,15 @@ Ralph-Status: IN_PROGRESS
 - **Integration:** The replacement branch is awaiting PR creation and
   coordinator integration readiness. No merge or remote-main verification is
   claimed.
+
+## Replacement branch publication and PR access — 2026-09-25T01:28:12Z
+
+- `git -C /Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-replace-beats-local-ralph-runner-worker-01-20260925-0105-refresh-58b4f91 push --set-upstream origin ralph/replace-beats-local-ralph-runner-worker-01-20260925-0105-refresh-58b4f91` — passed.
+- `git -C /Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-replace-beats-local-ralph-runner-worker-01-20260925-0105-refresh-58b4f91 fetch origin && git -C /Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-replace-beats-local-ralph-runner-worker-01-20260925-0105-refresh-58b4f91 rev-parse HEAD refs/remotes/origin/ralph/replace-beats-local-ralph-runner-worker-01-20260925-0105-refresh-58b4f91 refs/remotes/origin/main` — passed: pushed branch/status tip
+  `6c29951144a217e63a718b7304e17f3cb79d782f`; `origin/main`
+  `58b4f916603cc8e140c5e8c1bbca1290bb2dede6`.
+- `gh` is not installed. The GitHub page-open call reported existing pages
+  including a sign-in page; navigating the old comparison page to this PR path
+  and opening a forced-new page both failed at browser-tool execution. No PR
+  was created, and no sign-in or credential change was attempted. The
+  replacement branch remains `AWAITING_MERGE` with PR creation pending.

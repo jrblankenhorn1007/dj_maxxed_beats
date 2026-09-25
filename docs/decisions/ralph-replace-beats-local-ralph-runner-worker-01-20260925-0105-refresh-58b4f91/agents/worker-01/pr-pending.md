@@ -11,6 +11,11 @@
   number or URL has been assigned.
 - **GitHub create-PR URL:**
   `https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/new/ralph/replace-beats-local-ralph-runner-worker-01-20260925-0105-refresh-58b4f91`
+- **Initial published status-commit tip:** `6c29951144a217e63a718b7304e17f3cb79d782f`
+  was verified against
+  `origin/ralph/replace-beats-local-ralph-runner-worker-01-20260925-0105-refresh-58b4f91`;
+  subsequent branch-local status evidence remains on the same branch.
+- **Fetched main at publication:** `58b4f916603cc8e140c5e8c1bbca1290bb2dede6`.
 
 ## Decisions
 

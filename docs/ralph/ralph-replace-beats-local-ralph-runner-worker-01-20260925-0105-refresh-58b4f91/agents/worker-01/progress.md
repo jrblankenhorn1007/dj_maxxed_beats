@@ -100,3 +100,10 @@
   "statement": "I, worker-01, sign off iteration 1 for replace-beats-local-ralph-runner at implementation commit 6e13eeea00bbbfb7a046926c4e0732beb05e9a8b."
 }
 ```
+
+## Branch publish and PR-path update — 2026-09-25T01:28:12Z
+
+- **Publish:** `git -C /Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-replace-beats-local-ralph-runner-worker-01-20260925-0105-refresh-58b4f91 push --set-upstream origin ralph/replace-beats-local-ralph-runner-worker-01-20260925-0105-refresh-58b4f91` — PASS.
+- **Remote verification:** `git -C /Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-replace-beats-local-ralph-runner-worker-01-20260925-0105-refresh-58b4f91 fetch origin && git -C /Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-replace-beats-local-ralph-runner-worker-01-20260925-0105-refresh-58b4f91 rev-parse HEAD refs/remotes/origin/ralph/replace-beats-local-ralph-runner-worker-01-20260925-0105-refresh-58b4f91 refs/remotes/origin/main` — PASS. The branch/remote tip is `6c29951144a217e63a718b7304e17f3cb79d782f`; `origin/main` remains `58b4f916603cc8e140c5e8c1bbca1290bb2dede6`.
+- **PR creation:** `gh` is unavailable. The GitHub create-PR URL returned an existing-page notice with a GitHub sign-in page and an old-branch comparison page. Navigating the existing page and opening a forced-new page both failed at browser-tool execution. No PR was created; no sign-in, credential, or configuration changes were attempted.
+- **State:** `AWAITING_MERGE`; PR remains `PENDING`. The coordinator must establish the normal PR path using existing host authentication. No remote merge is claimed.
