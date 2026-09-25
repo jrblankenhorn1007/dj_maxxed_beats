@@ -82,12 +82,14 @@
       {"command": "Python 3 json.loads validation of the fenced sign-off payload", "result": "PASS"},
       {"command": "GitHub CLI PR #17 status query", "result": "PASS — OPEN, MERGEABLE, CLEAN; no check runs reported"},
       {"command": "GitHub CLI PR #17 head readback", "result": "PASS — OPEN; remote head remains 733ca464e6546acd5e392e81ec9414f0b5574071"},
+      {"command": "git diff --check origin/main...HEAD", "result": "PASS"},
+      {"command": "git fetch origin && git rev-parse origin/main", "result": "PASS — origin/main remains 0736add11eae7b7f745d7b7bf9806c116d72eed6"},
       {"command": "GIT_TERMINAL_PROMPT=0 git push --porcelain --verbose origin ralph/readme-docs-worker-01-20260925-0248", "result": "BLOCKED — GH013 rejected the status-record update under the repository rules"}
     ],
     "blockers": [
       "GH013 rejected the post-PR handoff-record push; the remote branch remains at 733ca464e6546acd5e392e81ec9414f0b5574071 while the final worker records are local. Coordinator direction is required."
     ],
-    "attested_at_utc": "2026-09-25T03:34:32Z",
+    "attested_at_utc": "2026-09-25T03:39:38Z",
     "attestation_kind": "SELF_ATTESTATION",
     "cryptographic_signature_status": "NOT_CRYPTOGRAPHICALLY_SIGNED",
     "statement": "I, worker-01, sign off iteration 1 for improve-root-readme at exact implementation commit 733ca464e6546acd5e392e81ec9414f0b5574071. The post-PR status-record push is blocked by GH013; no merge is claimed."
@@ -112,5 +114,13 @@
 - **Integration:** PR #17 remains open and awaiting coordinator
   review/authorization. Worker-01 will not retry this policy-blocked push or
   merge before explicit coordinator direction.
+- **Final synchronization:** `git fetch origin` left `origin/main` at
+  `0736add11eae7b7f745d7b7bf9806c116d72eed6`;
+  `git ls-remote --heads origin` showed the PR branch at implementation
+  commit `733ca464e6546acd5e392e81ec9414f0b5574071`, and the PR API readback
+  reported that same `headRefOid`. `git diff --check origin/main...HEAD`
+  passed with the local blocker evidence on the branch. The local branch was
+  at `b13e5795bd74fb68cb7ed373473b45baa48cf214` before this final evidence
+  update; no further push has been attempted.
 - **Memory:** The coordinator owns the post-merge memory review. This worker
   has not changed the shared memory store.
