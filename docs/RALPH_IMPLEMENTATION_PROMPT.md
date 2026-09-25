@@ -1,19 +1,22 @@
 # Ralph Implementation Prompt
 
-Use this project prompt with the shared **Ralph Loop** agent. Invoke the
-canonical
-[Ralph Loop agent](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/agents/ralph-loop.agent.md)
-and follow the canonical
-[Ralph Loop skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/SKILL.md)
-for development-loop mechanics. The shared skill and agent are the sole
-implementation of the outer development workflow; this project does not
-provide or require a local shell runner.
+This is the project's operational entry point for its shared-skill routing,
+agent configuration, and project-specific source-of-truth files. Shared
+workflow details remain in the canonical skills; product requirements and
+project protocol remain in this repository.
 
-For behavior-changing work, also follow the shared
-[TDD skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd/SKILL.md).
-When the task concerns the SuperCollider music product, consult the shared
-[SuperCollider AI Music Agent prompt](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/references/ralph-loop.md)
-for relevant domain context.
+## Relevant skills
+
+- [Ralph Loop skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/SKILL.md) — **Always:** use for every Ralph iteration.
+- [TDD skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd/SKILL.md) — **Behavior changes:** use test-first for behavior-changing implementation.
+- [Project Memory skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/project-memory/SKILL.md) — **Post-merge review:** review lessons after implementation content is merged and verified.
+- [SuperCollider AI Music Agent prompt](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/references/ralph-loop.md) — **Only when the task concerns this SuperCollider music product:** use for domain-specific context.
+
+## Shared agent configuration
+
+The project uses the shared
+[Ralph Loop agent](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/agents/ralph-loop.agent.md)
+as agent configuration; this agent definition is not an additional skill.
 
 ## Project sources of truth
 

@@ -27,13 +27,7 @@ language environment cannot provide secure asynchronous API access.
 ## Project documents
 
 - [Implementation plan](./IMPLEMENTATION_PLAN.md)
-- [Canonical TDD skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd/SKILL.md)
-- [Canonical Ralph Loop skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/SKILL.md)
-- [SuperCollider AI Music Agent Ralph prompt](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/references/ralph-loop.md)
-- [Canonical Ralph Loop agent](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/agents/ralph-loop.agent.md)
-- [Copilot Skills repository](https://github.com/jrblankenhorn1007/copilot_skills)
-- [Development Ralph-loop prompt](./RALPH_IMPLEMENTATION_PROMPT.md)
-- [Local TDD skill pointer](../.github/skills/tdd/SKILL.md)
+- [Development Ralph implementation prompt](./RALPH_IMPLEMENTATION_PROMPT.md)
 - [Visual application test plan](./VISUAL_TEST_PLAN.md)
 - [Decision log](./decision_log.md)
 - [Current implementation status](./implementation_status.md)
@@ -41,27 +35,20 @@ language environment cannot provide secure asynchronous API access.
 
 Project-facing documentation is organized under `docs/`, with plugin design
 notes under `docs/plugin/`. The root `README.md` is a short repository landing
-page. The `LICENSE` and `.github/skills/tdd/SKILL.md` stay at the repository
-root/canonical Copilot skill path. The local skill and project prompt point to
-the shared `copilot_skills` repository; they do not duplicate its general
-workflow instructions.
+page. The [Ralph implementation prompt](./RALPH_IMPLEMENTATION_PROMPT.md) is
+the project's entry point for shared-skill routing and the local development
+workflow; consult it rather than duplicating those references here. `LICENSE`
+remains at the repository root.
 
 ## Running the development Ralph loop
 
-Start a development iteration by invoking the shared **Ralph Loop** agent
-with this repository's
-[Ralph implementation prompt](./RALPH_IMPLEMENTATION_PROMPT.md). Follow the
-canonical
-[Ralph Loop skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/SKILL.md)
-for the development workflow and the shared
-[TDD skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd/SKILL.md)
-for behavior changes. When work concerns the SuperCollider music product,
-also consult the
-[project-specific music-agent prompt](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/references/ralph-loop.md).
+Start a development iteration by using this project's
+[Ralph implementation prompt](./RALPH_IMPLEMENTATION_PROMPT.md) for current
+shared-skill routing and agent configuration.
 
-The shared agent and skill own the general development-loop mechanics; this
-project does not provide a local shell runner. Product-specific acceptance
-criteria and status sources remain in this repository: the
+The shared workflow owns general development-loop mechanics; this project does
+not provide a local shell runner. Product-specific acceptance criteria and
+status sources remain in this repository: the
 [implementation plan](./IMPLEMENTATION_PLAN.md),
 [visual test plan](./VISUAL_TEST_PLAN.md),
 [iteration progress](./RALPH_PROGRESS.md),

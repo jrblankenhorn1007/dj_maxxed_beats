@@ -503,3 +503,28 @@ credentials and private user data out of this file.
   was `4`; the subsequent update to `5` in the latest current status came from
   the independent, already-pending iteration-5 memory follow-up (PR #7), not
   this workflow change.
+
+### DEC-024 — Centralize active shared-skill routing in the project prompt
+
+- **Date:** 2026-09-25
+- **Context:** DEC-023 established the shared Ralph Loop agent as the
+  development entry point, but canonical TDD/Ralph references still appeared
+  throughout the README, implementation plan, and docs index. The local TDD
+  pointer added another discovery location, while applicability and the
+  post-merge memory-review step were not centralized.
+- **Decision:** Retire `.github/skills/tdd/SKILL.md` and make
+  `docs/RALPH_IMPLEMENTATION_PROMPT.md` the only current operational project
+  document that links to shared skills. List the Ralph Loop skill as always
+  applicable, TDD for behavior changes, Project Memory for post-merge review,
+  and the SuperCollider-specific prompt only for music-product tasks. Keep the
+  shared Ralph Loop agent link separately as agent configuration. Direct other
+  current project guidance to the local prompt; keep product acceptance
+  criteria and test strategy in `docs/IMPLEMENTATION_PLAN.md`.
+- **Alternatives:** Retain a local redirect file, repeat shared skill links in
+  every relevant project document, or remove local discovery guidance.
+- **Rationale:** One operational entry point can explain applicability without
+  duplicating shared links or confusing the configured agent with a skill.
+- **Consequences:** Current README and plan guidance point to the project
+  prompt; append-only historical links, including DEC-017, are not rewritten.
+  This documentation-only change does not imply a product behavior change or
+  advance the product implementation iteration counter.
