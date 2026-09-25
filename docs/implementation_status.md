@@ -10,7 +10,7 @@
 - **Completed implementation iteration:** `5`
 - **Iteration commit:** [`1a1a8fa`](https://github.com/jrblankenhorn1007/dj_maxxed_beats/commit/1a1a8faeb2f4e6a44b9e95af0f4a41f27c688c17)
 - **Lines changed:** `+650 / -93` (Git numstat; text files; includes documentation; binary files excluded)
-- **Loop state:** Iteration 5's ChaosOsc NRT integration is merged and verified on `origin/main` at `b1c77ae`; the coordinator review captured reusable runtime-testing lessons in `.github/memory/testing.md`.
+- **Loop state:** Iteration 5's ChaosOsc NRT integration is merged and verified on `origin/main` at `b1c77ae`; a separate plugin-symbol build-validation maintenance iteration is in progress. It does not advance the product implementation counter (`5`), and its mocked cross-platform symbol cases do not constitute native Windows validation.
 
 ## Overall state
 
@@ -39,7 +39,7 @@ unimplemented.
 | Usage, estimated dollars, and informational credits | Specified | The planned initial conversion is 100 app credits per estimated USD; no metering or display exists. |
 | Review, approval, undo, and candidate isolation | Specified | Safety requirements are planned but not implemented. |
 | In-app variation loop | Specified | User-started, stoppable, isolated, and limited to four candidates by default; not implemented. |
-| Tests, builds, and release packaging | In progress | `bash scripts/run_headless_tests.sh` runs the nine DSP assertions and all 12 Python tests, including the release-pinned plugin build and runtime NRT integration, on macOS. GitHub Actions provisions official SuperCollider 3.14.1 and runs the entrypoint on macOS only; Windows coverage is not claimed. Release packaging is not started. |
+| Tests, builds, and release packaging | In progress | `bash scripts/run_headless_tests.sh` runs the nine DSP assertions and all 19 Python tests, including the release-pinned plugin build, runtime NRT integration, and mocked Darwin/ELF/Windows x64 symbol checks, on macOS. GitHub Actions provisions official SuperCollider 3.14.1 and runs the entrypoint on macOS only; mocked Windows output is not native Windows build/runtime coverage. Release packaging is not started. |
 | Visual application verification | Planned | `docs/VISUAL_TEST_PLAN.md` requires live SCIDE GUI runs, native screenshots, and image inspection on both target platforms; no app exists to test yet. |
 
 ## Verification and platform coverage
@@ -85,6 +85,12 @@ unimplemented.
   launched no GUI, SCIDE, real-time server, or audio hardware. The GitHub
   Actions workflow is configured for pull requests, pushes, and manual
   dispatch on macOS 14; its hosted run was not observed in this local check.
+- **Portable plugin load-symbol validation:** The six-test mocked suite passed
+  for Darwin `_load`, ELF and Windows x64 `load`, exact defined text-symbol
+  matching, nm invocation errors, and Windows CRLF output. The actual
+  macOS/arm64 build smoke check verified `_load`; these mock cases do not
+  validate a native Windows or ELF build/runtime and do not advance product
+  iteration `5`.
 - **Diff/syntax:** The existing build-script check
   `bash -n plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh && git diff --check`
   passed. This pipeline also passed `bash -n scripts/run_headless_tests.sh`,
@@ -93,9 +99,9 @@ unimplemented.
 - **Runtime:** The official SuperCollider 3.14.1 universal DMG was verified
   by SHA256 and run locally from ignored `.runtime/`. `sclang` and `scsynth`
   both reported 3.14.1 (release commit `426edf6`).
-- **Windows 10 x64:** Not validated.
-- **Windows CI coverage:** Not provided by the headless workflow; the current
-  plugin smoke build is macOS-specific.
+- **Windows 10 x64:** Native plugin build/runtime not validated. The new
+  Windows x64 symbol-check case is mocked; the headless GitHub workflow
+  remains macOS-only.
 - **MacBook Neo:** Not validated; this macOS arm64 run is not device-specific.
 - **Real-time audition, GUI/SCIDE, and other SuperCollider releases:** Not
   validated. The NRT integration covers only SuperCollider 3.14.1 on this

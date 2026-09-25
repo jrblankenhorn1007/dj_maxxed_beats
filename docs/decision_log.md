@@ -560,3 +560,29 @@ credentials and private user data out of this file.
   real-time audio, Windows 10 x64, MacBook Neo, and visual screenshots remain
   outside this workflow and unverified by it. This test-infrastructure
   change does not advance the product implementation iteration counter.
+
+### DEC-026 — Verify the platform-specific ChaosOsc plugin load symbol
+
+- **Date:** 2026-09-25
+- **Context:** The plugin smoke build invoked Darwin-specific `nm -gU` on
+  every platform and accepted only `_load`. ELF and Windows x64 toolchains
+  expose the unprefixed `load`; a mocked Red also showed that matching an
+  identifier suffix can accept a similar symbol and that invocation errors
+  must not be reported merely as a missing export.
+- **Decision:** Use `nm -gU` and exact `_load` on Darwin; use
+  `nm -g --defined-only` and exact `load` on non-Darwin hosts. Require the
+  global text symbol type (`T`), normalize CRLF before parsing, and report
+  `nm` invocation errors with their status and diagnostic output. Cover the
+  platform contract with network-free mocked tests.
+- **Alternatives:** Keep the Darwin-only command and weaken the assertion to
+  a substring; accept both spellings on every platform; or silently treat a
+  failed `nm` invocation as an absent symbol.
+- **Rationale:** The platform ABI determines the exported symbol spelling,
+  and a build smoke check must distinguish the exact defined text export from
+  similar or undefined symbols while surfacing inspection failures.
+- **Consequences:** The mocked suite covers Darwin, ELF, and Windows x64
+  output, but does not claim native Windows 10 x64 or ELF build/runtime
+  validation. The actual macOS/arm64 smoke build and SuperCollider 3.14.1 NRT
+  test verify the Darwin path. The headless GitHub workflow remains macOS-only.
+  This build-validation/test-infrastructure maintenance does not advance the
+  product implementation counter (`5`).

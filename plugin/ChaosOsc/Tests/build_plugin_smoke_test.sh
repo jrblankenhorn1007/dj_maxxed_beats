@@ -6,9 +6,10 @@
 #
 # What this proves: the UGen C++ source is a syntactically and semantically
 # valid consumer of the real SC_PlugIn.hpp interface at the exact commit
-# pinned in docs/IMPLEMENTATION_PLAN.md, and produces a shared library exporting
-# the plugin's load entry point, matching what scsynth's plugin loader scans
-# for (see supercollider's PluginLoad(name) macro / server plugin loading in
+# pinned in docs/IMPLEMENTATION_PLAN.md, and produces a shared library
+# exporting the platform-specific load entry point (`_load` on Mach-O, `load`
+# on ELF and Windows x64), matching what scsynth's plugin loader scans for
+# (see supercollider's PluginLoad(name) macro / server plugin loading in
 # WritingUGens.schelp).
 #
 # What this does NOT prove: that scsynth actually loads and runs this plugin
@@ -37,20 +38,51 @@ out_lib="${bin_dir}/ChaosOsc.scx"
 
 echo "Built shared plugin library: ${out_lib}"
 
+has_defined_global_text_symbol() {
+    local expected_symbol="$1"
+    local symbol_table="$2"
+
+    printf '%s\n' "${symbol_table}" \
+        | tr -d '\r' \
+        | awk -v expected="${expected_symbol}" \
+            'NF >= 2 && $(NF - 1) == "T" && $NF == expected { found = 1 }
+             END { exit !found }'
+}
+
 # The plugin loader looks up the C-linkage symbols PluginLoad(ChaosOscUGens)
 # expands to (see SC_InterfaceTable.h): the exported `load` entry point
 # (plus `api_version`/`server_type`), not a symbol containing the macro
-# argument -- confirm the actual required symbol is present so a missing/
-# garbled PluginLoad invocation is caught here rather than only at scsynth
-# load time.
-if command -v nm >/dev/null 2>&1; then
-    if nm -gU "${out_lib}" 2>/dev/null | grep -qE '\b_load$'; then
-        echo "Verified exported plugin load symbol: _load"
+# argument. Mach-O tools show the leading ABI underscore; ELF and Windows
+# x64 tools report the unprefixed name. Inspect only global, defined symbols
+# and require the exact global-text entry point.
+if ! command -v nm >/dev/null 2>&1; then
+    echo "ERROR: 'nm' is not available; cannot verify the exported plugin load symbol." >&2
+    exit 1
+fi
+
+if [[ "$(uname -s)" == "Darwin" ]]; then
+    nm_flags=(-gU)
+    load_symbol="_load"
+else
+    nm_flags=(-g --defined-only)
+    load_symbol="load"
+fi
+
+if nm_output="$(nm "${nm_flags[@]}" "${out_lib}" 2>&1)"; then
+    if has_defined_global_text_symbol "${load_symbol}" "${nm_output}"; then
+        echo "Verified exported plugin load symbol: ${load_symbol}"
     else
-        echo "ERROR: expected exported symbol '_load' not found in ${out_lib}" >&2
-        nm -gU "${out_lib}" 2>/dev/null | grep -i load || true
+        echo "ERROR: expected defined text symbol '${load_symbol}' not found in ${out_lib}" >&2
+        if [[ -n "${nm_output}" ]]; then
+            printf '%s\n' "${nm_output}" | grep -i load >&2 || true
+        fi
         exit 1
     fi
 else
-    echo "WARNING: 'nm' not available; skipping exported-symbol check." >&2
+    nm_status=$?
+    echo "ERROR: nm invocation failed with exit status ${nm_status} for ${out_lib}" >&2
+    if [[ -n "${nm_output}" ]]; then
+        printf '%s\n' "${nm_output}" >&2
+    fi
+    exit "${nm_status}"
 fi

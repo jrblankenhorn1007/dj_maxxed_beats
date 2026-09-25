@@ -704,3 +704,55 @@ Ralph-Status: IN_PROGRESS
   its separate visual-test boundary.
 - **Integration state:** Awaiting normal PR publication/review; no merge or
   `origin/main` integration is claimed here.
+
+## Portable plugin load-symbol validation — worker-01, iteration 1
+
+- **Run/task:** `ralph-cross-platform-finish-20260925-0607` /
+  `portable-plugin-load-symbol-check`; worker `worker-01 / portable ChaosOsc
+  symbol check`.
+- **Scope and product counter:** Build-validation/test-infrastructure
+  maintenance only. The product implementation counter remains `5`.
+- **Branch/base:** `ralph/portable-plugin-load-symbol-check-worker-01-20260925-0607`,
+  based on fetched `origin/main` at
+  `c448dae05f792ef868557e7d67a0a1becb7e6895`.
+- **Red:** Added `tests/test_plugin_smoke_symbol_check.py` before changing the
+  build script and ran
+  `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_plugin_smoke_symbol_check.py`.
+  Result: 6 tests ran, 5 failed against the old behavior. The ELF and Windows
+  x64 cases rejected exact unprefixed `load` because the script used
+  `nm -gU` and expected `_load`; the similar `plugin._load` and undefined
+  `U _load` fixtures were incorrectly accepted; and an `nm` exit status of
+  `23` was hidden behind the generic missing-symbol error. The Darwin exact
+  `_load` case passed. The mocked compiler/fetcher kept this Red network-free
+  and independent of SuperCollider headers.
+- **Green:** Implemented Darwin `nm -gU`/`_load` selection and non-Darwin
+  `nm -g --defined-only`/`load` selection, exact global-text (`T`) matching,
+  CRLF normalization, and explicit `nm` failure reporting. The same focused
+  command passed all 6 tests (`Ran 6 tests in 1.026s`, `OK`).
+- **Refactor:** Extracted exact defined-global-text parsing into
+  `has_defined_global_text_symbol`. Re-running
+  `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_plugin_smoke_symbol_check.py`
+  passed all 6 tests (`Ran 6 tests in 0.735s`, `OK`). The post-refactor
+  `bash -n plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh` also passed.
+- **Real plugin build:** `bash plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh`
+  resolved 29 headers pinned to SuperCollider 3.14.1 commit
+  `426edf6d8742e1cc3bd85b51ca0c4e595d37a903`, built `ChaosOsc.scx`, and
+  verified the actual Darwin export `_load`.
+- **NRT integration:** The pinned CLI binaries reported SuperCollider 3.14.1
+  (release commit `426edf6`). From this worktree, ran
+  `SCLANG=/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-headless-integration-tests-worker-01-20260925-0246/.runtime/mount/SuperCollider.app/Contents/MacOS/sclang SCSYNTH=/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-headless-integration-tests-worker-01-20260925-0246/.runtime/mount/SuperCollider.app/Contents/Resources/scsynth PYTHONDONTWRITEBYTECODE=1 python3 tests/test_chaososc_nrt.py`.
+  Result: `Ran 1 test in 58.355s`, `OK`.
+- **Full headless regression:** Ran
+  `SCLANG=/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-headless-integration-tests-worker-01-20260925-0246/.runtime/mount/SuperCollider.app/Contents/MacOS/sclang SCSYNTH=/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-headless-integration-tests-worker-01-20260925-0246/.runtime/mount/SuperCollider.app/Contents/Resources/scsynth bash scripts/run_headless_tests.sh`.
+  Result: all 9 DSP assertions and all 19 Python tests passed
+  (`Ran 19 tests in 74.984s`, `OK`), including the NRT test and all 6 new
+  mocked symbol cases.
+- **Platform gaps:** The actual build/NRT verification used macOS 26.5.2
+  arm64 and SuperCollider 3.14.1. Mocked Darwin, ELF, and Windows x64 symbol
+  output (including CRLF) is not native Windows 10 x64 or ELF build/runtime
+  validation. The GitHub Actions workflow
+  `.github/workflows/headless-tests.yml` remains `macos-14` only. An actual
+  MacBook Neo, SCIDE/GUI, and real-time audition remain unvalidated.
+- **Integration and memory:** Normal worker-owned PR publication is pending.
+  No merge or `origin/main` integration is claimed. Post-merge memory review
+  remains coordinator-owned; this worker did not edit `.github/memory/**`.
