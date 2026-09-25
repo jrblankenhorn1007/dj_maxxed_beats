@@ -1,7 +1,7 @@
 schema_version: 2
 snapshot_path: "docs/ralph-status.md"
-snapshot_revision: 5
-updated_at_utc: "2026-09-25T09:51:22Z"
+snapshot_revision: 7
+updated_at_utc: "2026-09-25T10:27:47Z"
 overall_status: IN_PROGRESS
 current_run_ids:
   - "branch-evidence-dossiers-20260925-081730"
@@ -230,11 +230,11 @@ runs:
     coordinator_branch_slug: "ralph-implementation-records-coordinator-20260925-081730"
     coordinator_worktree: "/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-implementation-records-coordinator-20260925-081730"
     coordinator_base_origin_main_sha: "7523a9a0b87ffc5304686e2e64509fc4a6941bb7"
-    coordinator_rebased_onto_origin_main_sha: "ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6"
-    coordinator_implementation_commit_sha: "42ac69454a2f14b94adc25fe54b3f4fb375fd52a"
+    coordinator_rebased_onto_origin_main_sha: "6f2a6c8693634e58282a8b70274664ad316b24e8"
+    coordinator_implementation_commit_sha: "3f82142369c833be370e57037d3a97cc7cad3688"
     created_at_utc: "2026-09-25T08:17:30Z"
-    updated_at_utc: "2026-09-25T09:41:04Z"
-    next_action: "Coordinator: commit the archive and records, publish the parent PR, then complete the independent review and normal merge gates."
+    updated_at_utc: "2026-09-25T10:27:47Z"
+    next_action: "Coordinator: publish the branch and open the parent PR; record its exact SHAs and start the independent round-1 review."
     split_plan:
       - task_id: "document-branch-evidence-dossiers"
         worker_id: "worker-01"
@@ -567,8 +567,8 @@ branch_agent_index:
     worker_name: "coordinator-01 / branch evidence archive"
     branch: "ralph/implementation-records-coordinator-20260925-081730"
     branch_slug: "ralph-implementation-records-coordinator-20260925-081730"
-    rebased_onto_origin_main_sha: "ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6"
-    implementation_commit_sha: "42ac69454a2f14b94adc25fe54b3f4fb375fd52a"
+    rebased_onto_origin_main_sha: "6f2a6c8693634e58282a8b70274664ad316b24e8"
+    implementation_commit_sha: "3f82142369c833be370e57037d3a97cc7cad3688"
     status: IN_PROGRESS
     iteration: 1
     merge_actor_worker_id: null
@@ -592,7 +592,7 @@ branch_agent_index:
         rationale: null
         recorded_at_utc: null
     resource_usage:
-      time_spent_seconds: 5014
+      time_spent_seconds: 7817
       time_basis: WALL_CLOCK_ELAPSED
       token_spend:
         status: NOT_REPORTED
@@ -606,12 +606,12 @@ branch_agent_index:
     decision_record_path: "docs/decisions/ralph-implementation-records-coordinator-20260925-081730/agents/coordinator-01/pr-pending.md"
     decision_index_path: "docs/decisions/ralph-implementation-records-coordinator-20260925-081730/README.md"
     checks:
-      - command: "git diff --cached --check"
+      - command: "git diff --check origin/main...HEAD"
         result: PASS
-      - command: "git diff --check"
+      - command: "Ruby branch-archive index and local-link validation"
+        result: "PASS (21 branch dossiers; 209 local links checked across 77 Markdown files; 9 optional SuperCollider targets skipped)"
+      - command: "Ruby YAML parse of docs/ralph-status.md"
         result: PASS
-      - command: "Final documentation, branch-index, link, and YAML status validation"
-        result: "PASS (13 changed Markdown files linked; 19 dossiers present; coordinator leaf and dashboard synchronized)"
       - command: "Product behavior test suite"
         result: NOT_RUN
-    next_action: "Coordinator: commit the archive and records, publish the parent PR, then complete the independent review and normal merge gates."
+    next_action: "Coordinator: publish the branch and open the parent PR; record its exact SHAs and start the independent round-1 review."

@@ -155,3 +155,35 @@
 - The branch is still unpublished; the next action is to publish it, open
   the parent PR, record its exact SHA pair and reviewer prompt, and run the
   independent review.
+
+## Rebase onto PR #26 and complete the branch archive — 2026-09-25T10:27:47Z
+
+- **Fetched `origin/main`:**
+  `6f2a6c8693634e58282a8b70274664ad316b24e8`. PR #26 is merged at that SHA
+  and was verified reachable with
+  `git merge-base --is-ancestor 6f2a6c8693634e58282a8b70274664ad316b24e8 origin/main`.
+- **Rebase:** Rebased the unpublished archive branch onto that exact main.
+  Three rebase stops were confined to `docs/ralph-status.md`; resolution kept
+  the latest PR #25/#26 records and restored this run's coordinator entry.
+  The Ruby YAML parse passed after resolution. No unrelated records were
+  discarded.
+- **Branch evidence:** Added the PR #25 dossier and round-01 review summary
+  from its canonical `CLEAN` status/decision evidence. Added the PR #26
+  status-only branch dossier and decision record; because its GitHub review
+  list was empty and no report was preserved, its review remains
+  `LEGACY_NOT_ARCHIVED`. The index now contains 21 branch dossiers, each with
+  a dossier README and dedicated code-review README. Added this branch's
+  task-specific reviewer prompt.
+- **Archive commit:** `3f82142369c833be370e57037d3a97cc7cad3688`.
+- **Checks:**
+  - `git diff --check origin/main...HEAD` — PASS.
+  - Ruby branch-index and local-link validation — PASS (21 indexed branch
+    refs and matching dossiers/review folders; 209 local links checked
+    across 77 Markdown files; nine missing optional `supercollider/`
+    checkout targets excluded).
+  - `ruby -e 'require "yaml";
+    YAML.load_file("docs/ralph-status.md");
+    puts "PASS: docs/ralph-status.md YAML syntax"'` — PASS.
+  - Product behavior tests — NOT RUN; this remains documentation-only.
+- **Next action:** Push the branch and open the parent PR; then record exact
+  PR SHAs and run the independent round-1 review with the archived prompt.
