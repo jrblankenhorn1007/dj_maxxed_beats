@@ -107,3 +107,18 @@
 - **Remote verification:** `git -C /Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-replace-beats-local-ralph-runner-worker-01-20260925-0105-refresh-58b4f91 fetch origin && git -C /Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-replace-beats-local-ralph-runner-worker-01-20260925-0105-refresh-58b4f91 rev-parse HEAD refs/remotes/origin/ralph/replace-beats-local-ralph-runner-worker-01-20260925-0105-refresh-58b4f91 refs/remotes/origin/main` — PASS. The branch/remote tip is `6c29951144a217e63a718b7304e17f3cb79d782f`; `origin/main` remains `58b4f916603cc8e140c5e8c1bbca1290bb2dede6`.
 - **PR creation:** `gh` is unavailable. The GitHub create-PR URL returned an existing-page notice with a GitHub sign-in page and an old-branch comparison page. Navigating the existing page and opening a forced-new page both failed at browser-tool execution. No PR was created; no sign-in, credential, or configuration changes were attempted.
 - **State:** `AWAITING_MERGE`; PR remains `PENDING`. The coordinator must establish the normal PR path using existing host authentication. No remote merge is claimed.
+
+## Coordinator PR and status transition — 2026-09-25T01:34:39Z
+
+- The coordinator created [PR #8](https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/8)
+  using the existing GitHub CLI and its configured authentication. The worker
+  did not find the CLI because it was outside the default `PATH`; no credentials
+  or authentication configuration were exposed or changed.
+- `gh pr view 8 --repo jrblankenhorn1007/dj_maxxed_beats --json number,url,state,mergeable,mergeStateStatus,reviewDecision,statusCheckRollup`
+  returned `OPEN`, `MERGEABLE`, and `CLEAN`; the check-run list is empty.
+- Updated this leaf record and the branch decision index to use
+  `agents/worker-01/pr-8.md`. The superseded PR-pending record is no longer
+  current.
+- **Status:** `AWAITING_MERGE`; no unresolved blockers. The coordinator's next
+  action is to request the normal merge and verify the merge SHA on fetched
+  `origin/main`. No merge is claimed.
