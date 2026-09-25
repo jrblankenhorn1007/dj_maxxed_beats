@@ -637,3 +637,70 @@ Ralph-Status: IN_PROGRESS
   reported `OPEN`; GitHub returned `UNKNOWN` for mergeability and merge state
   and reported no check runs. The worker remains `AWAITING_MERGE`; no merge
   was attempted.
+
+## Headless test pipeline — worker-01, iteration 1
+
+- **Run/task:** `headless-integration-tests-20260925-0246` /
+  `implement-headless-test-pipeline`; worker `worker-01 / headless test
+  pipeline`. This is test-infrastructure work and does not advance the
+  product implementation iteration counter (`5`).
+- **Branch/base:** `ralph/headless-integration-tests-worker-01-20260925-0246`,
+  based on fetched `origin/main` at
+  `0736add11eae7b7f745d7b7bf9806c116d72eed6`.
+- **TDD Red:** Before adding the entrypoint or workflow,
+  `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_headless_test_pipeline.py`
+  ran the three new contract tests and failed as expected: the entrypoint
+  `scripts/run_headless_tests.sh` and workflow
+  `.github/workflows/headless-tests.yml` did not yet exist. These were
+  missing required artifacts, not test-runner or dependency failures.
+- **Green:** Added the required C++/Python entrypoint, runtime preflight, and
+  macOS GitHub Actions workflow. The first test rerun exposed a test-fixture
+  issue: this host does not provide `/bin/true`; the fixture was changed to
+  use the available executable found by `shutil.which("bash")`. Then
+  `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_headless_test_pipeline.py`
+  passed all 3 contract tests, including both missing-runtime diagnostics and
+  the workflow trigger/runtime/entrypoint contract.
+- **Refactor:** Extracted the repeated required-file assertion/read into
+  `_read_required_file` in the contract tests. Re-running
+  `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_headless_test_pipeline.py`
+  passed all 3 tests.
+- **Runtime provisioning:** Downloaded the official 3.14.1 universal macOS
+  DMG to ignored `.runtime/` from
+  `https://github.com/supercollider/supercollider/releases/download/Version-3.14.1/SuperCollider-3.14.1-macOS-universal.dmg`;
+  `shasum -a 256 --check` verified
+  `ed264b32752d27fc86e506dd0a7eb36de7c19ebce73c3fdf2ed5514f8c73f02e`.
+  Mounted read-only with `hdiutil attach -readonly -nobrowse -noautoopen`
+  and used only the `SuperCollider.app/Contents/MacOS/sclang` and
+  `Contents/Resources/scsynth` CLI executables. Both reported SuperCollider
+  3.14.1, release commit `426edf6`.
+- **Full headless run with explicit paths:** From the worktree root,
+  `SCLANG=.runtime/mount/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=.runtime/mount/SuperCollider.app/Contents/Resources/scsynth bash
+  scripts/run_headless_tests.sh` passed all 9 DSP C++ assertions and all 12
+  discovered Python tests, including the real ChaosOsc plugin/class NRT
+  integration (`Ran 12 tests in 86.724s`, `OK`).
+- **Full headless run with PATH lookup:** Added ignored `.runtime/bin`
+  symlinks to the same CLI executables, unset `SCLANG` and `SCSYNTH`, then
+  ran `env -u SCLANG -u SCSYNTH PATH="$PWD/.runtime/bin:$PATH" bash
+  scripts/run_headless_tests.sh`. It passed all 9 DSP assertions and all 12
+  Python tests, including NRT (`Ran 12 tests in 16.557s`, `OK`).
+- **Final full-pipeline confirmation:** After strengthening the contract test
+  to require the `test_*.py` discovery pattern, the explicit-path command
+  `SCLANG=.runtime/mount/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=.runtime/mount/SuperCollider.app/Contents/Resources/scsynth bash
+  scripts/run_headless_tests.sh` passed all 9 DSP assertions and all 12
+  Python tests, including NRT (`Ran 12 tests in 90.531s`, `OK`).
+- **Scope and platform:** All complete runs were on macOS 26.5.2 arm64 and
+  ran without SCIDE, a GUI, a real-time server, or audio hardware. The new
+  workflow configures pull-request, push, and manual runs on `macos-14`,
+  verifies the official runtime digest, sets the CLI executable paths, and
+  invokes the same entrypoint. GitHub-hosted workflow execution is not
+  claimed by the local checks. Windows 10 x64 and MacBook Neo remain
+  unverified; no Windows coverage is claimed.
+- **Additional checks:** `bash -n scripts/run_headless_tests.sh`,
+  `ruby -e 'require "yaml"; YAML.load_file(".github/workflows/headless-tests.yml"); puts "YAML syntax: OK"'`,
+  and `git diff --cached --check` passed.
+- **Decision:** Added DEC-025 for the required headless unit/NRT pipeline and
+  its separate visual-test boundary.
+- **Integration state:** Awaiting normal PR publication/review; no merge or
+  `origin/main` integration is claimed here.

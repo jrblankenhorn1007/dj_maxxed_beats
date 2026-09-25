@@ -528,3 +528,35 @@ credentials and private user data out of this file.
   prompt; append-only historical links, including DEC-017, are not rewritten.
   This documentation-only change does not imply a product behavior change or
   advance the product implementation iteration counter.
+
+### DEC-025 — Add a required headless DSP and NRT test pipeline
+
+- **Date:** 2026-09-25
+- **Context:** The DSP unit tests and Python source/API/NRT tests existed as
+  separate commands. Without one documented entrypoint, automated runs could
+  omit the real `ChaosOsc` NRT integration. The project's visual acceptance
+  gate also needs to remain distinct from headless verification.
+- **Decision:** Add `bash scripts/run_headless_tests.sh` to require `sclang`
+  and `scsynth` via `SCLANG`/`SCSYNTH` executable paths or `PATH`, fail with
+  an actionable diagnostic if either is missing, run the DSP C++ tests, and
+  discover all Python tests. Add a GitHub Actions workflow for pull requests,
+  pushes, and manual dispatch that downloads the official SuperCollider
+  3.14.1 macOS DMG, verifies its recorded SHA-256, sets the CLI executable
+  paths, and invokes the same entrypoint without launching SCIDE or a GUI.
+  Keep native visual sign-off in `VISUAL_TEST_PLAN.md`; do not claim Windows
+  coverage because the current plugin smoke build is macOS-specific.
+- **Alternatives:** Continue to document separate ad hoc test commands; allow
+  the NRT test to skip when a runtime is absent; launch the GUI as a test
+  prerequisite; or claim a Windows workflow despite the macOS-specific
+  plugin smoke build.
+- **Rationale:** A mandatory single command makes the unit and real runtime
+  integration coverage reproducible while providing a clear failure when
+  required CLI tools are absent. The official pinned runtime keeps the plugin
+  ABI aligned with the server, and separate documentation prevents headless
+  audio tests from being mistaken for GUI acceptance.
+- **Consequences:** GitHub Actions is configured to run the headless suite
+  for pull requests, pushes, and manual dispatch on macOS with the official
+  3.14.1 runtime. GUI/SCIDE,
+  real-time audio, Windows 10 x64, MacBook Neo, and visual screenshots remain
+  outside this workflow and unverified by it. This test-infrastructure
+  change does not advance the product implementation iteration counter.

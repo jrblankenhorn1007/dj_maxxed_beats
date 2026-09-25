@@ -47,8 +47,8 @@ Start a development iteration by using this project's
 shared-skill routing and agent configuration.
 
 The shared workflow owns general development-loop mechanics; this project does
-not provide a local shell runner. Product-specific acceptance criteria and
-status sources remain in this repository: the
+not provide a local Ralph-loop shell runner. Product-specific acceptance
+criteria and status sources remain in this repository: the
 [implementation plan](./IMPLEMENTATION_PLAN.md),
 [visual test plan](./VISUAL_TEST_PLAN.md),
 [iteration progress](./RALPH_PROGRESS.md),
@@ -56,10 +56,40 @@ status sources remain in this repository: the
 [append-only decision log](./decision_log.md). The development workflow is
 separate from the in-SuperCollider music-variation feature.
 
+## Automated headless tests
+
+From the repository root, run:
+
+```sh
+bash scripts/run_headless_tests.sh
+```
+
+This entrypoint runs the ChaosOsc DSP C++ unit tests and discovers all Python
+tests, including the real `ChaosOsc` integration test. The integration test
+builds and loads the plugin in `sclang`, writes an NRT score, and renders it
+with `scsynth`; it requires both command-line executables and fails with a
+diagnostic rather than silently skipping when either is unavailable. Put
+`sclang` and `scsynth` on `PATH`, or provide explicit paths:
+
+```sh
+SCLANG=/path/to/sclang SCSYNTH=/path/to/scsynth \
+  bash scripts/run_headless_tests.sh
+```
+
+The suite also requires Python 3 and a C++17 compiler. SuperCollider 3.14.1
+is the project's tested plugin/runtime compatibility target.
+
+The command does not launch SCIDE or a GUI, start a real-time server, or use
+audio hardware. GitHub Actions runs the same entrypoint on macOS with the
+official SuperCollider 3.14.1 command-line runtime. This workflow does not
+claim Windows coverage; the current plugin smoke build is macOS-specific.
+
 ## Product verification
 
-Before declaring the product complete, follow the
-[visual application test plan](./VISUAL_TEST_PLAN.md). A successful build,
-headless test, log message, or mocked window is not visual confirmation; the
-real SuperCollider application must be exercised with native screenshots on
-the specified target platforms.
+Headless DSP/NRT coverage and visual application verification are separate.
+The automated command above does not satisfy GUI acceptance. Before declaring
+the product complete, follow the [visual application test
+plan](./VISUAL_TEST_PLAN.md): the real SuperCollider application must be
+exercised with native screenshots on the specified target platforms. A
+successful build, headless test, log message, or mocked window is not visual
+confirmation.
