@@ -24,10 +24,12 @@ documentation rather than repeating the product overview.
   references.
 - [Sound-design notes](./plugin/SOUND_DESIGN.md) — the ChaosOsc DSP
   prototype, controls, build state, and open verification gaps.
-- [Headless test entrypoint](../scripts/run_headless_tests.sh) — runs the DSP
-  tests and Python suite, including the plugin's SuperCollider NRT check. See
-  the [root README](../README.md#run-the-developer-checks) for prerequisites
-  and commands.
+- [Quality-check entrypoint](../scripts/run_quality_checks.sh) — shell/Python
+  source checks, Clang analysis, and warning-as-error DSP/plugin builds.
+- [Headless test entrypoint](../scripts/run_headless_tests.sh) — runs quality
+  checks and the full Python suite, including the plugin's SuperCollider NRT
+  check. See the [root README](../README.md#run-the-developer-checks) for
+  prerequisites and commands.
 
 ## Repository-root references
 

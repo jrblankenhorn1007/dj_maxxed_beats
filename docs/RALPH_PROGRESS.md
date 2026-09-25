@@ -904,3 +904,133 @@ Ralph-Status: IN_PROGRESS
 - **Platform gaps:** No new platform build/runtime was performed by this
   records-only continuation. Native ELF and Windows x64 remain unvalidated;
   the symbol behaviors there are mocked as recorded above.
+## CI quality gate expansion — 2026-09-25
+
+- **Task:** Extend the existing push/PR headless workflow with warning-as-error
+  builds and static checks, then update contributor and Ralph-role guidance.
+  This is workflow maintenance; product implementation iteration `5` is
+  unchanged.
+- **Branch/base:** `ralph/ci-quality-pipeline-20260925-0412`, initially based
+  on `origin/main` at `c448dae05f792ef868557e7d67a0a1becb7e6895`. After
+  `origin/main` advanced, the branch was rebased onto
+  `9c8c1b679b765ace2b4ae1dac49c1ed827f43171`; all checks below ran after that
+  rebase.
+- **TDD Red — initial quality contract:** Added contract tests for a required
+  quality entrypoint, source-analysis steps, and warning-as-error builds
+  before implementing the gate. From the parent worktree,
+  `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_headless_test_pipeline.HeadlessTestPipelineContractTests.test_entrypoint_runs_quality_checks_and_discovers_all_python_tests tests.test_headless_test_pipeline.HeadlessTestPipelineContractTests.test_quality_checks_cover_source_syntax_analysis_and_builds tests.test_headless_test_pipeline.HeadlessTestPipelineContractTests.test_cpp_builds_fail_on_project_warnings -v`
+  failed because the new entrypoint and strict build flags were absent. An
+  initial invocation from a different worktree loaded the old test module and
+  returned test-discovery `AttributeError`s; that was a command-context
+  mistake, not Red, and the test was rerun from the assigned parent worktree.
+- **TDD Green — quality gate:** Added
+  `scripts/run_quality_checks.sh`, wired it into
+  `scripts/run_headless_tests.sh`, and made C++ unit/plugin builds use
+  `-Wall -Wextra -Werror`. The plugin build runs Clang static analysis and
+  treats pinned external API headers as system headers so upstream-only
+  warnings do not mask warnings in project code. Missing `clang++` or `nm`
+  now fails with an explicit error instead of skipping analysis or symbol
+  verification.
+- **TDD Red/Green — analyzer artifacts:** The first analyzer run emitted
+  `ChaosOsc.plist` and `test_chaos_osc_core.plist` into the repository root.
+  A contract test failed while `-analyzer-output=text` was absent. Added
+  `-Xanalyzer -analyzer-output=text` to both analyzer invocations; rerunning
+  the quality gate passed without generating either artifact.
+- **TDD Red/Green — Python warnings:** Added contract assertions that the
+  quality and full-suite entrypoints set `PYTHONWARNINGS=error`. The tests
+  failed before that setting was wired in, then passed after Python
+  compilation and the discovered test suite were configured to treat warnings
+  as errors.
+- **Targeted verification:**
+  `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_headless_test_pipeline -v`
+  passed all 5 pipeline contract tests.
+- **Quality verification:** `bash scripts/run_quality_checks.sh` passed Bash
+  syntax checks, Python compilation, Clang static analysis, all 9 DSP
+  assertions, and the pinned-header plugin build. The plugin build emitted no
+  compiler warnings and verified the exported `_load` symbol.
+- **Full regression verification:** With the already SHA-verified official
+  SuperCollider 3.14.1 CLI runtime, the following command passed all 9 DSP
+  assertions and all 15 discovered Python tests, including plugin loading and
+  the NRT render:
+
+  ```sh
+  SCLANG=/path/to/SuperCollider.app/Contents/MacOS/sclang \
+  SCSYNTH=/path/to/SuperCollider.app/Contents/Resources/scsynth \
+  bash scripts/run_headless_tests.sh
+  ```
+
+  The placeholders above represent the exact SHA-verified SuperCollider
+  3.14.1 executables used locally; their machine-specific path is omitted.
+  Result: `Ran 15 tests in 81.435s`, `OK`; no compiler warnings or analyzer
+  plist artifacts. The Ruby standard-library YAML parse of
+  `.github/workflows/headless-tests.yml` and `git diff --check` also passed.
+- **Documentation:** The root README and docs index describe both check
+  commands; `RALPH_IMPLEMENTATION_PROMPT.md` makes the full check mandatory
+  for implementation workers and requires reviewers/coordinators to verify
+  green checks on the exact PR head and after integration/rebase.
+- **Coverage limits:** The local run used macOS arm64. The updated GitHub
+  Actions workflow is configured for pushes, pull requests, and manual
+  dispatch on macOS 14, but its hosted run on this branch has not been
+  observed. Windows 10 x64, an actual MacBook Neo, GUI/SCIDE, and real-time
+  audio remain outside this CI gate.
+- **Integration state:** No PR or remote merge is claimed.
+
+## CI quality gate — latest-base retest — 2026-09-25
+
+- **Rebase:** Fetched `origin/main` at
+  `1926bdab3c358088f359cf73f0d8025a66c7d0d0` and rebased
+  `ralph/ci-quality-pipeline-20260925-0412` onto it without conflicts.
+  Upstream changes were limited to Git workflow memory and README follow-up
+  records.
+- **Implementation commit after rebase:**
+  `0ed695472f44c52a0379eb61ee691d45fe590684`.
+- **Full regression command:** `bash scripts/run_headless_tests.sh`, with
+  `SCLANG` and `SCSYNTH` set to the verified SuperCollider 3.14.1 CLI
+  executables. The full quality/build/Python/NRT gate passed: 9 DSP assertions
+  and all 15 discovered Python tests, including plugin loading and NRT render.
+  Result: `Ran 15 tests in 11.239s`, `OK`. Machine-specific runtime paths are
+  intentionally omitted from this repository record.
+- **Integration state:** The task branch is unpublished. No hosted run for the
+  strict quality-gate commits, PR, or remote merge is claimed.
+
+## CI quality gate — post-PR #23 rebase retest — 2026-09-25
+
+- **Rebase:** Fetched `origin/main` at
+  `7523a9a0b87ffc5304686e2e64509fc4a6941bb7` after PR #23 reconciled the
+  Ralph dashboard, then rebased the CI branch without conflicts in the
+  executable gate.
+- **Implementation commit:** `c585ea93bb1c3e819ac63376dc7a0dd1de94b842`.
+- **Full regression:** `bash scripts/run_headless_tests.sh`, with `SCLANG`
+  and `SCSYNTH` set to the verified SuperCollider 3.14.1 CLI executables,
+  passed after this latest rebase: all 9 DSP assertions and all 15 Python
+  tests, including plugin loading and NRT rendering. Result: `Ran 15 tests in
+  82.733s`, `OK`; no compiler warnings or analyzer artifacts.
+- **Integration:** The task branch remains unpublished. No GitHub-hosted run,
+  PR, or remote merge for the strict quality-gate change is claimed.
+
+## CI quality gate — post-PR #26 rebase and authorized integration — 2026-09-25
+
+- **Rebase:** Fetched `origin/main` at
+  `6f2a6c8693634e58282a8b70274664ad316b24e8` and completed the rebase while
+  preserving upstream PR #24-26 implementation, review, and status records.
+  The portable symbol check remains intact alongside strict Clang analysis,
+  `-Werror`, and required `nm` preflight.
+- **Implementation commit:** `16d39c8fedc282a6560e407be1f7b20fc296e156`.
+- **Full regression command:** `bash scripts/run_headless_tests.sh`, with
+  `SCLANG` and `SCSYNTH` set to the verified official SuperCollider 3.14.1
+  executables. Result: PASS — 9 DSP assertions, warning-free plugin analysis
+  and build with exact `_load` export verification, and all 23 Python tests,
+  including NRT plugin integration; `Ran 23 tests in 28.168s`, `OK`.
+  Machine-specific runtime paths are omitted. No compiler warnings or
+  analyzer plist artifacts were produced.
+- **Integration authorization:** The owner explicitly requested that the
+  branch be committed, pushed, and merged. `RALPH_IMPLEMENTATION_PROMPT.md`,
+  `.github/memory/git-workflow.md`, and DEC-028 now require agents to complete
+  that requested sequence and verify the remote merge before reporting
+  completion. They also prohibit retrying a rejected post-publication push;
+  follow-up records must use a fresh branch and PR.
+- **Current state:** The required local gate is green and the user authorized
+  publication. The branch has not yet been published; no hosted run, PR, or
+  remote merge is claimed. Next, finish final records, publish once, open the
+  PR, verify checks on its exact head, and merge through the authorized
+  GitHub path.

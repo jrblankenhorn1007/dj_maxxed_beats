@@ -28,11 +28,30 @@ mkdir -p "${bin_dir}"
 python3 "${plugin_root}/fetch_sc_plugin_api.py"
 
 out_lib="${bin_dir}/ChaosOsc.scx"
+source_file="${script_dir}/../Source/ChaosOsc.cpp"
+analyzer="${CLANGXX:-clang++}"
+compiler="${CXX:-clang++}"
 
-"${CXX:-clang++}" -std=c++17 -Wall -Wextra -O2 -fPIC -shared \
-    -I "${sc_api_cache}/include/plugin_interface" \
-    -I "${sc_api_cache}/include/common" \
-    "${script_dir}/../Source/ChaosOsc.cpp" \
+if ! command -v "${analyzer}" >/dev/null 2>&1; then
+    printf "ERROR: Clang C++ analyzer is required but unavailable: %s\n" \
+        "${analyzer}" >&2
+    exit 1
+fi
+if ! command -v "${compiler}" >/dev/null 2>&1; then
+    printf "ERROR: C++ compiler is required but unavailable: %s\n" \
+        "${compiler}" >&2
+    exit 1
+fi
+"${analyzer}" --analyze -Xanalyzer -analyzer-output=text \
+    -std=c++17 -Wall -Wextra -Werror \
+    -isystem "${sc_api_cache}/include/plugin_interface" \
+    -isystem "${sc_api_cache}/include/common" \
+    "${source_file}"
+
+"${compiler}" -std=c++17 -Wall -Wextra -Werror -O2 -fPIC -shared \
+    -isystem "${sc_api_cache}/include/plugin_interface" \
+    -isystem "${sc_api_cache}/include/common" \
+    "${source_file}" \
     -o "${out_lib}"
 
 echo "Built shared plugin library: ${out_lib}"

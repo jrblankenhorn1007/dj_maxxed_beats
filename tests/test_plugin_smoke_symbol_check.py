@@ -14,6 +14,7 @@ BUILD_SCRIPT = ROOT / "plugin" / "ChaosOsc" / "Tests" / "build_plugin_smoke_test
 
 _BASH_HARNESS = r"""
 python3() { return 0; }
+mock_analyzer() { return 0; }
 mock_compiler() { return 0; }
 uname() {
     if [[ "$#" -ne 1 || "$1" != "-s" ]]; then
@@ -55,6 +56,7 @@ command() {
     fi
     builtin command "$@"
 }
+CLANGXX=mock_analyzer
 CXX=mock_compiler
 source "$1"
 """

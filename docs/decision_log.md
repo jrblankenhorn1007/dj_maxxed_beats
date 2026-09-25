@@ -588,3 +588,60 @@ credentials and private user data out of this file.
   validated. Windows 10 x64, MacBook Neo, GUI/SCIDE, and real-time audition
   remain unverified. This build-validation/test-infrastructure continuation
   does not advance the product implementation iteration counter (`5`).
+### DEC-027 — Require static analysis and warning-free CI builds
+
+- **Date:** 2026-09-25
+- **Context:** DEC-025 provided a repeatable DSP/Python/NRT suite, but C++
+  diagnostics were not fatal, source syntax and static analysis were not
+  explicit gates, and every Ralph role did not have one documented rule for
+  running and reviewing CI.
+- **Decision:** Make `scripts/run_quality_checks.sh` the shared source-quality
+  entrypoint and invoke it from `scripts/run_headless_tests.sh`. Check
+  first-party Bash/Python syntax, treat Python warnings as errors, analyze the
+  ChaosOsc DSP/plugin with Clang's static analyzer, and build/run the DSP unit
+  test and plugin with `-Wall -Wextra -Werror`. Require Clang analysis and the
+  plugin-symbol inspection instead of warning and skipping when unavailable.
+  Keep the pinned SuperCollider API headers as system headers so external
+  warnings do not obscure warnings in project code. Run this gate with the
+  Python/NRT suite from the existing GitHub Actions workflow on every push
+  and pull request. Document the exact checks and merge requirements in the
+  project Ralph prompt for implementation workers, reviewers, coordinators,
+  and retries.
+- **Alternatives:** Add external Python/shell lint dependencies that are not
+  currently part of the project; silently skip missing static-analysis tools;
+  or promote all upstream-header diagnostics to project failures.
+- **Rationale:** The existing Clang/macOS build toolchain supplies useful
+  analysis without adding package dependencies. Failing on project warnings
+  makes compilation a reliable regression gate, while classifying the
+  release-pinned external headers as system headers keeps that gate focused
+  on code owned by this project.
+- **Consequences:** The single full-suite command now runs syntax checks,
+  static analysis, warning-as-error DSP/plugin builds, all Python tests, and
+  real SuperCollider NRT integration. The current hosted workflow remains
+  macOS-only; Windows, MacBook Neo, GUI/SCIDE, and real-time audio validation
+  are not claimed. This CI/documentation change does not advance the product
+  implementation iteration counter.
+
+### DEC-028 — Complete explicitly requested GitHub integration
+
+- **Date:** 2026-09-25
+- **Context:** A CI-pipeline task had been committed locally but was not
+  published or merged. The owner clarified that requested push and merge
+  actions are part of completion, not optional follow-up work.
+- **Decision:** Treat an explicit user request to commit, push, publish, open a
+  PR, or merge as authorization for those requested actions and their
+  prerequisites. When merge is requested, keep the task in progress until the
+  exact PR head has passed required checks, the authorized GitHub merge has
+  completed, and that merge is verified on `origin/main`. Complete known
+  changes before initial publication; if a post-publication status update is
+  blocked, use a fresh branch and PR rather than retrying a direct push.
+- **Alternatives:** Stop after local commits; ask the owner again for the same
+  authorization; or attempt repeated direct pushes after a repository rule
+  rejects them.
+- **Rationale:** Users need their explicit integration requests completed, and
+  the repository's `code_coverage` rule requires the authorized API/UI merge
+  path. A successful local test or commit is not proof of a hosted check or
+  remote merge.
+- **Consequences:** Agent completion records must distinguish local,
+  published, checked, and merged states. Any blocked integration remains
+  explicitly in progress and is reported with its blocker.

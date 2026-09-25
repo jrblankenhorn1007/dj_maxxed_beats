@@ -1,12 +1,14 @@
 schema_version: 2
 snapshot_path: "docs/ralph-status.md"
-snapshot_revision: 5
-updated_at_utc: "2026-09-25T09:51:22Z"
+snapshot_revision: 9
+updated_at_utc: "2026-09-25T14:01:55Z"
 overall_status: IN_PROGRESS
 current_run_ids:
   - "skills-routing-20260925-0108"
   - "headless-integration-tests-20260925-0246"
   - "ralph-main-review-20260925-021443"
+  - "ci-quality-pipeline-20260925-0412"
+legacy_leaf_status_note: "Schema-v1 leaf files remain unchanged; branch-index status/leaf_status and merge/status_sync records distinguish the last worker snapshot from the coordinator's current integration view."
 
 runs:
   - run_id: "ralph-shared-workflow-move-20260925-0105"
@@ -32,6 +34,55 @@ runs:
       sources:
         - ".github/memory/README.md"
         - ".github/memory/testing.md"
+  - run_id: "ci-quality-pipeline-20260925-0412"
+    task_ids: ["add-ci-quality-gates"]
+    aggregate_status: IN_PROGRESS
+    requested_worker_count: 1
+    effective_worker_count: 1
+    active_worker_count: 0
+    base_origin_main_sha: "c448dae05f792ef868557e7d67a0a1becb7e6895"
+    rebased_onto_origin_main_sha: "6f2a6c8693634e58282a8b70274664ad316b24e8"
+    implementation_commit_sha: "16d39c8fedc282a6560e407be1f7b20fc296e156"
+    created_at_utc: "2026-09-25T04:53:54Z"
+    updated_at_utc: "2026-09-25T14:01:55Z"
+    next_action: "The user explicitly authorized publication and merge. Push once, open a PR, verify all required checks on its exact head, then merge through the authorized GitHub path. Do not update the published branch directly; synchronize post-merge records via a fresh follow-up PR."
+    worker_count_note: "The integrated CI gate, tests, and agent documentation were kept in one coordinator-owned scope; no child workers were launched."
+    split_plan:
+      - task_id: "add-ci-quality-gates"
+        worker_id: "coordinator-01"
+        scope: "Add static analysis and warning-as-error CI checks, document the full gate for agent roles, and validate the complete SuperCollider headless suite."
+        depends_on: []
+    pull_request:
+      status: PENDING
+      number: null
+      url: null
+      base_sha: "6f2a6c8693634e58282a8b70274664ad316b24e8"
+      head_sha: null
+    review:
+      status: PENDING
+      reviewer_agents: ["Ralph Code Reviewer"]
+      reviewed_base_sha: null
+      reviewed_head_sha: null
+      rounds_completed: 0
+      max_rounds: 2
+      unresolved_finding_count: 0
+      author_decision:
+        status: NOT_REQUIRED
+        choice: null
+        rationale: null
+        recorded_at_utc: null
+    merge:
+      status: PENDING
+      sha: null
+      verified_remote_ref: "refs/heads/main"
+      verified_origin_main_sha: null
+      verification_method: null
+      verified_at_utc: null
+    checks:
+      - command: "bash scripts/run_headless_tests.sh with the verified SuperCollider 3.14.1 CLI executables"
+        result: "PASS after rebase onto origin/main 6f2a6c8693634e58282a8b70274664ad316b24e8: 9 DSP assertions, warning-free plugin build and exact _load verification, and all 23 Python tests including NRT plugin integration; 28.168 seconds."
+      - command: "GitHub Actions run for this task branch"
+        result: "NOT_RUN — the branch has not been published."
 
   - run_id: "skills-routing-20260925-0108"
     task_ids: ["retire-maxxed-local-tdd-skill"]
@@ -537,3 +588,42 @@ branch_agent_index:
       merge_sha: "ba59eb507e03bff97a1c9e9d54a93a0c88265a25"
       verified_origin_main_sha: "ba59eb507e03bff97a1c9e9d54a93a0c88265a25"
     next_action: "None; PR #25 and its memory update are merged and verified. Final aggregate records are synchronized in the separate status-only follow-up."
+  - run_id: "ci-quality-pipeline-20260925-0412"
+    task_ids: ["add-ci-quality-gates"]
+    worker_id: "coordinator-01"
+    worker_name: "coordinator-01 / CI quality pipeline and agent guidance"
+    branch: "ralph/ci-quality-pipeline-20260925-0412"
+    branch_slug: "ralph-ci-quality-pipeline-20260925-0412"
+    status: IN_PROGRESS
+    iteration: 1
+    status_path: "docs/ralph/ralph-ci-quality-pipeline-20260925-0412/agents/coordinator-01/status.md"
+    progress_path: "docs/ralph/ralph-ci-quality-pipeline-20260925-0412/agents/coordinator-01/progress.md"
+    decision_record_path: "docs/decisions/ralph-ci-quality-pipeline-20260925-0412/agents/coordinator-01/pr-pending.md"
+    decision_index_path: "docs/decisions/ralph-ci-quality-pipeline-20260925-0412/README.md"
+    implementation_commit_sha: "16d39c8fedc282a6560e407be1f7b20fc296e156"
+    pull_request:
+      status: PENDING
+      number: null
+      url: null
+      base_sha: "6f2a6c8693634e58282a8b70274664ad316b24e8"
+      head_sha: null
+    review:
+      status: PENDING
+      reviewer_agents: ["Ralph Code Reviewer"]
+      reviewed_base_sha: null
+      reviewed_head_sha: null
+      rounds_completed: 0
+      max_rounds: 2
+      unresolved_finding_count: 0
+    hosted_checks: []
+    resource_usage:
+      time_spent_seconds: 32881
+      time_basis: WALL_CLOCK_ELAPSED
+      token_spend:
+        status: NOT_REPORTED
+        input_tokens: null
+        output_tokens: null
+        total_tokens: null
+        cached_input_tokens: null
+        source: null
+    next_action: "Push the authorized branch once, open a PR, verify required checks on the exact PR head, and merge via the authorized GitHub path. Synchronize final records through a fresh post-merge PR."

@@ -39,11 +39,11 @@ they are not commands for installing or running an AI music application.
 bash scripts/run_headless_tests.sh
 ```
 
-This is the recommended complete check. It runs the DSP C++ tests and all
-Python tests, including the SuperCollider plugin/NRT integration. It requires
-Bash, Python 3, a C++17 compiler, and matching `sclang` and `scsynth`
-executables. Put both SuperCollider command-line tools on `PATH`, or provide
-their paths:
+This is the recommended complete check. It runs the quality gate followed by
+all Python tests, including the SuperCollider plugin/NRT integration. It
+requires Bash, Python 3, Clang, a C++17 compiler, and matching `sclang` and
+`scsynth` executables. Put both SuperCollider command-line tools on `PATH`, or
+provide their paths:
 
 ```sh
 SCLANG=/absolute/path/to/sclang \
@@ -54,6 +54,21 @@ bash scripts/run_headless_tests.sh
 The plugin build also needs network access to fetch its pinned API headers
 when they are not already cached. The suite does not launch SCIDE, a GUI, a
 real-time server, or audio hardware.
+
+### Static analysis and warning-free builds
+
+```sh
+bash scripts/run_quality_checks.sh
+```
+
+This quality gate is also run by the full headless suite. It checks the
+first-party Bash and Python source syntax, treats Python warnings as errors,
+runs Clang's static analyzer on the ChaosOsc sources, and builds/tests both
+the DSP core and SuperCollider plugin with C++ warnings treated as errors.
+The pinned SuperCollider API headers are treated as system headers so only
+project-source warnings block the build. The plugin analysis/build requires
+network access to fetch the pinned headers when they are not cached. Set
+`CLANGXX` to select the Clang analyzer or `CXX` to select the C++ compiler.
 
 ### Pure DSP test
 
@@ -81,10 +96,11 @@ bash plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh
 
 Requires Bash, Python 3, and a C++17 compiler (`CXX` can select the compiler).
 The script builds the plugin against the public SuperCollider 3.14.1 plugin
-API headers and checks for the exported `_load` symbol when `nm` is available.
-If those pinned headers are not already in the local cache, the build needs
-network access to fetch them from `raw.githubusercontent.com`. A successful
-smoke build does not itself run the plugin in `scsynth`.
+API headers, performs Clang static analysis, treats project compiler warnings
+as errors, and requires `nm` to verify the exported `_load` symbol. If those
+pinned headers are not already in the local cache, the build needs network
+access to fetch them from `raw.githubusercontent.com`. A successful smoke
+build does not itself run the plugin in `scsynth`.
 
 ### Optional NRT runtime integration
 
@@ -112,8 +128,10 @@ explicit validation planned on an actual **MacBook Neo**. These are project
 targets, not claims of current platform support.
 
 The latest local runtime verification is **macOS 26.5.2 arm64 with
-SuperCollider 3.14.1**. GitHub Actions also runs the headless suite on macOS
-14 with SuperCollider 3.14.1. Neither run was on an actual MacBook Neo.
+SuperCollider 3.14.1**. GitHub Actions runs the quality and headless test
+gates on every push and pull request, and on manual dispatch, using macOS 14
+and the official SuperCollider 3.14.1 runtime. These checks are not a
+Windows build and neither macOS run was on an actual MacBook Neo.
 Windows 10 x64, a real MacBook Neo, real-time audition, the GUI/SCIDE workflow,
 SuperCollider versions other than 3.14.1, and release binaries remain
 unverified. Packaging and release support have not been implemented.

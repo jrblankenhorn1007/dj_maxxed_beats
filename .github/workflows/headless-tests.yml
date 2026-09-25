@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Provision SuperCollider 3.14.1 and run headless tests
+      - name: Provision SuperCollider 3.14.1
         shell: bash
         run: |
           set -euo pipefail
@@ -44,6 +44,9 @@ jobs:
           test -x "${scsynth_path}"
           "${sclang_path}" -v
           "${scsynth_path}" -v
-          export SCLANG="${sclang_path}"
-          export SCSYNTH="${scsynth_path}"
-          bash scripts/run_headless_tests.sh
+
+      - name: Run quality checks, builds, unit tests, and NRT integration
+        env:
+          SCLANG: ${{ github.workspace }}/.runtime/mount/SuperCollider.app/Contents/MacOS/sclang
+          SCSYNTH: ${{ github.workspace }}/.runtime/mount/SuperCollider.app/Contents/Resources/scsynth
+        run: bash scripts/run_headless_tests.sh

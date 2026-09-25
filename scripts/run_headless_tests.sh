@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run the DSP unit tests and Python suite, including the real ChaosOsc NRT test.
+# Run source-quality checks and Python tests, including the real ChaosOsc NRT test.
 # The NRT test needs the sclang/scsynth command-line executables; no GUI,
 # real-time server, or audio device is started by this entrypoint.
 set -euo pipefail
@@ -46,9 +46,10 @@ test_tmp_dir="${repo_root}/tests/.build/test-tmp"
 mkdir -p "${test_tmp_dir}"
 export TMPDIR="${test_tmp_dir}"
 export PYTHONDONTWRITEBYTECODE=1
+export PYTHONWARNINGS=error
 
-printf '\n==> ChaosOsc DSP C++ unit tests\n'
-bash plugin/ChaosOsc/Tests/run_tests.sh
+printf '\n==> Static analysis and warning-free builds\n'
+bash scripts/run_quality_checks.sh
 
 printf '\n==> Python tests (including the ChaosOsc sclang/scsynth NRT integration)\n'
 python3 -m unittest discover -s tests -p 'test_*.py' -v

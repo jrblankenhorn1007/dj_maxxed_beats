@@ -11,11 +11,12 @@
 - **Iteration commit:** [`1a1a8fa`](https://github.com/jrblankenhorn1007/dj_maxxed_beats/commit/1a1a8faeb2f4e6a44b9e95af0f4a41f27c688c17)
 - **Lines changed:** `+650 / -93` (Git numstat; text files; includes documentation; binary files excluded)
 - **Loop state:** Iteration 5's ChaosOsc NRT integration is merged and verified on `origin/main` at `b1c77ae`; the coordinator review captured reusable runtime-testing lessons in `.github/memory/testing.md`.
+- **CI workflow maintenance:** Added Clang static analysis, Python warning-as-error syntax checks, and warning-as-error C++ builds to the push/PR pipeline. This does not advance the product implementation iteration counter.
 
 ## Overall state
 
-The project-facing documents are organized in `docs/` (plugin notes in
-`docs/plugin/`); the root README is a short entry point. ChaosOsc now has a
+Project documentation is organized in `docs/` (plugin notes in `docs/plugin/`);
+the root README is the project landing page and developer-check guide. ChaosOsc has a
 unit-tested DSP core, a C++ server plugin pinned to the SuperCollider 3.14.1
 plugin API, and an audio-rate sclang class/help source. A deterministic NRT
 integration test loads the class and plugin, renders finite/non-silent float
@@ -39,7 +40,7 @@ unimplemented.
 | Usage, estimated dollars, and informational credits | Specified | The planned initial conversion is 100 app credits per estimated USD; no metering or display exists. |
 | Review, approval, undo, and candidate isolation | Specified | Safety requirements are planned but not implemented. |
 | In-app variation loop | Specified | User-started, stoppable, isolated, and limited to four candidates by default; not implemented. |
-| Tests, builds, and release packaging | In progress | `bash scripts/run_headless_tests.sh` runs the nine DSP assertions and all 12 Python tests, including the release-pinned plugin build and runtime NRT integration, on macOS. GitHub Actions provisions official SuperCollider 3.14.1 and runs the entrypoint on macOS only; Windows coverage is not claimed. Release packaging is not started. |
+| Tests, builds, and release packaging | In progress | `bash scripts/run_headless_tests.sh` runs the source-quality gate, nine DSP assertions, and all discovered Python tests, including the release-pinned plugin build and runtime NRT integration. GitHub Actions runs on every push/pull request on macOS with official SuperCollider 3.14.1; Windows coverage is not claimed. Release packaging is not started. |
 | Visual application verification | Planned | `docs/VISUAL_TEST_PLAN.md` requires live SCIDE GUI runs, native screenshots, and image inspection on both target platforms; no app exists to test yet. |
 
 ## Verification and platform coverage
@@ -77,14 +78,21 @@ unimplemented.
   difference before update was `0`, and the post-update maximum difference
   was `0.165870212`.
 - **Headless pipeline:** `bash scripts/run_headless_tests.sh` passed with
-  explicit `SCLANG`/`SCSYNTH` paths (9/9 DSP assertions and all 12 Python
-  tests, including the ChaosOsc NRT render); a second complete run passed with
-  both variables unset and the CLI executables found on `PATH`. The official
-  SuperCollider 3.14.1 DMG matched the recorded SHA-256 and both CLI tools
-  reported release commit `426edf6`. These runs used macOS 26.5.2 arm64 and
-  launched no GUI, SCIDE, real-time server, or audio hardware. The GitHub
-  Actions workflow is configured for pull requests, pushes, and manual
-  dispatch on macOS 14; its hosted run was not observed in this local check.
+- **CI quality gate:** `bash scripts/run_quality_checks.sh` passed Bash
+  syntax checks, Python compilation with `PYTHONWARNINGS=error`, Clang static
+  analysis of both C++ components, all nine DSP assertions, and the plugin
+  build with `-Wall -Wextra -Werror`; the `_load` symbol was verified. No
+  analyzer output artifacts or compiler warnings were produced.
+- **Full local headless suite:** After rebasing the task branch onto fetched
+  `origin/main` at `6f2a6c8693634e58282a8b70274664ad316b24e8`, with explicit
+  paths to the verified SuperCollider 3.14.1 CLI runtime,
+  `bash scripts/run_headless_tests.sh` passed all nine DSP assertions and all
+  23 discovered Python tests, including the plugin/NRT render. The warning-free
+  plugin build and exact `_load` export check also passed. This local run
+  completed in 28.168 seconds and launched no GUI, SCIDE, real-time server, or
+  audio hardware. The GitHub Actions workflow is configured for every push,
+  pull request, and manual dispatch on macOS 14; its hosted run for this
+  quality-gate branch must be verified on the exact PR head.
 - **Diff/syntax:** The existing build-script check
   `bash -n plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh && git diff --check`
   passed. This pipeline also passed `bash -n scripts/run_headless_tests.sh`,
