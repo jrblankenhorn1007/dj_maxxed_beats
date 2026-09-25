@@ -18,3 +18,20 @@
   coverage is below the configured minimum. Do not lower coverage thresholds
   or add coverage instrumentation unless a separate coverage result shows an
   actual coverage shortfall.
+
+### Honor explicit integration requests through verified merge
+- **Rule:** Treat an explicit user request to commit, push, publish, open a PR,
+  or merge as authorization for those requested actions and their
+  prerequisites. When merge is requested, do not report completion at a local
+  commit, branch push, or open PR: verify required checks on the exact PR head,
+  merge via the authorized GitHub path, and confirm the merge is an ancestor
+  of `origin/main`. If blocked by an external requirement, leave the task
+  status in progress and report the blocker. Finish known changes before the
+  first publication; if a post-publication status update is rejected, create a
+  fresh branch and PR rather than retrying a direct push.
+- **Why:** During the 2026-09-25 CI-gate task, the owner clarified that the
+  requested work was not complete until the branch was pushed and merged.
+  Earlier local commits alone did not satisfy that explicit integration
+  requirement.
+- **Scope:** Repository agents and Ralph coordinators handling user-requested
+  GitHub integration.

@@ -1007,3 +1007,30 @@ Ralph-Status: IN_PROGRESS
   82.733s`, `OK`; no compiler warnings or analyzer artifacts.
 - **Integration:** The task branch remains unpublished. No GitHub-hosted run,
   PR, or remote merge for the strict quality-gate change is claimed.
+
+## CI quality gate — post-PR #26 rebase and authorized integration — 2026-09-25
+
+- **Rebase:** Fetched `origin/main` at
+  `6f2a6c8693634e58282a8b70274664ad316b24e8` and completed the rebase while
+  preserving upstream PR #24-26 implementation, review, and status records.
+  The portable symbol check remains intact alongside strict Clang analysis,
+  `-Werror`, and required `nm` preflight.
+- **Implementation commit:** `16d39c8fedc282a6560e407be1f7b20fc296e156`.
+- **Full regression command:** `bash scripts/run_headless_tests.sh`, with
+  `SCLANG` and `SCSYNTH` set to the verified official SuperCollider 3.14.1
+  executables. Result: PASS — 9 DSP assertions, warning-free plugin analysis
+  and build with exact `_load` export verification, and all 23 Python tests,
+  including NRT plugin integration; `Ran 23 tests in 28.168s`, `OK`.
+  Machine-specific runtime paths are omitted. No compiler warnings or
+  analyzer plist artifacts were produced.
+- **Integration authorization:** The owner explicitly requested that the
+  branch be committed, pushed, and merged. `RALPH_IMPLEMENTATION_PROMPT.md`,
+  `.github/memory/git-workflow.md`, and DEC-028 now require agents to complete
+  that requested sequence and verify the remote merge before reporting
+  completion. They also prohibit retrying a rejected post-publication push;
+  follow-up records must use a fresh branch and PR.
+- **Current state:** The required local gate is green and the user authorized
+  publication. The branch has not yet been published; no hosted run, PR, or
+  remote merge is claimed. Next, finish final records, publish once, open the
+  PR, verify checks on its exact head, and merge through the authorized
+  GitHub path.

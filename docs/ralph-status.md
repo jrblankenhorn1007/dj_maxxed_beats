@@ -1,7 +1,7 @@
 schema_version: 2
 snapshot_path: "docs/ralph-status.md"
-snapshot_revision: 6
-updated_at_utc: "2026-09-25T13:44:33Z"
+snapshot_revision: 9
+updated_at_utc: "2026-09-25T14:01:55Z"
 overall_status: IN_PROGRESS
 current_run_ids:
   - "skills-routing-20260925-0108"
@@ -44,7 +44,7 @@ runs:
     rebased_onto_origin_main_sha: "6f2a6c8693634e58282a8b70274664ad316b24e8"
     implementation_commit_sha: "16d39c8fedc282a6560e407be1f7b20fc296e156"
     created_at_utc: "2026-09-25T04:53:54Z"
-    updated_at_utc: "2026-09-25T13:44:33Z"
+    updated_at_utc: "2026-09-25T14:01:55Z"
     next_action: "The user explicitly authorized publication and merge. Push once, open a PR, verify all required checks on its exact head, then merge through the authorized GitHub path. Do not update the published branch directly; synchronize post-merge records via a fresh follow-up PR."
     worker_count_note: "The integrated CI gate, tests, and agent documentation were kept in one coordinator-owned scope; no child workers were launched."
     split_plan:
@@ -57,7 +57,7 @@ runs:
       number: null
       url: null
       base_sha: "6f2a6c8693634e58282a8b70274664ad316b24e8"
-      head_sha: "16d39c8fedc282a6560e407be1f7b20fc296e156"
+      head_sha: null
     review:
       status: PENDING
       reviewer_agents: ["Ralph Code Reviewer"]
@@ -80,7 +80,7 @@ runs:
       verified_at_utc: null
     checks:
       - command: "bash scripts/run_headless_tests.sh with the verified SuperCollider 3.14.1 CLI executables"
-        result: "PASS after rebase onto origin/main 7523a9a0b87ffc5304686e2e64509fc4a6941bb7: 9 DSP assertions and all 15 Python tests, including NRT plugin integration; 82.733 seconds."
+        result: "PASS after rebase onto origin/main 6f2a6c8693634e58282a8b70274664ad316b24e8: 9 DSP assertions, warning-free plugin build and exact _load verification, and all 23 Python tests including NRT plugin integration; 28.168 seconds."
       - command: "GitHub Actions run for this task branch"
         result: "NOT_RUN — the branch has not been published."
 
@@ -606,7 +606,7 @@ branch_agent_index:
       number: null
       url: null
       base_sha: "6f2a6c8693634e58282a8b70274664ad316b24e8"
-      head_sha: "16d39c8fedc282a6560e407be1f7b20fc296e156"
+      head_sha: null
     review:
       status: PENDING
       reviewer_agents: ["Ralph Code Reviewer"]
@@ -616,4 +616,14 @@ branch_agent_index:
       max_rounds: 2
       unresolved_finding_count: 0
     hosted_checks: []
+    resource_usage:
+      time_spent_seconds: 32881
+      time_basis: WALL_CLOCK_ELAPSED
+      token_spend:
+        status: NOT_REPORTED
+        input_tokens: null
+        output_tokens: null
+        total_tokens: null
+        cached_input_tokens: null
+        source: null
     next_action: "Push the authorized branch once, open a PR, verify required checks on the exact PR head, and merge via the authorized GitHub path. Synchronize final records through a fresh post-merge PR."

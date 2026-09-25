@@ -1,4 +1,4 @@
-name: CI
+name: Headless Tests
 
 on:
   pull_request:
@@ -10,7 +10,6 @@ permissions:
 
 jobs:
   headless-tests:
-    name: Quality, unit tests, plugin build, and NRT
     runs-on: macos-14
     timeout-minutes: 20
     steps:

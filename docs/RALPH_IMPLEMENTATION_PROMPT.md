@@ -72,6 +72,21 @@ on macOS only; it does not validate Windows, an actual MacBook Neo, SCIDE or
 GUI behavior, or real-time audio. Keep those requirements in the product and
 visual acceptance plans.
 
+## Publication, merge, and completion
+
+- Treat an explicit user request to commit, push, publish, open a PR, or merge
+  as authorization for those requested actions and their prerequisites. Do not
+  stop to request the same authorization again.
+- When the user asks for a merge, the task is not complete at a local commit,
+  branch push, or open PR. Run the required checks on the exact PR head, merge
+  through the repository's authorized GitHub path, and verify the merge is an
+  ancestor of `origin/main` before reporting completion. If an external
+  blocker prevents this, report it accurately and leave status in progress.
+- Finish all known implementation and documentation/status commits before the
+  first branch publication. Do not retry a rejected direct push to a published
+  branch; use a fresh branch and PR for follow-up records, then verify that
+  merge as well.
+
 The development Ralph loop changes and verifies product code. The separate
 in-SuperCollider music-variation feature runs only when a user starts it and
 must remain bounded, stoppable, and isolated from the original project.

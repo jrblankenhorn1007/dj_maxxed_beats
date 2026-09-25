@@ -621,3 +621,27 @@ credentials and private user data out of this file.
   macOS-only; Windows, MacBook Neo, GUI/SCIDE, and real-time audio validation
   are not claimed. This CI/documentation change does not advance the product
   implementation iteration counter.
+
+### DEC-028 — Complete explicitly requested GitHub integration
+
+- **Date:** 2026-09-25
+- **Context:** A CI-pipeline task had been committed locally but was not
+  published or merged. The owner clarified that requested push and merge
+  actions are part of completion, not optional follow-up work.
+- **Decision:** Treat an explicit user request to commit, push, publish, open a
+  PR, or merge as authorization for those requested actions and their
+  prerequisites. When merge is requested, keep the task in progress until the
+  exact PR head has passed required checks, the authorized GitHub merge has
+  completed, and that merge is verified on `origin/main`. Complete known
+  changes before initial publication; if a post-publication status update is
+  blocked, use a fresh branch and PR rather than retrying a direct push.
+- **Alternatives:** Stop after local commits; ask the owner again for the same
+  authorization; or attempt repeated direct pushes after a repository rule
+  rejects them.
+- **Rationale:** Users need their explicit integration requests completed, and
+  the repository's `code_coverage` rule requires the authorized API/UI merge
+  path. A successful local test or commit is not proof of a hosted check or
+  remote merge.
+- **Consequences:** Agent completion records must distinguish local,
+  published, checked, and merged states. Any blocked integration remains
+  explicitly in progress and is reported with its blocker.
