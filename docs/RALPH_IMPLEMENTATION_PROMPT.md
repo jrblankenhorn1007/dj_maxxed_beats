@@ -1,59 +1,38 @@
 # Ralph Implementation Prompt
 
-This file is a compatibility pointer read by the local Copilot CLI runner,
-not a second source of general TDD or Ralph-loop instructions.
-
-## Canonical workflow
-
-Follow the shared
+Use this project prompt with the shared **Ralph Loop** agent. Invoke the
+canonical
+[Ralph Loop agent](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/agents/ralph-loop.agent.md)
+and follow the canonical
 [Ralph Loop skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/SKILL.md)
-for isolated iterations and verified remote integration. For behavior
-changes, also follow the shared
-[TDD skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd/SKILL.md)
-and use the shared
-[Ralph Loop agent](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/agents/ralph-loop.agent.md).
+for development-loop mechanics. The shared skill and agent are the sole
+implementation of the outer development workflow; this project does not
+provide or require a local shell runner.
 
-When an iteration implements or validates the SuperCollider music product,
-consult the Ralph Loop skill's
+For behavior-changing work, also follow the shared
+[TDD skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd/SKILL.md).
+When the task concerns the SuperCollider music product, consult the shared
 [SuperCollider AI Music Agent prompt](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/references/ralph-loop.md)
-for domain-specific context. Use it only when relevant; this project's
-[implementation plan](./IMPLEMENTATION_PLAN.md) remains the source of product
-acceptance criteria, and the local runner and status files remain authoritative
-for project protocol.
-
-The shared repository owns the general test-first and iteration workflow; do
-not duplicate those instructions here.
+for relevant domain context.
 
 ## Project sources of truth
 
-- [Product acceptance criteria](./IMPLEMENTATION_PLAN.md)
-- [Visual verification](./VISUAL_TEST_PLAN.md)
-- [Per-iteration evidence](./RALPH_PROGRESS.md)
-- [Current project status](./implementation_status.md)
+The shared workflow does not replace project-specific acceptance criteria or
+state. Read and preserve these project sources:
+
+- [Product acceptance criteria and implementation plan](./IMPLEMENTATION_PLAN.md)
+- [Visual application verification](./VISUAL_TEST_PLAN.md)
+- [Append-only implementation evidence](./RALPH_PROGRESS.md)
+- [Current product status](./implementation_status.md)
 - [Append-only project decisions](./decision_log.md)
 
-Keep project-specific progress, status, acceptance criteria, and decisions in
-those files. Treat the upstream `supercollider/` checkout as read-only.
+Use the shared skill's branch-scoped worker status and progress records for
+Ralph run state; the coordinator owns the aggregate dashboard. Do not copy the
+general Ralph or TDD implementation into this project. Treat the upstream
+`supercollider/` checkout as read-only.
 
-## Local runner protocol
-
-The
-[local runner](../scripts/ralph-loop.sh) invokes GPT-6 Luna for one iteration
-in a fresh worktree and branch. It creates a status-report commit, publishes
-the iteration branch, opens a pull request, and uses the repository-configured
-GitHub merge process. It emits the final `RALPH_CONTINUE` or `RALPH_COMPLETE`
-marker only after fetching `origin/main` and verifying the pull-request merge
-commit there. Copilot's `RALPH_READY_CONTINUE` and
-`RALPH_READY_COMPLETE` are pre-merge handoffs, not completion markers. If
-remote integration is blocked, the runner records a blocked status on the
-iteration branch when possible and emits `RALPH_BLOCKED`.
-
-Before launching the agent, the runner fetches `origin`, verifies the clean
-`main` integration worktree against the fetched `origin/main`, and includes
-that preflight evidence in the iteration prompt. Treat it as satisfying the
-shared agent's remote/worktree discovery requirement; do not repeat the fetch
-or inspect the separate integration worktree.
-
-The runner's `--auto` mode uses non-interactive `--allow-all-tools`; shell
-commands can affect files outside the repository. It is not a sandbox. Run it
-only in a trusted environment and review the resulting changes.
+The development Ralph loop changes and verifies product code. The separate
+in-SuperCollider music-variation feature runs only when a user starts it and
+must remain bounded, stoppable, and isolated from the original project.
+Workflow-maintenance work does not by itself advance the product
+implementation iteration counter.

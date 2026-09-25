@@ -30,7 +30,7 @@ unimplemented.
 | Area | Status | Current state |
 | --- | --- | --- |
 | Product architecture and acceptance criteria | Documented | Quark-first, in-SuperCollider experience; no SuperCollider core fork planned. |
-| Development process | Set up | Canonical TDD/Ralph instructions and the `ralph-loop` agent live in the shared `copilot_skills` repository. The runner checks a clean synchronized `main`, selects the shared agent/model, creates a fresh branch/worktree, opens a PR, requests the configured merge, and verifies its merge commit on `origin/main`. Mocked tests cover preflight, pending checks, remote merge verification, marker ordering, and blocker reporting. |
+| Development process | Shared workflow | Invoke the canonical shared `Ralph Loop` agent with `docs/RALPH_IMPLEMENTATION_PROMPT.md` and follow the shared `ralph-loop` skill. The shared workflow owns general iteration mechanics; this project has no local shell runner or runner-only tests. Product acceptance criteria, visual coverage, progress, current status, and decisions remain documented locally. |
 | Custom C++ server plugin / UGen palette | In progress | ChaosOsc DSP core and `SCUnit` wrapper exist (`plugin/ChaosOsc/Source/`). Audio-rate inputs are read per sample; scalar/control-rate values are broadcast per block; seed is captured at construction. Finite bounds and NaN fallbacks are deterministic. The `ChaosOsc.ar` class/help pass source tests; the plugin compiles against the 3.14.1 API and loads in its matching `scsynth` for NRT rendering. Real-time audition and other platform/release ABIs remain unverified. |
 | Quark packaging and SCIDE entry point | Not started | No Quark classes or GUI exist. |
 | sclang composition and NRT rendering | Prototype verified | A test-only deterministic NRT Score uses `ChaosOsc.ar` and the plugin to produce a short WAV. The end-user composition/render workflow is not implemented. |
@@ -62,11 +62,10 @@ unimplemented.
   PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/tests/.build/test-tmp" python3
   tests/test_fetch_sc_plugin_api.py` passed all 6 tests, including release
   pin and per-revision cache coverage.
-- **Ralph branch/merge workflow:** `bash tests/ralph-status-reporting.sh`
-  passed in the prior iteration, covering fresh branches/worktrees, stale-ref
-  refresh, runner-owned main-worktree preflight, PR merges, retrying pending
-  requirements, merge-SHA verification, marker ordering, and closed-PR
-  blocker reporting.
+- **Development workflow migration:** The project prompt invokes the shared
+  Ralph Loop agent and canonical skill; runner-only files and active local
+  runner instructions are removed. Exact checks are recorded in
+  `RALPH_PROGRESS.md`.
 - **Current iteration:** `bash plugin/ChaosOsc/Tests/run_tests.sh` passed all
   9 DSP assertions. The NRT command
   `SCLANG=.runtime/mount/SuperCollider.app/Contents/MacOS/sclang

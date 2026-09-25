@@ -418,3 +418,33 @@ Ralph-Status: IN_PROGRESS
 - **Next task:** Implement a minimal user-facing procedural `.scd` composition
   and offline render workflow on the validated UGen, then test real-time
   audition and the supported target platforms.
+
+## Workflow migration — shared Ralph Loop entrypoint (2026-09-24)
+
+- **Scope:** Documentation and workflow maintenance only; no product behavior
+  changed. The existing product implementation iteration number remains `4`.
+- **Branch/base:** `ralph/replace-beats-local-ralph-runner-worker-01-20260925-0105`,
+  based on `origin/main` at `b1c77ae9192491a86be5d42e86aebc10e3057a2d`.
+- **Decision:** The project prompt now invokes the canonical shared Ralph Loop
+  agent and skill. The project-local shell runner and its dedicated mocked
+  runner tests were removed. The implementation plan and README direct users
+  to the shared agent with this project prompt; product acceptance, visual
+  verification, progress, current status, and decision history remain local.
+- **TDD:** Red/Green/Refactor was not applicable to this documentation-only
+  migration. No behavior test was fabricated.
+- **Checks:**
+  - `cd /Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-replace-beats-local-ralph-runner-worker-01-20260925-0105 && git diff --check` — passed.
+  - `cd /Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-replace-beats-local-ralph-runner-worker-01-20260925-0105 && ! git grep -n -E 'scripts/ralph-loop\.sh|tests/ralph-(status-reporting|iteration-worktrees)\.sh|--allow-all-tools|GPT-6 Luna|gpt-6-luna|RALPH_READY_(CONTINUE|COMPLETE)|ralph-loop\.sh --(check|auto)' -- docs/README.md docs/IMPLEMENTATION_PLAN.md docs/RALPH_IMPLEMENTATION_PROMPT.md docs/implementation_status.md` — passed; no matches.
+  - `cd /Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-replace-beats-local-ralph-runner-worker-01-20260925-0105 && test ! -e scripts/ralph-loop.sh && test ! -e tests/ralph-iteration-worktrees.sh && test ! -e tests/ralph-status-reporting.sh` — passed.
+  - An inline Python local-Markdown-link check across the four edited
+    documents passed when it excluded the plan's optional `../supercollider/`
+    references. The broader check found those pre-existing relative targets
+    unresolved because that optional read-only upstream checkout is not
+    present in this fresh worktree; no changed link was implicated.
+- **Coverage and environment:** Product tests, GUI checks, and platform tests
+  were not rerun because product code and behavior are unchanged. No
+  project-local `.github/memory/` store or category files were found; the
+  coordinator owns the required post-merge memory review.
+- **Next action:** Coordinator to review and integrate the workflow migration,
+  verify the resulting commit on fetched `origin/main`, and complete the
+  post-merge memory review.
