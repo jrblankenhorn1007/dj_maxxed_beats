@@ -419,6 +419,36 @@ Ralph-Status: IN_PROGRESS
   and offline render workflow on the validated UGen, then test real-time
   audition and the supported target platforms.
 
+## Workflow migration — shared Ralph Loop entrypoint (2026-09-24)
+
+- **Scope:** Documentation and workflow maintenance only; no product behavior
+  changed. The existing product implementation iteration number remains `4`.
+- **Branch/base:** `ralph/replace-beats-local-ralph-runner-worker-01-20260925-0105`,
+  based on `origin/main` at `b1c77ae9192491a86be5d42e86aebc10e3057a2d`.
+- **Decision:** The project prompt now invokes the canonical shared Ralph Loop
+  agent and skill. The project-local shell runner and its dedicated mocked
+  runner tests were removed. The implementation plan and README direct users
+  to the shared agent with this project prompt; product acceptance, visual
+  verification, progress, current status, and decision history remain local.
+- **TDD:** Red/Green/Refactor was not applicable to this documentation-only
+  migration. No behavior test was fabricated.
+- **Checks:**
+  - `cd /Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-replace-beats-local-ralph-runner-worker-01-20260925-0105 && git diff --check` — passed.
+  - `cd /Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-replace-beats-local-ralph-runner-worker-01-20260925-0105 && ! git grep -n -E 'scripts/ralph-loop\.sh|tests/ralph-(status-reporting|iteration-worktrees)\.sh|--allow-all-tools|GPT-6 Luna|gpt-6-luna|RALPH_READY_(CONTINUE|COMPLETE)|ralph-loop\.sh --(check|auto)' -- docs/README.md docs/IMPLEMENTATION_PLAN.md docs/RALPH_IMPLEMENTATION_PROMPT.md docs/implementation_status.md` — passed; no matches.
+  - `cd /Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-replace-beats-local-ralph-runner-worker-01-20260925-0105 && test ! -e scripts/ralph-loop.sh && test ! -e tests/ralph-iteration-worktrees.sh && test ! -e tests/ralph-status-reporting.sh` — passed.
+  - An inline Python local-Markdown-link check across the four edited
+    documents passed when it excluded the plan's optional `../supercollider/`
+    references. The broader check found those pre-existing relative targets
+    unresolved because that optional read-only upstream checkout is not
+    present in this fresh worktree; no changed link was implicated.
+- **Coverage and environment:** Product tests, GUI checks, and platform tests
+  were not rerun because product code and behavior are unchanged. No
+  project-local `.github/memory/` store or category files were found; the
+  coordinator owns the required post-merge memory review.
+- **Next action:** Coordinator to review and integrate the workflow migration,
+  verify the resulting commit on fetched `origin/main`, and complete the
+  post-merge memory review.
+
 ## Coordinator post-merge review — Iteration 5
 
 - **Merge verification:** PR [#6](https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/6)
@@ -431,3 +461,21 @@ Ralph-Status: IN_PROGRESS
   testing lessons. The coordinator recorded them in
   `.github/memory/testing.md` on a fresh follow-up branch. This memory-only
   follow-up is part of iteration 5 and does not trigger another memory review.
+
+## Workflow migration follow-up — refresh after origin/main movement (2026-09-25)
+
+- After the first migration branch was published, `origin/main` advanced from
+  `b1c77ae9192491a86be5d42e86aebc10e3057a2d` to
+  `58b4f916603cc8e140c5e8c1bbca1290bb2dede6` through PR #7's separate
+  iteration-5 memory follow-up.
+- The latest main added `.github/memory/README.md` and
+  `.github/memory/testing.md`; those current memory sources were read. This
+  documentation/workflow migration does not warrant a memory edit; the
+  coordinator retains the required post-merge review.
+- The updated current product status reports completed iteration `5`. The
+  original migration base reported `4`; the change in the latest status came
+  from the independent upstream iteration-5 completion, not this workflow
+  maintenance.
+- Because the first branch was already published, it is preserved unchanged.
+  The migration is being replayed on a fresh branch from this latest
+  `origin/main`; no force-push or direct-main write was used.
