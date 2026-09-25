@@ -6,6 +6,7 @@
 - **Runtime/session ID:** `ac00179e-f9e2-4693-8f9f-710a82b06af9`
 - **Branch:** `ralph/implementation-records-coordinator-20260925-081730`
 - **Base `origin/main`:** `7523a9a0b87ffc5304686e2e64509fc4a6941bb7`
+- **Rebased onto `origin/main`:** `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6`
 - **Implementation commit:** pending
 - **Pull request:** pending normal publication to `main`.
 - **Review:** pending; launch the independent Ralph Code Reviewer for the
@@ -57,3 +58,33 @@ unchanged targets passed for all new and changed documentation. The other
 internal links, all 18 dossier/code-review pairs, and the schema-v2 dashboard
 checks passed. No product behavior tests were run because this change is
 documentation-only.
+
+## Decision — rebase and archive PR #24
+
+- **Context:** Before publication, `origin/main` advanced by five commits
+  from `7523a9a0b87ffc5304686e2e64509fc4a6941bb7` to
+  `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6`; the new history included
+  portable-plugin PR #24 and the previously concurrent project records.
+- **Alternatives:** Publish from the stale base, abandon the in-progress
+  archive and restart it, or rebase the committed documentation onto the
+  refreshed `origin/main` and index the newly merged branch.
+- **Decision:** Rebase the local, unpublished archive commit onto
+  `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6`; preserve the incoming project
+  records; add PR #24 to the branch inventory and correct its pending
+  decision-record filename using verified PR metadata.
+- **Rationale:** The rebase completed without conflicts, retains upstream
+  changes, and keeps the archive current with the verified integration base.
+- **Consequences:** The initial archive commit was rewritten to
+  `aff7918e81773f6ae8a4a794ef4d3b8f9872a5cc`. The PR #24 review folder is
+  `LEGACY_NOT_ARCHIVED`: the GitHub PR API returned no submitted reviews and
+  no structured report is present in the project docs; no claim is made
+  about external review activity.
+
+## Recovered documentation-validator setup errors
+
+The first ad-hoc Ruby validator failed to parse its slash-delimited path
+regular expression. A second attempt used `Array#filter_map`, which is not
+available in the installed Ruby version. Replacing the expression with
+`%r{...}` and using portable iteration allowed the same validation to pass:
+nine changed Markdown files linked successfully, and all 19 indexed
+dossiers had matching `README.md` and `code-review/README.md` files.

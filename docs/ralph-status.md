@@ -230,8 +230,9 @@ runs:
     coordinator_branch_slug: "ralph-implementation-records-coordinator-20260925-081730"
     coordinator_worktree: "/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-implementation-records-coordinator-20260925-081730"
     coordinator_base_origin_main_sha: "7523a9a0b87ffc5304686e2e64509fc4a6941bb7"
+    coordinator_rebased_onto_origin_main_sha: "ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6"
     created_at_utc: "2026-09-25T08:17:30Z"
-    updated_at_utc: "2026-09-25T09:08:46Z"
+    updated_at_utc: "2026-09-25T09:37:42Z"
     next_action: "Coordinator: commit the archive and records, publish the parent PR, then complete the independent review and normal merge gates."
     split_plan:
       - task_id: "document-branch-evidence-dossiers"
@@ -565,6 +566,7 @@ branch_agent_index:
     worker_name: "coordinator-01 / branch evidence archive"
     branch: "ralph/implementation-records-coordinator-20260925-081730"
     branch_slug: "ralph-implementation-records-coordinator-20260925-081730"
+    rebased_onto_origin_main_sha: "ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6"
     status: IN_PROGRESS
     iteration: 1
     merge_actor_worker_id: null
@@ -588,7 +590,7 @@ branch_agent_index:
         rationale: null
         recorded_at_utc: null
     resource_usage:
-      time_spent_seconds: 3076
+      time_spent_seconds: 4812
       time_basis: WALL_CLOCK_ELAPSED
       token_spend:
         status: NOT_REPORTED
@@ -606,10 +608,8 @@ branch_agent_index:
         result: PASS
       - command: "git diff --check"
         result: PASS
-      - command: "Ruby Markdown link and archive-index validation over docs/implementation and changed project docs; excluded only unavailable optional ../supercollider checkout links"
-        result: PASS
-      - command: "Ruby YAML parse and coordinator leaf/dashboard status and resource_usage consistency check"
-        result: PASS
+      - command: "Final documentation, branch-index, link, and YAML status validation"
+        result: "PASS (13 changed Markdown files linked; 19 dossiers present; coordinator leaf and dashboard synchronized)"
       - command: "Product behavior test suite"
         result: NOT_RUN
     next_action: "Coordinator: commit the archive and records, publish the parent PR, then complete the independent review and normal merge gates."
