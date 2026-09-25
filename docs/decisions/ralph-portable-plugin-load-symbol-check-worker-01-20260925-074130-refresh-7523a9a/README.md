@@ -8,12 +8,14 @@
 - **Branch base:** `7523a9a0b87ffc5304686e2e64509fc4a6941bb7`
 - **Coordinator-assigned base before refresh:** `1926bdab3c358088f359cf73f0d8025a66c7d0d0`
 - **Implementation commit:** `4cb936134e7ccef09c248de7fe761783891fa6ec`
-- **PR:** Pending normal publication; no number assigned yet.
+- **PR #24:** Merged at `2026-09-25T09:08:38Z`; integration SHA
+  `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6` verified on `origin/main`.
 
 ## Agent / PR records
 
-- [worker-01 / PR pending](agents/worker-01/pr-pending.md)
+- [worker-01 / PR #24](agents/worker-01/pr-24.md)
 
-Update this index and move the pending record to `pr-<number>.md` after a
-normal PR is created. Do not merge before the coordinator completes the
-independent review gate and authorizes the worker-owned merge.
+PR #24 passed the independent review gate (round 1 clean) and both hosted
+headless checks. The coordinator completed the required post-merge memory
+review; the memory/status follow-up is recorded separately and remains
+pending its normal PR merge and verification.

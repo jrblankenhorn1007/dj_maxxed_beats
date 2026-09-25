@@ -801,3 +801,56 @@ Ralph-Status: IN_PROGRESS
   ChaosOsc NRT and all eight new mocked symbol tests (`Ran 21 tests in
   57.623s`, `OK`). This later full-suite result is the final pre-publication
   verification; no implementation source or test changes followed it.
+
+## PR #24 integration and post-merge memory review — coordinator
+
+- **Implementation PR:** PR #24 merged through the worker-owned normal CLI
+  path, `gh -R jrblankenhorn1007/dj_maxxed_beats pr merge 24 --merge`, by
+  `worker-01` at `2026-09-25T09:08:38Z`. GitHub integration SHA:
+  `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6`.
+- **Independent review:** Ralph Code Reviewer and Ralph Security Reviewer
+  both reported `CLEAN` for exact base
+  `7523a9a0b87ffc5304686e2e64509fc4a6941bb7` and head
+  `ca94e4a4cddbe086ce13b10a17739bb6a5e53cce` (round 1 of 2; zero
+  unresolved findings). These independent reports do not replace required
+  repository checks or approvals.
+- **Hosted checks:** `headless-tests` runs `36112124375` and `36112177699`
+  both completed successfully. The worker also reported the final local
+  `bash scripts/run_headless_tests.sh` pass: nine DSP assertions and 21
+  Python tests, including NRT; the eight mocked symbol tests, native Darwin
+  arm64 build, and SuperCollider 3.14.1 NRT test passed.
+- **Coordinator remote verification:** After fetching `origin`, the fetched
+  `origin/main` was `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6`.
+  `git merge-base --is-ancestor ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6 origin/main`
+  and
+  `git merge-base --is-ancestor c448dae05f792ef868557e7d67a0a1becb7e6895 origin/main`
+  both passed. Thus PR #24's implementation merge and PR #13's earlier
+  header-URL merge are reachable from current fetched main.
+- **Superseded duplicates:** After verifying PR #24 on main, PRs #14, #18,
+  and #21 were closed via the normal GitHub CLI with comments identifying
+  PR #24 as the replacement. Their branches/worktrees were not modified or
+  deleted. PRs #11, #12, #15, and #16 were not touched.
+- **Recovered worker-record sync:** PR #24's post-publication worker-record
+  push received GH013; one `createCommitOnBranch` API attempt also exited
+  nonzero without moving the remote ref. No repeat push/API attempt was
+  made. The published branch, worktree, and local numbered record were
+  preserved. The coordinator is reconciling the final numbered record and
+  aggregate snapshot on a separate fresh follow-up branch, not changing the
+  reviewed PR head or writing directly to main.
+- **PR #13 memory review:** Reviewed the merged implementation, its Windows
+  `ntpath` simulation in
+  `tests/test_fetch_sc_plugin_api.py::test_header_urls_use_posix_paths_with_windows_normalization`,
+  and the recorded failure mode: host `os.path.normpath` produced
+  backslash-separated URL candidates that received expected 404s and were
+  silently omitted. The durable rule is to normalize URL/protocol paths with
+  protocol semantics (POSIX URL separators), independently of host filesystem
+  conventions. A new `.github/memory/cross-platform.md` entry and index link
+  are on the coordinator's follow-up branch; its PR/merge verification is
+  still pending.
+- **TDD for this follow-up:** Not applicable; this branch changes categorized
+  memory and coordination/status records only. Documentation and YAML
+  integrity checks will be recorded before publication.
+- **Completion gate:** The implementation merge is verified, but the Ralph
+  iteration remains `IN_PROGRESS` until the memory/status follow-up is
+  merged and verified on fetched `origin/main`, and the coordinator publishes
+  the final aggregate disposition.

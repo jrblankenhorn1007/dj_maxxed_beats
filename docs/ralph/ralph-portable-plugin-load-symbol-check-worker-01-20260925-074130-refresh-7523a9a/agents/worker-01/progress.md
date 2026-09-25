@@ -125,3 +125,39 @@ All nine DSP assertions and all 21 Python tests passed, including ChaosOsc
 NRT and the eight new mocked symbol cases (`Ran 21 tests in 57.623s`, `OK`).
 This later full-suite run is the final pre-publication verification; no
 implementation source or test changes followed it.
+## PR #24 merge and coordinator verification — 2026-09-25
+
+- GitHub reported PR #24 merged at `2026-09-25T09:08:38Z`; the branch owner
+  `worker-01` used the normal command
+  `gh -R jrblankenhorn1007/dj_maxxed_beats pr merge 24 --merge`.
+- The integration SHA is
+  `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6`. At `2026-09-25T09:09:17Z`,
+  the coordinator fetched `origin`, observed `origin/main` at that SHA, and
+  verified it with
+  `git merge-base --is-ancestor ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6 origin/main`.
+- The worker's self-attestation remains bound to implementation commit
+  `4cb936134e7ccef09c248de7fe761783891fa6ec`
+  (`SELF_ATTESTATION`; `NOT_CRYPTOGRAPHICALLY_SIGNED`). The independent
+  code/security review round was bound to PR base
+  `7523a9a0b87ffc5304686e2e64509fc4a6941bb7` and head
+  `ca94e4a4cddbe086ce13b10a17739bb6a5e53cce`; both reports were `CLEAN`.
+  Hosted `headless-tests` runs `36112124375` and `36112177699` passed.
+- After verifying PR #24 on main, the coordinator closed duplicate PRs #14,
+  #18, and #21 through the GitHub CLI. Their branches/worktrees remain
+  untouched and preserved.
+- The post-publication PR-numbered worker-record update was rejected with
+  GH013; a single `createCommitOnBranch` attempt did not move the remote ref.
+  No direct push retry or additional API write was made. The branch/worktree
+  and local record commits remain preserved. The coordinator is finalizing
+  the numbered decision/status records on a fresh follow-up branch; the
+  worker's merged branch head is unchanged.
+- The coordinator's post-merge memory review found one durable lesson from
+  already-merged PR #13: URL path fragments must be normalized with
+  protocol/POSIX semantics, not host filesystem rules. The Windows `ntpath`
+  simulation and URL assertions in
+  `tests/test_fetch_sc_plugin_api.py::test_header_urls_use_posix_paths_with_windows_normalization`
+  support the rule. The memory entry is on the coordinator follow-up branch;
+  its normal merge and final status reconciliation remain pending.
+- The worker assignment awaits only the coordinator-owned memory/status
+  follow-up; no additional worker implementation is pending.
+*** End of File

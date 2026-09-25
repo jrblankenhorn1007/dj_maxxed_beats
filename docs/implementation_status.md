@@ -140,12 +140,21 @@ unimplemented.
   SuperCollider 3.14.1 NRT integration passed. The final
   `bash scripts/run_headless_tests.sh` run passed all nine DSP assertions and
   all 21 Python tests, including NRT and the new symbol cases.
-- **Integration state:** the implementation commit is
-  `4cb936134e7ccef09c248de7fe761783891fa6ec`. Worker status/progress and
-  `pr-pending.md` are committed before first publication; the PR is not yet
-  opened, and no PR merge or `origin/main` integration is claimed.
+- **Integration state:** implementation commit
+  `4cb936134e7ccef09c248de7fe761783891fa6ec` was merged in PR #24 at
+  `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6` and independently verified on
+  fetched `origin/main`. Ralph Code Reviewer and Ralph Security Reviewer both
+  reported `CLEAN` for PR #24's exact base/head pair; both hosted
+  `headless-tests` runs passed. The old PR #21 was closed as superseded; the
+  earlier duplicate PRs #14 and #18 were also closed after their useful
+  symbol/NRT test coverage was carried into PR #24.
 - **Remaining platform gaps:** native ELF and Windows x64 builds/runtimes were
   unavailable; those symbol cases are mocked. Windows 10 x64 and an actual
   MacBook Neo remain unvalidated. The local macOS run used Darwin arm64,
   macOS 26.5.2, and SuperCollider 3.14.1; it is not device-specific MacBook
   Neo validation.
+- **Post-merge memory review:** review of merged PR #13 found a durable
+  cross-platform rule: URL path fragments must use protocol/POSIX separators,
+  not host filesystem normalization. The categorized memory update and final
+  status reconciliation are pending normal integration on the coordinator's
+  fresh follow-up branch.
