@@ -704,3 +704,88 @@ Ralph-Status: IN_PROGRESS
   its separate visual-test boundary.
 - **Integration state:** Awaiting normal PR publication/review; no merge or
   `origin/main` integration is claimed here.
+
+## Portable plugin load-symbol validation — worker-01, iteration 2
+
+- **Run/task:** `ralph-cross-platform-finish-20260925-0607` /
+  `portable-plugin-load-symbol-check`; stable worker
+  `worker-01 / portable ChaosOsc symbol check (fresh-main continuation)`.
+  This build-validation/test-infrastructure continuation leaves the product
+  implementation counter at `5`.
+- **Base and branch:** The coordinator-assigned base was
+  `1926bdab3c358088f359cf73f0d8025a66c7d0d0`. The required fast-forward
+  refresh of the clean project main advanced `origin/main` to
+  `7523a9a0b87ffc5304686e2e64509fc4a6941bb7`; this newer SHA was reported
+  before proceeding. A fresh branch/worktree was created from that latest
+  SHA (no rebase of the old branch):
+  `ralph/portable-plugin-load-symbol-check-worker-01-20260925-074130-refresh-7523a9a`
+  at
+  `/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-portable-plugin-load-symbol-check-worker-01-20260925-074130-refresh-7523a9a`.
+- **Recovered prior integration issue:** PR #21 remains open and stale. Its
+  recorded base is `9c8c1b679b765ace2b4ae1dac49c1ed827f43171` and head is
+  `54153d6591e0e263674e1806e055260179db81c7`; the prior worker's later
+  status-record push was rejected with `GH013: Code coverage checks require
+  merging via API or UI`. The old branch, worktree, and PR were preserved.
+  Ruleset `23973625` remains active; no direct-main write, force push, ruleset
+  bypass, or repeated push attempt was made. This is a recovered integration
+  issue, not an unresolved product blocker.
+- **Behavior under test:** inspect only the actual platform's exact loader
+  export (`_load` on Darwin, `load` on ELF and Windows x64), and accept it
+  only as a global defined text (`T`) symbol. Cover CRLF, similar and
+  undefined names, `nm` invocation diagnostics, and the deliberate warning
+  when `nm` is unavailable. The NRT output assertion accepts exactly one of
+  the two complete reported lines.
+- **TDD Red:** Before changing production code, ran
+  `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_plugin_smoke_symbol_check.py`
+  against the unchanged Darwin-only script. Result: `Ran 8 tests in 0.540s`,
+  `FAILED (failures=5)`. The Darwin/ELF/Windows export cases and command-
+  failure diagnostic case exposed the existing incorrect behavior; the
+  similar/undefined-name and missing-`nm` behavior checks passed on baseline.
+  This was an expected behavior Red, not a setup failure.
+- **Recovered test-harness corrections:** The first post-implementation run
+  exposed that the mocked `nm` had not removed its option arguments before
+  validating the library path; five failures with mock status `66` were
+  fixture failures, not product Red. After correcting the fixture, one
+  assertion expected the words `nm invocation failed` contiguously while the
+  useful diagnostic included the selected `-gU` arguments. The assertion was
+  corrected to check the failure status, exact command flags, and forwarded
+  diagnostic; coverage was not weakened.
+- **TDD Green:** Re-ran
+  `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_plugin_smoke_symbol_check.py`;
+  all eight mocked cases passed.
+- **Refactor:** Extracted the exact global-defined-text predicate into
+  `has_exported_load_symbol` without changing behavior. Re-ran
+  `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_plugin_smoke_symbol_check.py
+  && bash -n plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh
+  && git diff --check`; all eight tests passed, and Bash syntax/diff checks
+  passed.
+- **Real macOS build:** Reused the previously verified pinned SuperCollider
+  3.14.1 API-header cache in this fresh worktree. From the worktree root,
+  `bash plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh` passed, resolved 29
+  headers, built an arm64 Mach-O plugin, and reported
+  `Verified exported plugin load symbol: _load`. An additional
+  `bash -x plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh` trace also
+  completed successfully and showed the exact `nm -gU` invocation and symbol.
+- **NRT integration:** With the cached official SuperCollider 3.14.1 runtime
+  (`sclang` and `scsynth` both report tag `Version-3.14.1`, commit
+  `426edf6`), ran
+  `SCLANG=/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-headless-integration-tests-worker-01-20260925-0246/.runtime/mount/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-headless-integration-tests-worker-01-20260925-0246/.runtime/mount/SuperCollider.app/Contents/Resources/scsynth
+  PYTHONDONTWRITEBYTECODE=1 python3 tests/test_chaososc_nrt.py`; result:
+  `Ran 1 test in 52.724s`, `OK`.
+- **Final headless pipeline:** From this branch, ran
+  `SCLANG=/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-headless-integration-tests-worker-01-20260925-0246/.runtime/mount/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-headless-integration-tests-worker-01-20260925-0246/.runtime/mount/SuperCollider.app/Contents/Resources/scsynth
+  bash scripts/run_headless_tests.sh`; result: all nine DSP assertions and
+  all 21 Python tests passed (`Ran 21 tests in 11.722s`, `OK`), including
+  NRT and the new mocked platform-symbol cases.
+- **Platform gaps:** Verified locally on Darwin arm64 / macOS 26.5.2 only.
+  ELF and Windows x64 symbol cases (including Windows CRLF) are mocked, not
+  native ELF or Windows 10 x64 build/runtime checks. An actual MacBook Neo,
+  GUI/SCIDE, and real-time audition were not tested. The GitHub Actions
+  workflow remains macOS-only; no hosted CI result is claimed here.
+- **Implementation commit:** `4cb936134e7ccef09c248de7fe761783891fa6ec`.
+  The worker-owned status/decision records are being committed before first
+  branch publication. The aggregate `docs/ralph-status.md` remains
+  coordinator-owned and was not edited. Post-merge memory review remains
+  pending for the coordinator; no memory update is made before merge.
