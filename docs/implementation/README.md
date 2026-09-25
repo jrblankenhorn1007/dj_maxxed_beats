@@ -1,11 +1,13 @@
 # Per-branch implementation archive
 
 This is the branch-centric index for implementation and code-review evidence.
-The initial inventory is based on integrated `origin/main`
+The initial inventory was based on integrated `origin/main`
 `7523a9a0b87ffc5304686e2e64509fc4a6941bb7`, plus terminal branches already
 documented in the project Ralph records and this documentation-maintenance
-branch. Add each future branch dossier on its working branch and update this
-index when the branch is integrated.
+branch. While this archive was being prepared, PR #24 advanced `origin/main`
+to `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6`; its verified branch dossier is
+included below. Add each future branch dossier on its working branch and
+update this index when the branch is integrated.
 
 ## Record ownership and layout
 
@@ -80,12 +82,12 @@ record `NOT_APPLICABLE`. A historical PR without an archived report is
 
 ## Integrated and documented branch inventory
 
-The entries below cover the merged PR branches reported on the baseline
-`origin/main` and terminal attempts that already have project records. New
-work must create its dossier before opening a PR. Open or otherwise
-unintegrated legacy branches are not represented as merged history; their
-owners must follow the current prompt before merging and add their dossier
-when integrated.
+The entries below cover the merged PR branches reported on the initial
+`origin/main`, PR #24 which merged while this archive was being prepared, and
+terminal attempts that already have project records. New work must create
+its dossier before opening a PR. Open or otherwise unintegrated legacy
+branches are not represented as merged history; their owners must follow the
+current prompt before merging and add their dossier when integrated.
 
 | Exact branch ref | Integrated or terminal state | PR / merge evidence | Dossier |
 |---|---|---|---|
@@ -103,6 +105,7 @@ when integrated.
 | `ralph/readme-documentation-followup-20260925-0412` | Merged | PR #20; merge `9c8c1b679b765ace2b4ae1dac49c1ed827f43171` | [Branch record](./ralph-readme-documentation-followup-20260925-0412/README.md) |
 | `ralph/readme-gh013-memory-followup-20260925-9c8c1b6` | Merged | PR #22; merge `1926bdab3c358088f359cf73f0d8025a66c7d0d0` | [Branch record](./ralph-readme-gh013-memory-followup-20260925-9c8c1b6/README.md) |
 | `ralph/readme-status-reconcile-20260925-1926bdab` | Merged | PR #23; merge `7523a9a0b87ffc5304686e2e64509fc4a6941bb7` | [Branch record](./ralph-readme-status-reconcile-20260925-1926bdab/README.md) |
+| `ralph/portable-plugin-load-symbol-check-worker-01-20260925-074130-refresh-7523a9a` | Merged | PR #24; base `7523a9a0b87ffc5304686e2e64509fc4a6941bb7`, head `ca94e4a4cddbe086ce13b10a17739bb6a5e53cce`, merge `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6` | [Branch record](./ralph-portable-plugin-load-symbol-check-worker-01-20260925-074130-refresh-7523a9a/README.md) |
 | `ralph/replace-beats-local-ralph-runner-worker-01-20260925-0105` | Cancelled; superseded | No PR; see branch decision and worker progress | [Branch record](./ralph-replace-beats-local-ralph-runner-worker-01-20260925-0105/README.md) |
 | `ralph/readme-docs-worker-01-20260925-0248` | Closed without merge; superseded | PR #17 closed; see branch decision | [Branch record](./ralph-readme-docs-worker-01-20260925-0248/README.md) |
 | `ralph/iteration-3-b2f6a9e` | Preserved preflight-blocked attempt | No PR; implementation did not start | [Branch record](./ralph-iteration-3-b2f6a9e/README.md) |

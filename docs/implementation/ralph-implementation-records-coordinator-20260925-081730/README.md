@@ -6,6 +6,7 @@
   `document-branch-evidence-dossiers`
 - **Owner:** `coordinator-01`
 - **Base `origin/main`:** `7523a9a0b87ffc5304686e2e64509fc4a6941bb7`
+- **Rebased onto `origin/main`:** `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6`
 - **State:** `IN_PROGRESS`; parent PR not yet opened.
 - **Code review:** [branch review folder](./code-review/README.md)
 - **Prompts:** [user request](./prompts/user-request.md) and
@@ -22,4 +23,7 @@ iteration. The branch archive is additive: established Ralph status/progress
 and decision paths remain canonical and are linked rather than relocated.
 The dispatched worker reported a pre-implementation blocker; no child branch,
 worker files, commit, or sign-off exists. The coordinator is continuing the
-documentation change in this parent worktree.
+documentation change in this parent worktree. PR #24 merged while this
+archive was being prepared; its branch dossier and exact merge metadata are
+now included in the index. The parent change was rebased onto that updated
+`origin/main` without conflicts.

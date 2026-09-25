@@ -70,9 +70,11 @@
   root README, and implementation-plan navigation. The prompt requires
   task-specific prompts, dated handoffs, linked decisions, and SHA-bound
   independent review records with the two-round limit.
-- **Concurrent edits preserved:** The top-level progress, decision, and
-  implementation-status files were not changed because a separate unmerged
-  portable-plugin worktree contains concurrent edits in those files.
+- **Concurrent edits preserved:** At initial discovery, the top-level
+  progress, decision, and implementation-status files were excluded to avoid
+  overlapping a separate portable-plugin worktree. That branch later merged
+  as PR #24; its upstream versions were preserved during the rebase and were
+  not edited by this run.
 - **Documentation-only scope:** TDD Red/Green/Refactor and product behavior
   tests were not applicable; no product implementation iteration was advanced.
 - **Checks:**
@@ -86,3 +88,56 @@
   - Ruby YAML parsing and coordinator leaf/dashboard status and
     `resource_usage` synchronization — passed.
   - Product behavior tests — not run; no behavior changed.
+
+## Origin update, rebase, and PR #24 archive — 2026-09-25T09:25:13Z
+
+- Before publication, fetched `origin` and found five new commits on
+  `origin/main`, advancing it from `7523a9a0b87ffc5304686e2e64509fc4a6941bb7`
+  to `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6`. The update integrated PR
+  #24 and its portable-plugin source and branch records.
+- Rebased the committed archive (`7712de2`) onto the new `origin/main`
+  without conflicts. The rebased archive commit is
+  `aff7918e81773f6ae8a4a794ef4d3b8f9872a5cc`.
+- Preserved the upstream changes to `docs/RALPH_PROGRESS.md`,
+  `docs/decision_log.md`, and `docs/implementation_status.md`. Added the
+  verified PR #24 dossier, its prompt-availability and worker-handoff
+  summaries, and its dedicated historical `code-review/` record. Updated
+  the branch inventory and moved the branch's decision record from
+  `pr-pending.md` to `pr-24.md` with the verified PR base, head, and merge
+  SHA. The other run's worker status/progress files were left unchanged.
+- `gh pr view 24` confirmed base
+  `7523a9a0b87ffc5304686e2e64509fc4a6941bb7`, head
+  `ca94e4a4cddbe086ce13b10a17739bb6a5e53cce`, and merge
+  `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6`. Its GitHub `reviews` list was
+  empty; the dossier records `LEGACY_NOT_ARCHIVED` without asserting
+  whether a review occurred elsewhere or performing a retrospective review.
+- Post-rebase checks:
+  - `git diff --check` — passed.
+  - Ruby changed-Markdown link and dossier-index validation — passed for
+    nine changed Markdown files and all 19 indexed branch dossiers.
+  - The validator excludes only absent optional `../supercollider/` targets;
+    this run encountered none in the changed files.
+  - Product behavior tests — not run; the change remains documentation-only.
+- Two initial attempts to launch the ad-hoc Ruby validator failed before
+  checking the files: its first regular-expression delimiter conflicted with
+  a slash, and its second used `Array#filter_map`, unavailable in the
+  installed Ruby. The expression was changed to `%r{...}` and iteration to
+  portable `each_line`/`each` loops; the final validation passed.
+- **Next action:** Commit the verified archive, publish the parent PR, and
+  complete its exact-SHA independent review and normal merge gates.
+
+## Final post-rebase documentation validation — 2026-09-25T09:37:42Z
+
+- `git diff --check` — passed.
+- Ruby changed-Markdown link and dossier-index validation — passed:
+  13 changed Markdown files had no broken local links, and all 19 indexed
+  dossiers had the expected README and dedicated code-review README.
+- Ruby schema/status synchronization validation — passed: the dashboard and
+  coordinator leaf parsed, matched on branch/status/iteration/rebase SHA and
+  elapsed time, and the PR #24 decision record was numbered with no pending
+  record left behind.
+- No absent optional SuperCollider links occurred in the changed files.
+- Product behavior tests were not run; this remains documentation-only.
+- **Next action:** Stage and commit the verified archive updates, then
+  publish the parent PR and complete its independent review and normal merge
+  gates.
