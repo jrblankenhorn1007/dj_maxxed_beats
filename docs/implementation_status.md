@@ -91,8 +91,10 @@ unimplemented.
   plugin build and exact `_load` export check also passed. This local run
   completed in 28.168 seconds and launched no GUI, SCIDE, real-time server, or
   audio hardware. The GitHub Actions workflow is configured for every push,
-  pull request, and manual dispatch on macOS 14; its hosted run for this
-  quality-gate branch must be verified on the exact PR head.
+  pull request, and manual dispatch on macOS 14. PR #28 passed both its push
+  run (`36144876368`) and pull-request run (`36144900104`) on exact head
+  `212e1971f5ce8439ea6ca64eeece13f7ab61b5ec` before merging at
+  `3c942fbd6e43dfec39bd1393be1c3ed0dd43b06e`.
 - **Diff/syntax:** The existing build-script check
   `bash -n plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh && git diff --check`
   passed. This pipeline also passed `bash -n scripts/run_headless_tests.sh`,
