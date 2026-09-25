@@ -7,10 +7,11 @@
 - **Branch:** `refs/heads/ralph/replace-beats-local-ralph-runner-worker-01-20260925-0105-refresh-58b4f91`
 - **Base SHA:** `58b4f916603cc8e140c5e8c1bbca1290bb2dede6`
 - **Implementation commit SHA:** `6e13eeea00bbbfb7a046926c4e0732beb05e9a8b`
-- **PR:** [#8](https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/8), open against `main`; created at `2026-09-25T01:33:19Z`.
-- **PR head at creation:** `e962f4713ba66584796b6f34b57a248591fbd703`.
-- **Merge:** Pending coordinator integration and remote-main verification.
-- **Checks:** GitHub reported `OPEN`, `MERGEABLE`, and `CLEAN`; the check-run list was empty.
+- **PR:** [#8](https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/8), merged against `main` at `2026-09-25T01:37:42Z`.
+- **PR head before merge:** `2a08392077b1e958d1508245a70d86137e918d4e`.
+- **Merge SHA:** `570bb69028f6ddf9bffa7391ba5d050852459941`.
+- **Remote verification:** `git merge-base --is-ancestor 570bb69028f6ddf9bffa7391ba5d050852459941 origin/main` passed; fetched `origin/main` and the clean local `main` both resolved to the merge SHA.
+- **Checks:** GitHub reported `OPEN`, `MERGEABLE`, and `CLEAN` before merge; the check-run list was empty.
 
 ## Decisions
 
@@ -34,8 +35,11 @@
   existing GitHub CLI outside the default `PATH`, confirmed its existing
   authentication without displaying credentials, and created PR #8. No
   credentials or configuration were changed.
+- Post-merge memory review read `.github/memory/README.md` and
+  `.github/memory/testing.md`. No new durable lesson emerged beyond the
+  workflow decision recorded in DEC-023, so the memory store was left
+  unchanged.
 
 ## Unresolved blockers
 
-- None. PR #8 is awaiting the coordinator's normal merge process and
-  verification on fetched `origin/main`.
+- None. PR #8 is merged and verified; the worker state is `COMPLETE`.

@@ -15,5 +15,7 @@ advanced to this branch's base before PR creation. The older branch is recorded
 as cancelled under its own branch slug. The coordinator owns
 `docs/ralph-status.md`; this branch contains only the assigned worker's
 branch-scoped status, progress, and decision records. The coordinator opened
-PR #8 after the worker's publication report; the migration remains awaiting
-merge verification.
+PR #8 after the worker's publication report. PR #8 merged at
+`570bb69028f6ddf9bffa7391ba5d050852459941`, and the merge SHA was verified on
+fetched `origin/main`. The post-merge memory review found no new reusable
+lesson; no memory update was warranted.
