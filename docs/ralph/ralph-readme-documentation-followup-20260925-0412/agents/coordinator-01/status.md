@@ -7,9 +7,9 @@ runtime_agent_id: null
 branch: "ralph/readme-documentation-followup-20260925-0412"
 branch_slug: "ralph-readme-documentation-followup-20260925-0412"
 iteration: 1
-status: IN_PROGRESS
+status: COMPLETE
 started_at_utc: "2026-09-25T04:12:00Z"
-updated_at_utc: "2026-09-25T06:52:12Z"
+updated_at_utc: "2026-09-25T07:17:28Z"
 base_origin_main_sha: "c448dae05f792ef868557e7d67a0a1becb7e6895"
 rebased_onto_origin_main_sha: "c448dae05f792ef868557e7d67a0a1becb7e6895"
 implementation_commit_sha: "908a28c30103c3cbe6f14d81e1c16f4187775ee5"
@@ -38,18 +38,31 @@ checks:
     result: "PASS — both headless-tests runs passed; confirms the documented macOS 14 / SuperCollider 3.14.1 CI coverage, not this documentation-only branch."
   - command: "gh pr checks 20 --repo jrblankenhorn1007/dj_maxxed_beats"
     result: "PASS — both headless-tests runs passed for the README PR."
+  - command: "gh pr checks 22 --repo jrblankenhorn1007/dj_maxxed_beats"
+    result: "PASS — both headless-tests runs passed for the memory follow-up PR."
   - command: "git merge-base --is-ancestor 9c8c1b679b765ace2b4ae1dac49c1ed827f43171 origin/main"
     result: "PASS — the PR #20 merge SHA is present on fetched origin/main."
+  - command: "git merge-base --is-ancestor 1926bdab3c358088f359cf73f0d8025a66c7d0d0 origin/main"
+    result: "PASS — the PR #22 memory merge SHA is present on fetched origin/main."
+  - command: "Ruby YAML parse and branch_agent_index path reconciliation for docs/ralph-status.md"
+    result: "PASS — all 7 status leaves are indexed and all status, progress, and decision targets exist."
+  - command: "Python 3 inline local Markdown-link and anchor validation across changed records"
+    result: "PASS — 43 local link candidates in 9 files; 0 unexpected missing targets or anchors."
   - command: "Product behavior tests"
     result: NOT_RUN
 blockers: []
-next_action: "Publish and merge the fresh memory follow-up PR; then reconcile the aggregate Ralph status snapshot on a fresh branch."
+next_action: "None; PR #20, memory PR #22, and their merge SHAs are verified on origin/main."
 memory_review:
   status: COMPLETE
   reviewed_at_utc: "2026-09-25T06:52:12Z"
   outcome: DURABLE_LESSON_CAPTURED
-  memory_update: PENDING_MERGE
+  memory_update: VERIFIED
   memory_followup_branch: "ralph/readme-gh013-memory-followup-20260925-9c8c1b6"
+  memory_followup_commit_sha: "214017506fc757758fddbe345d409528f08f848d"
+  memory_followup_pull_request: 22
+  memory_followup_merge_sha: "1926bdab3c358088f359cf73f0d8025a66c7d0d0"
+  memory_followup_verified_origin_main_sha: "1926bdab3c358088f359cf73f0d8025a66c7d0d0"
+  memory_followup_verification_method: "git merge-base --is-ancestor 1926bdab3c358088f359cf73f0d8025a66c7d0d0 origin/main"
 coordinator_attestation:
   status: RECEIVED
   attestation_kind: SELF_ATTESTATION
