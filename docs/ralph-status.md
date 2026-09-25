@@ -1,12 +1,13 @@
-schema_version: 1
+schema_version: 2
 snapshot_path: "docs/ralph-status.md"
-snapshot_revision: 3
-updated_at_utc: "2026-09-25T07:17:28Z"
+snapshot_revision: 4
+updated_at_utc: "2026-09-25T09:31:30Z"
 overall_status: IN_PROGRESS
 current_run_ids:
   - "skills-routing-20260925-0108"
   - "headless-integration-tests-20260925-0246"
   - "ralph-main-review-20260925-021443"
+  - "ralph-cross-platform-finish-20260925-0607"
 
 runs:
   - run_id: "ralph-shared-workflow-move-20260925-0105"
@@ -57,8 +58,19 @@ runs:
     active_worker_count: 1
     base_origin_main_sha: "f9e1bb3edafff1cc6d24c640a8e0ed38f5bf49fe"
     created_at_utc: "2026-09-25T02:19:06Z"
-    updated_at_utc: "2026-09-25T02:28:32Z"
-    next_action: "PR #13 is merged; the worker leaf still records a pending PR and has no sign-off. Reconcile the post-merge status and memory review."
+    updated_at_utc: "2026-09-25T09:26:07Z"
+    next_action: "PR #13 memory review is complete and its durable URL-path lesson is on the shared follow-up branch. The original worker sign-off is still unavailable; do not invent it or alter its preserved branch."
+    memory_review:
+      status: COMPLETE
+      outcome: DURABLE_LESSON_CAPTURED
+      memory_update: PENDING
+      sources:
+        - ".github/memory/README.md"
+        - ".github/memory/cross-platform.md"
+        - "tests/test_fetch_sc_plugin_api.py"
+        - "plugin/fetch_sc_plugin_api.py"
+      followup_branch: "ralph/portable-symbol-memory-status-20260925-0917-ffbb4a3"
+      followup_implementation_commit_sha: "2e2c57a4b6f96722d381df00fee40774557134b9"
 
   - run_id: "readme-refresh-20260925-0248"
     task_ids: ["improve-root-readme"]
@@ -92,6 +104,95 @@ runs:
       followup_pull_request: 22
       followup_merge_sha: "1926bdab3c358088f359cf73f0d8025a66c7d0d0"
       followup_verified_origin_main_sha: "1926bdab3c358088f359cf73f0d8025a66c7d0d0"
+
+  - run_id: "ralph-cross-platform-finish-20260925-0607"
+    task_ids: ["portable-plugin-load-symbol-check"]
+    aggregate_status: IN_PROGRESS
+    requested_worker_count: 1
+    effective_worker_count: 1
+    active_worker_count: 0
+    base_origin_main_sha: "c448dae05f792ef868557e7d67a0a1becb7e6895"
+    created_at_utc: "2026-09-25T06:23:53.187Z"
+    updated_at_utc: "2026-09-25T09:31:30Z"
+    next_action: "PR #24 implementation is merged and verified; complete the coordinator-owned memory/status follow-up and verify it on fetched origin/main before marking this run complete."
+    split_plan:
+      - task_id: "portable-plugin-load-symbol-check"
+        worker_id: "worker-01"
+        scope: "Make the ChaosOsc plugin smoke test validate the platform's exact exported load symbol with platform-appropriate nm options and network-free regression coverage."
+        depends_on: []
+    worker_count_note: "One distinct validated defect remained; this was a single cohesive test/build-validation scope, so no duplicate review or speculative implementation assignments were dispatched. The same stable worker continued on a fresh branch after origin/main advanced."
+    superseded_attempts:
+      - iteration: 1
+        branch: "ralph/portable-plugin-load-symbol-check-worker-01-20260925-0607"
+        base_origin_main_sha: "c448dae05f792ef868557e7d67a0a1becb7e6895"
+        rebased_onto_origin_main_sha: "9c8c1b679b765ace2b4ae1dac49c1ed827f43171"
+        implementation_commit_sha: "c153421ffb0a8e5ef96f230ce92eb6bf5ddc95d5"
+        pull_request:
+          number: 21
+          url: "https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/21"
+          state: CLOSED
+          final_head_sha: "54153d6591e0e263674e1806e055260179db81c7"
+        disposition: "Superseded by iteration 2 from fresh main after main advanced; branch/worktree preserved. Post-publication status push received GH013; no retry."
+    implementation_merge:
+      pull_request: 24
+      url: "https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/24"
+      state: MERGED
+      base_sha: "7523a9a0b87ffc5304686e2e64509fc4a6941bb7"
+      head_sha: "ca94e4a4cddbe086ce13b10a17739bb6a5e53cce"
+      implementation_commit_sha: "4cb936134e7ccef09c248de7fe761783891fa6ec"
+      merge_sha: "ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6"
+      merged_at_utc: "2026-09-25T09:08:38Z"
+      merge_actor_worker_id: "worker-01"
+      status: VERIFIED
+      verified_origin_main_sha: "ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6"
+      verification_method: "git merge-base --is-ancestor ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6 origin/main"
+      verified_at_utc: "2026-09-25T09:09:17Z"
+    checks:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python3 tests/test_plugin_smoke_symbol_check.py"
+        result: "PASS (8 mocked tests after expected Red)"
+      - command: "bash -n plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh && git diff --check"
+        result: PASS
+      - command: "bash plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh"
+        result: "PASS on Darwin arm64; exact _load verified"
+      - command: "PYTHONDONTWRITEBYTECODE=1 python3 tests/test_chaososc_nrt.py with cached SuperCollider 3.14.1"
+        result: "PASS (1 NRT test)"
+      - command: "bash scripts/run_headless_tests.sh with cached SuperCollider 3.14.1"
+        result: "PASS (9 DSP assertions; 21 Python tests)"
+      - command: "GitHub PR #24 headless-tests runs 36112124375 and 36112177699"
+        result: "PASS (both runs)"
+    review:
+      status: CLEAN
+      reviewer_agents: ["Ralph Code Reviewer", "Ralph Security Reviewer"]
+      reviewed_base_sha: "7523a9a0b87ffc5304686e2e64509fc4a6941bb7"
+      reviewed_head_sha: "ca94e4a4cddbe086ce13b10a17739bb6a5e53cce"
+      rounds_completed: 1
+      max_rounds: 2
+      unresolved_finding_count: 0
+      author_decision:
+        status: NOT_REQUIRED
+        choice: null
+        rationale: null
+        recorded_at_utc: null
+    duplicate_pull_requests_closed:
+      - 14
+      - 18
+      - 21
+    memory_review:
+      status: COMPLETE
+      outcome: DURABLE_LESSON_CAPTURED
+      memory_update: PENDING
+      sources:
+        - ".github/memory/README.md"
+        - ".github/memory/git-workflow.md"
+        - ".github/memory/testing.md"
+        - "plugin/fetch_sc_plugin_api.py"
+        - "tests/test_fetch_sc_plugin_api.py"
+      followup_branch: "ralph/portable-symbol-memory-status-20260925-0917-ffbb4a3"
+      followup_implementation_commit_sha: "2e2c57a4b6f96722d381df00fee40774557134b9"
+      followup_pull_request:
+        status: PENDING
+        number: null
+        url: null
 
 branch_agent_index:
   - run_id: "ralph-shared-workflow-move-20260925-0105"
@@ -286,3 +387,111 @@ branch_agent_index:
         - ".github/memory/README.md"
         - ".github/memory/git-workflow.md"
     next_action: "None; the implementation and required memory follow-up are merged and verified. Other in-progress runs remain separate."
+  - run_id: "ralph-cross-platform-finish-20260925-0607"
+    task_ids: ["portable-plugin-load-symbol-check"]
+    worker_id: "worker-01"
+    worker_name: "worker-01 / portable ChaosOsc symbol check (fresh-main continuation)"
+    branch: "ralph/portable-plugin-load-symbol-check-worker-01-20260925-074130-refresh-7523a9a"
+    branch_slug: "ralph-portable-plugin-load-symbol-check-worker-01-20260925-074130-refresh-7523a9a"
+    status: AWAITING_MERGE
+    leaf_status: AWAITING_MERGE
+    iteration: 2
+    status_path: "docs/ralph/ralph-portable-plugin-load-symbol-check-worker-01-20260925-074130-refresh-7523a9a/agents/worker-01/status.md"
+    progress_path: "docs/ralph/ralph-portable-plugin-load-symbol-check-worker-01-20260925-074130-refresh-7523a9a/agents/worker-01/progress.md"
+    decision_record_path: "docs/decisions/ralph-portable-plugin-load-symbol-check-worker-01-20260925-074130-refresh-7523a9a/agents/worker-01/pr-24.md"
+    decision_index_path: "docs/decisions/ralph-portable-plugin-load-symbol-check-worker-01-20260925-074130-refresh-7523a9a/README.md"
+    implementation_commit_sha: "4cb936134e7ccef09c248de7fe761783891fa6ec"
+    pull_request:
+      number: 24
+      url: "https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/24"
+      state: MERGED
+      base_sha: "7523a9a0b87ffc5304686e2e64509fc4a6941bb7"
+      head_sha: "ca94e4a4cddbe086ce13b10a17739bb6a5e53cce"
+      merged_at_utc: "2026-09-25T09:08:38Z"
+      merge_sha: "ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6"
+    review:
+      status: CLEAN
+      reviewer_agents: ["Ralph Code Reviewer", "Ralph Security Reviewer"]
+      reviewed_base_sha: "7523a9a0b87ffc5304686e2e64509fc4a6941bb7"
+      reviewed_head_sha: "ca94e4a4cddbe086ce13b10a17739bb6a5e53cce"
+      rounds_completed: 1
+      max_rounds: 2
+      unresolved_finding_count: 0
+      author_decision:
+        status: NOT_REQUIRED
+        choice: null
+        rationale: null
+        recorded_at_utc: null
+    merge_actor_worker_id: "worker-01"
+    merge_verification:
+      status: VERIFIED
+      merge_sha: "ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6"
+      verified_origin_main_sha: "ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6"
+      verification_method: "git merge-base --is-ancestor ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6 origin/main"
+      verified_at_utc: "2026-09-25T09:09:17Z"
+    checks:
+      - command: "PYTHONDONTWRITEBYTECODE=1 python3 tests/test_plugin_smoke_symbol_check.py"
+        result: "PASS (8 mocked tests; Red recorded in worker progress)"
+      - command: "bash -n plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh && git diff --check"
+        result: PASS
+      - command: "bash plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh"
+        result: "PASS on Darwin arm64; exact _load verified"
+      - command: "bash scripts/run_headless_tests.sh with cached SuperCollider 3.14.1"
+        result: "PASS (9 DSP assertions; 21 Python tests)"
+      - command: "GitHub PR #24 headless-tests runs 36112124375 and 36112177699"
+        result: "PASS (both runs)"
+    resource_usage:
+      time_spent_seconds: 7098
+      time_basis: WALL_CLOCK_ELAPSED
+      token_spend:
+        status: NOT_REPORTED
+        input_tokens: null
+        output_tokens: null
+        total_tokens: null
+        cached_input_tokens: null
+        source: null
+    next_action: "Coordinator memory/status follow-up remains pending; worker implementation is merged and verified."
+  - run_id: "ralph-cross-platform-finish-20260925-0607"
+    task_ids: ["portable-plugin-load-symbol-check"]
+    worker_id: "coordinator-01"
+    worker_name: "coordinator-01 / post-merge memory and status follow-up"
+    branch: "ralph/portable-symbol-memory-status-20260925-0917-ffbb4a3"
+    branch_slug: "ralph-portable-symbol-memory-status-20260925-0917-ffbb4a3"
+    status: IN_PROGRESS
+    leaf_status: IN_PROGRESS
+    iteration: 2
+    status_path: "docs/ralph/ralph-portable-symbol-memory-status-20260925-0917-ffbb4a3/agents/coordinator-01/status.md"
+    progress_path: "docs/ralph/ralph-portable-symbol-memory-status-20260925-0917-ffbb4a3/agents/coordinator-01/progress.md"
+    decision_record_path: "docs/decisions/ralph-portable-symbol-memory-status-20260925-0917-ffbb4a3/agents/coordinator-01/pr-pending.md"
+    decision_index_path: "docs/decisions/ralph-portable-symbol-memory-status-20260925-0917-ffbb4a3/README.md"
+    implementation_commit_sha: "2e2c57a4b6f96722d381df00fee40774557134b9"
+    pull_request:
+      status: PENDING
+      number: null
+      url: null
+      base_sha: null
+      head_sha: null
+    review:
+      status: PENDING
+      reviewer_agents: ["Ralph Code Reviewer"]
+      reviewed_base_sha: null
+      reviewed_head_sha: null
+      rounds_completed: 0
+      max_rounds: 2
+      unresolved_finding_count: 0
+      author_decision:
+        status: NOT_REQUIRED
+        choice: null
+        rationale: null
+        recorded_at_utc: null
+    resource_usage:
+      time_spent_seconds: 801
+      time_basis: WALL_CLOCK_ELAPSED
+      token_spend:
+        status: NOT_REPORTED
+        input_tokens: null
+        output_tokens: null
+        total_tokens: null
+        cached_input_tokens: null
+        source: null
+    next_action: "Publish the complete fresh memory/status follow-up PR, obtain independent code review, and use the normal merge path."
