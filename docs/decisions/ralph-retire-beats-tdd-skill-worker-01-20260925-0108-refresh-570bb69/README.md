@@ -14,4 +14,8 @@
 
 - [worker-01 / PR #10](agents/worker-01/pr-10.md)
 
-PR #10 is open; integration has not been attempted.
+PR #10 merged at `2026-09-25T02:25:58Z` with merge SHA
+`0736add11eae7b7f745d7b7bf9806c116d72eed6`. Worker-01 performed the merge
+after coordinator authorization. The coordinator verified that the merge SHA
+is reachable from fetched `origin/main` and completed the post-merge memory
+review; no new durable lesson was warranted.
