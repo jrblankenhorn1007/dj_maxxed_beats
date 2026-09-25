@@ -1,7 +1,10 @@
 import importlib.util
+import io
+import ntpath
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from urllib.error import HTTPError, URLError
 from unittest.mock import patch
 
@@ -96,6 +99,50 @@ class FetchScPluginApiTests(unittest.TestCase):
         self.assertIn("include/plugin_interface/SC_PlugIn.hpp", resolved)
         self.assertIn(real_candidate, resolved)
         self.assertNotIn("include/plugin_interface/SC_Types.h", resolved)
+
+    def test_header_urls_use_posix_paths_with_windows_normalization(self):
+        """Windows filesystem normalization must not turn raw GitHub URL
+        paths into backslash-separated paths, which upstream treats as
+        missing candidates."""
+        real_candidate = "include/common/SC_Types.h"
+        requested_urls = []
+
+        def fake_urlopen(url, timeout=20):
+            requested_urls.append(url)
+            rel = url[len(fetch_sc_plugin_api.BASE_URL):]
+            if rel == "include/plugin_interface/SC_PlugIn.hpp":
+                return _FakeResponse(b'#include "SC_Types.h"\n')
+            if rel == "include/plugin_interface/SC_PlugIn.h":
+                return _FakeResponse(b"")
+            if rel == real_candidate:
+                return _FakeResponse(b"// real SC_Types.h contents\n")
+            raise HTTPError(url, 404, "Not Found", None, None)
+
+        with tempfile.TemporaryDirectory() as cache_dir:
+            with patch.object(
+                fetch_sc_plugin_api,
+                "os",
+                SimpleNamespace(
+                    path=ntpath,
+                    makedirs=lambda *args, **kwargs: None,
+                ),
+            ):
+                with patch.object(
+                    fetch_sc_plugin_api,
+                    "open",
+                    new=lambda *args, **kwargs: io.BytesIO(),
+                    create=True,
+                ):
+                    with patch.object(
+                        fetch_sc_plugin_api.urllib.request,
+                        "urlopen",
+                        side_effect=fake_urlopen,
+                    ):
+                        resolved = fetch_sc_plugin_api.resolve_headers(cache_dir)
+
+        self.assertIn(fetch_sc_plugin_api.BASE_URL + real_candidate, requested_urls)
+        self.assertIn(real_candidate, resolved)
+        self.assertTrue(all("\\" not in url for url in requested_urls))
 
     def test_non_404_http_errors_are_not_swallowed(self):
         """A genuine outage (e.g. a 503) while resolving headers must abort
