@@ -7,8 +7,8 @@
 - **Starting `origin/main`:**
   `c448dae05f792ef868557e7d67a0a1becb7e6895`
 - **PR #20:** merged at `9c8c1b679b765ace2b4ae1dac49c1ed827f43171`.
-- **Memory follow-up:** pending publication from fresh base
-  `9c8c1b679b765ace2b4ae1dac49c1ed827f43171`.
+- **Memory follow-up PR #22:** merged at
+  `1926bdab3c358088f359cf73f0d8025a66c7d0d0`.
 
 ## Agent / PR records
 
@@ -20,4 +20,5 @@ Its GH013 push rejection is documented in the worker record and was caused by
 the repository's API/UI-only merge rule, not a reported measured coverage
 shortfall. PR #20 carries the README and link repair and is verified on
 `origin/main`. The post-merge memory review found a durable repository
-workflow lesson; its separate PR is not yet published.
+workflow lesson, which was added through fresh PR #22 and verified on
+`origin/main`.

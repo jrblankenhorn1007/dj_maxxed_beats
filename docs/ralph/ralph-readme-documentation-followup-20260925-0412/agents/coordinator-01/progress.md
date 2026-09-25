@@ -1,4 +1,4 @@
-Ralph-Status: IN_PROGRESS
+Ralph-Status: COMPLETE
 
 # Coordinator progress — README documentation continuation
 
@@ -45,8 +45,8 @@ Ralph-Status: IN_PROGRESS
   project's existing memory index and Testing category. The GH013 and
   ruleset evidence supports a durable Git-workflow lesson; the new entry is
   prepared on fresh branch
-  `ralph/readme-gh013-memory-followup-20260925-9c8c1b6`. Its merge remains
-  pending.
+  `ralph/readme-gh013-memory-followup-20260925-9c8c1b6` and is merged and
+  verified through PR #22.
 
 ## Local verification — 2026-09-25
 
@@ -87,5 +87,24 @@ Ralph-Status: IN_PROGRESS
   shortfall.
 - **Memory follow-up:** Changes are prepared on fresh branch
   `ralph/readme-gh013-memory-followup-20260925-9c8c1b6` from
-  `origin/main` at `9c8c1b679b765ace2b4ae1dac49c1ed827f43171`. Its PR and merge
-  verification remain pending.
+  `origin/main` at `9c8c1b679b765ace2b4ae1dac49c1ed827f43171`. PR #22 merged
+  at `2026-09-25T06:59:15Z` and is verified on `origin/main`.
+
+## Final integration and status
+
+- Memory PR #22 merged at `2026-09-25T06:59:15Z` with merge commit
+  `1926bdab3c358088f359cf73f0d8025a66c7d0d0`. A fetched `origin/main` at that
+  SHA contains the memory update, and the merge SHA passes the ancestry check.
+- The coordinator status now records both verified merges. The aggregate
+  snapshot also indexes every current `docs/ralph/**/agents/*/status.md`
+  record. It remains `IN_PROGRESS` overall because unrelated earlier runs
+  have stale or pending post-merge status records; this README run is complete.
+
+## Final status snapshot verification
+
+- Ruby YAML parsing and status-index reconciliation — PASS: all 7 current
+  worker/coordinator status leaves are indexed and all status, progress, and
+  decision targets exist.
+- Python 3 local Markdown-link and anchor validation — PASS: 43 local link
+  candidates in 9 files, with 0 unexpected missing targets or anchors.
+- `git diff --check` — PASS.
