@@ -105,7 +105,9 @@ append-only decisions remain in this repository's
 [`VISUAL_TEST_PLAN.md`](./VISUAL_TEST_PLAN.md),
 [`RALPH_PROGRESS.md`](./RALPH_PROGRESS.md),
 [`implementation_status.md`](./implementation_status.md), and
-[`decision_log.md`](./decision_log.md).
+[`decision_log.md`](./decision_log.md). The branch-centric index for their
+implementation, prompt, handoff, decision, and code-review evidence is the
+[`implementation/` archive](./implementation/README.md).
 
 ## Decision log
 

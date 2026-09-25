@@ -4,6 +4,7 @@ snapshot_revision: 5
 updated_at_utc: "2026-09-25T09:51:22Z"
 overall_status: IN_PROGRESS
 current_run_ids:
+  - "branch-evidence-dossiers-20260925-081730"
   - "skills-routing-20260925-0108"
   - "headless-integration-tests-20260925-0246"
   - "ralph-main-review-20260925-021443"
@@ -217,6 +218,27 @@ runs:
           verified_origin_main_sha: "ba59eb507e03bff97a1c9e9d54a93a0c88265a25"
           verification_method: "git merge-base --is-ancestor ba59eb507e03bff97a1c9e9d54a93a0c88265a25 origin/main"
           verified_at_utc: "2026-09-25T09:43:45Z"
+
+  - run_id: "branch-evidence-dossiers-20260925-081730"
+    task_ids: ["document-branch-evidence-dossiers"]
+    aggregate_status: IN_PROGRESS
+    requested_worker_count: 1
+    effective_worker_count: 1
+    active_worker_count: 0
+    base_origin_main_sha: "7523a9a0b87ffc5304686e2e64509fc4a6941bb7"
+    coordinator_branch: "ralph/implementation-records-coordinator-20260925-081730"
+    coordinator_branch_slug: "ralph-implementation-records-coordinator-20260925-081730"
+    coordinator_worktree: "/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-implementation-records-coordinator-20260925-081730"
+    coordinator_base_origin_main_sha: "7523a9a0b87ffc5304686e2e64509fc4a6941bb7"
+    created_at_utc: "2026-09-25T08:17:30Z"
+    updated_at_utc: "2026-09-25T09:08:46Z"
+    next_action: "Coordinator: commit the archive and records, publish the parent PR, then complete the independent review and normal merge gates."
+    split_plan:
+      - task_id: "document-branch-evidence-dossiers"
+        worker_id: "worker-01"
+        scope: "Create docs/implementation branch dossiers with per-branch code-review folders, prompt/handoff guidance, historical links, and project prompt/index updates."
+        depends_on: []
+    worker_count_note: "One cohesive documentation contract was ready. One worker was launched, but it reported a blocker before implementation and created no child branch, files, or commit. The coordinator is taking over directly. Shared progress/status/decision files with concurrent unmerged edits remain excluded."
 
 branch_agent_index:
   - run_id: "ralph-shared-workflow-move-20260925-0105"
@@ -537,3 +559,57 @@ branch_agent_index:
       merge_sha: "ba59eb507e03bff97a1c9e9d54a93a0c88265a25"
       verified_origin_main_sha: "ba59eb507e03bff97a1c9e9d54a93a0c88265a25"
     next_action: "None; PR #25 and its memory update are merged and verified. Final aggregate records are synchronized in the separate status-only follow-up."
+  - run_id: "branch-evidence-dossiers-20260925-081730"
+    task_ids: ["document-branch-evidence-dossiers"]
+    worker_id: "coordinator-01"
+    worker_name: "coordinator-01 / branch evidence archive"
+    branch: "ralph/implementation-records-coordinator-20260925-081730"
+    branch_slug: "ralph-implementation-records-coordinator-20260925-081730"
+    status: IN_PROGRESS
+    iteration: 1
+    merge_actor_worker_id: null
+    pull_request:
+      status: PENDING
+      number: null
+      url: null
+      base_sha: null
+      head_sha: null
+    review:
+      status: PENDING
+      reviewer_agents: ["Ralph Code Reviewer"]
+      reviewed_base_sha: null
+      reviewed_head_sha: null
+      rounds_completed: 0
+      max_rounds: 2
+      unresolved_finding_count: 0
+      author_decision:
+        status: NOT_REQUIRED
+        choice: null
+        rationale: null
+        recorded_at_utc: null
+    resource_usage:
+      time_spent_seconds: 3076
+      time_basis: WALL_CLOCK_ELAPSED
+      token_spend:
+        status: NOT_REPORTED
+        input_tokens: null
+        output_tokens: null
+        total_tokens: null
+        cached_input_tokens: null
+        source: null
+    status_path: "docs/ralph/ralph-implementation-records-coordinator-20260925-081730/agents/coordinator-01/status.md"
+    progress_path: "docs/ralph/ralph-implementation-records-coordinator-20260925-081730/agents/coordinator-01/progress.md"
+    decision_record_path: "docs/decisions/ralph-implementation-records-coordinator-20260925-081730/agents/coordinator-01/pr-pending.md"
+    decision_index_path: "docs/decisions/ralph-implementation-records-coordinator-20260925-081730/README.md"
+    checks:
+      - command: "git diff --cached --check"
+        result: PASS
+      - command: "git diff --check"
+        result: PASS
+      - command: "Ruby Markdown link and archive-index validation over docs/implementation and changed project docs; excluded only unavailable optional ../supercollider checkout links"
+        result: PASS
+      - command: "Ruby YAML parse and coordinator leaf/dashboard status and resource_usage consistency check"
+        result: PASS
+      - command: "Product behavior test suite"
+        result: NOT_RUN
+    next_action: "Coordinator: commit the archive and records, publish the parent PR, then complete the independent review and normal merge gates."
