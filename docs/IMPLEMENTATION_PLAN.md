@@ -75,18 +75,17 @@ These are distinct features with different jobs:
    [Ralph Loop skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/SKILL.md),
    [TDD skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd/SKILL.md),
    and [Ralph Loop agent](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/agents/ralph-loop.agent.md)
-   for iteration mechanics and test-first development. When relevant to
-   SuperCollider music-product work, consult the skill's
+   for iteration mechanics and test-first development. Invoke the shared
+   **Ralph Loop** agent with this project's
+   [Ralph implementation prompt](./RALPH_IMPLEMENTATION_PROMPT.md). When
+   relevant to SuperCollider music-product work, consult the skill's
    [project-specific music-agent prompt](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/references/ralph-loop.md).
-   Those shared
-   instructions are maintained in the
+   These shared instructions are maintained in the
    [`copilot_skills` repository](https://github.com/jrblankenhorn1007/copilot_skills),
    not copied into this plan. This plan remains the source of truth for the
    product's acceptance criteria; the development loop changes extension and
-   plugin code, not music-generation behavior. The local runner
-   ([`../scripts/ralph-loop.sh`](../scripts/ralph-loop.sh)) uses a fresh
-   worktree and branch for each iteration and verifies the configured PR merge
-   on `origin/main` before it emits a final marker or starts another pass.
+   plugin code, not music-generation behavior. This project does not provide
+   a local shell runner.
 2. **In-app music exploration loop:** when the user explicitly starts a
    sampling session, generate and render a bounded set of alternative musical
    candidates using the custom UGens. Keep each candidate and its settings
@@ -102,24 +101,17 @@ original project, and only apply a selected candidate to the project after
 confirmation. Here, "sampling" means exploring generated music variations; it
 does not mean slicing or classifying a user's imported audio samples.
 
-Run the development loop from the clean, synchronized `main` worktree with
-`scripts/ralph-loop.sh --auto`. It continues without an iteration-count limit
-until explicit completion, blockage, an error, or manual interruption. A
-failed pass leaves its iteration branch/worktree for review; never discard it
-to restart. The `--check` mode verifies GitHub CLI authentication and
-repository prerequisites. Non-interactive mode grants tool approval
-automatically; inspect the prompt and monitor Copilot usage. Final
-`RALPH_CONTINUE` and `RALPH_COMPLETE` markers are emitted only after
-`origin/main` contains the verified pull-request merge commit.
-
-The status snapshot is linked from the
-[README](./README.md#project-documents). Run
-`bash tests/ralph-status-reporting.sh` to exercise two successful mocked
-iterations plus a closed-PR blocker case, including fresh worktrees, GitHub
-CLI pull-request merges, refreshing a deliberately stale `origin/main` ref
-before the agent starts, a retried pending merge request, merge-SHA verification
-for merge-commit and squash-style results, blocked-status reporting, and
-cleanup against a local Git remote.
+Use the shared **Ralph Loop** agent with this project's
+[Ralph implementation prompt](./RALPH_IMPLEMENTATION_PROMPT.md) to start the
+development workflow. The shared skill and agent define the general iteration,
+verification, and integration process. Project-specific acceptance criteria,
+visual coverage, progress evidence, current implementation status, and
+append-only decisions remain in this repository's
+[`IMPLEMENTATION_PLAN.md`](./IMPLEMENTATION_PLAN.md),
+[`VISUAL_TEST_PLAN.md`](./VISUAL_TEST_PLAN.md),
+[`RALPH_PROGRESS.md`](./RALPH_PROGRESS.md),
+[`implementation_status.md`](./implementation_status.md), and
+[`decision_log.md`](./decision_log.md).
 
 ## Decision log
 

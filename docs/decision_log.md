@@ -475,3 +475,31 @@ credentials and private user data out of this file.
   behavior, and control-rate updates on macOS arm64 with SuperCollider
   3.14.1. Windows 10 x64, actual MacBook Neo, real-time audition, and other
   SuperCollider release ABIs remain unverified.
+
+### DEC-023 — Use the shared Ralph Loop agent instead of a Beats-local runner
+
+- **Date:** 2026-09-24
+- **Context:** The canonical Ralph Loop skill and agent already provide the
+  development workflow. The project also contained a separate shell runner,
+  dedicated runner tests, and active documentation describing runner-specific
+  CLI behavior.
+- **Decision:** Remove the Beats-local shell runner and its runner-only tests.
+  Make `RALPH_IMPLEMENTATION_PROMPT.md` explicitly invoke the shared Ralph Loop
+  agent and canonical skill, while retaining product acceptance criteria and
+  project status sources in this repository.
+- **Alternatives:** Keep and update the local runner; duplicate project-specific
+  runner logic in the shared repository; or use the canonical agent/skill
+  directly with this project's prompt.
+- **Rationale:** A second implementation of the outer development loop could
+  diverge from the maintained shared workflow. The local plan, visual plan,
+  progress log, current status, and decision history still provide project-
+  specific requirements without a second runner.
+- **Consequences:** Development iterations use the shared agent and canonical
+  skill with the project prompt. The project no longer specifies a local
+  `--check`/`--auto` runner, model pin, unlimited shell loop, or
+  `--allow-all-tools` invocation. Earlier runner decisions remain as history;
+  this workflow-maintenance change does not advance the product implementation
+  iteration number. At the migration's original base (`b1c77ae`) that number
+  was `4`; the subsequent update to `5` in the latest current status came from
+  the independent, already-pending iteration-5 memory follow-up (PR #7), not
+  this workflow change.
