@@ -560,3 +560,31 @@ credentials and private user data out of this file.
   real-time audio, Windows 10 x64, MacBook Neo, and visual screenshots remain
   outside this workflow and unverified by it. This test-infrastructure
   change does not advance the product implementation iteration counter.
+
+### DEC-026 — Verify the platform-specific ChaosOsc loader export
+
+- **Date:** 2026-09-25
+- **Context:** The plugin smoke check assumed Darwin's `_load` spelling and
+  `nm -gU` options on every platform. ELF and Windows x64 use GNU `nm` options
+  and the unprefixed `load` export. Name-only matching also does not prove the
+  symbol is global, defined text, or an exact loader entry point; Windows
+  output may contain CRLF.
+- **Decision:** Select Darwin `nm -gU` / `_load` or ELF and Windows x64
+  `nm -g --defined-only` / `load`. Require the exact uppercase `T` text-symbol
+  type and exact final symbol name, strip a trailing carriage return for
+  Windows output, and report `nm` failure status plus diagnostic output.
+  Preserve the prior warning-and-skip behavior when `nm` is absent. Cover the
+  behavior with network-free mocked tests and allow the NRT test to accept
+  only the exact `_load` or `load` verification line.
+- **Alternatives:** Keep the Darwin-only check; accept either spelling on all
+  platforms; search for a symbol substring; fail whenever `nm` is absent; or
+  treat command failure as an ordinary missing-symbol result.
+- **Rationale:** The server loader needs the platform's actual exact entry
+  point. Checking the global defined text-symbol type avoids false success
+  from undefined or similarly named symbols, while explicit command
+  diagnostics distinguish inspection failures from a missing export.
+- **Consequences:** Darwin arm64 build and SuperCollider 3.14.1 NRT checks
+  pass on macOS 26.5.2; ELF and Windows x64 behavior is mocked, not natively
+  validated. Windows 10 x64, MacBook Neo, GUI/SCIDE, and real-time audition
+  remain unverified. This build-validation/test-infrastructure continuation
+  does not advance the product implementation iteration counter (`5`).

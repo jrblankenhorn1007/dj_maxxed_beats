@@ -291,9 +291,18 @@ class ChaosOscNRTIntegrationTests(unittest.TestCase):
             1e-4,
             "control-rate chaosAmount update did not affect the running UGen",
         )
+        verified_symbol_lines = [
+            line
+            for line in build_result.stdout.splitlines()
+            if line.startswith("Verified exported plugin load symbol:")
+        ]
+        self.assertEqual(len(verified_symbol_lines), 1, build_result.stdout)
         self.assertIn(
-            "Verified exported plugin load symbol: _load",
-            build_result.stdout,
+            verified_symbol_lines[0],
+            {
+                "Verified exported plugin load symbol: _load",
+                "Verified exported plugin load symbol: load",
+            },
         )
 
 

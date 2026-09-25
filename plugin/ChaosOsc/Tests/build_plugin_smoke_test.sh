@@ -37,19 +37,53 @@ out_lib="${bin_dir}/ChaosOsc.scx"
 
 echo "Built shared plugin library: ${out_lib}"
 
+has_exported_load_symbol() {
+    local symbol_listing="$1"
+    local expected_symbol="$2"
+
+    printf '%s\n' "${symbol_listing}" | awk -v expected="${expected_symbol}" '
+        NF >= 2 {
+            symbol = $NF
+            sub(/\r$/, "", symbol)
+            if ($(NF - 1) == "T" && symbol == expected) {
+                found = 1
+            }
+        }
+        END { exit !found }
+    '
+}
+
 # The plugin loader looks up the C-linkage symbols PluginLoad(ChaosOscUGens)
 # expands to (see SC_InterfaceTable.h): the exported `load` entry point
 # (plus `api_version`/`server_type`), not a symbol containing the macro
-# argument -- confirm the actual required symbol is present so a missing/
-# garbled PluginLoad invocation is caught here rather than only at scsynth
-# load time.
+# argument. Mach-O reports this C symbol as `_load`; ELF and Windows x64
+# report it as `load`. Inspect only global, defined symbols and require the
+# exact global-text entry point so a missing/garbled PluginLoad invocation is
+# caught here rather than only at scsynth load time.
 if command -v nm >/dev/null 2>&1; then
-    if nm -gU "${out_lib}" 2>/dev/null | grep -qE '\b_load$'; then
-        echo "Verified exported plugin load symbol: _load"
+    if [[ "$(uname -s)" == "Darwin" ]]; then
+        nm_args=(-gU)
+        expected_load_symbol="_load"
     else
-        echo "ERROR: expected exported symbol '_load' not found in ${out_lib}" >&2
-        nm -gU "${out_lib}" 2>/dev/null | grep -i load || true
-        exit 1
+        nm_args=(-g --defined-only)
+        expected_load_symbol="load"
+    fi
+
+    if nm_output="$(nm "${nm_args[@]}" "${out_lib}" 2>&1)"; then
+        if has_exported_load_symbol "${nm_output}" "${expected_load_symbol}"; then
+            echo "Verified exported plugin load symbol: ${expected_load_symbol}"
+        else
+            echo "ERROR: expected global defined text symbol '${expected_load_symbol}' not found in ${out_lib}" >&2
+            printf '%s\n' "${nm_output}" | grep -i load >&2 || true
+            exit 1
+        fi
+    else
+        nm_status=$?
+        echo "ERROR: 'nm ${nm_args[*]}' invocation failed with status ${nm_status} for ${out_lib}" >&2
+        if [[ -n "${nm_output}" ]]; then
+            printf '%s\n' "${nm_output}" >&2
+        fi
+        exit "${nm_status}"
     fi
 else
     echo "WARNING: 'nm' not available; skipping exported-symbol check." >&2

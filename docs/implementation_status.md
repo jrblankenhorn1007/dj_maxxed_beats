@@ -116,3 +116,36 @@ unimplemented.
   supported target platforms.
 - Investigate the secure asynchronous HTTPS and credential-store options
   available to sclang; use the planned headless helper only if needed.
+
+## Portable plugin load-symbol validation — worker-01, iteration 2
+
+- **Run/task:** `ralph-cross-platform-finish-20260925-0607` /
+  `portable-plugin-load-symbol-check`.
+- **Product implementation counter:** remains `5`. This is a build-validation
+  and test-infrastructure continuation; it does not advance the product
+  implementation counter.
+- **Fresh continuation base:** the assignment supplied `1926bdab`, but the
+  required clean fast-forward refresh advanced `origin/main` to
+  `7523a9a0b87ffc5304686e2e64509fc4a6941bb7`. That newer SHA was reported
+  before work began, and this fresh branch was created from it; the prior
+  published branch was not rebased or changed.
+- **Implementation:** `plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh`
+  selects Darwin `nm -gU` / `_load` or GNU `nm -g --defined-only` / `load`,
+  accepts only the exact global defined text symbol, normalizes Windows CRLF,
+  reports `nm` command failures and their diagnostic output, and preserves the
+  existing warning-and-skip behavior when `nm` is absent. The NRT integration
+  test accepts exactly one of the two reported export lines.
+- **Verification:** eight network-free mocked symbol tests pass. The native
+  smoke build produced an arm64 macOS plugin and verified `_load`; the
+  SuperCollider 3.14.1 NRT integration passed. The final
+  `bash scripts/run_headless_tests.sh` run passed all nine DSP assertions and
+  all 21 Python tests, including NRT and the new symbol cases.
+- **Integration state:** the implementation commit is
+  `4cb936134e7ccef09c248de7fe761783891fa6ec`. Worker status/progress and
+  `pr-pending.md` are committed before first publication; the PR is not yet
+  opened, and no PR merge or `origin/main` integration is claimed.
+- **Remaining platform gaps:** native ELF and Windows x64 builds/runtimes were
+  unavailable; those symbol cases are mocked. Windows 10 x64 and an actual
+  MacBook Neo remain unvalidated. The local macOS run used Darwin arm64,
+  macOS 26.5.2, and SuperCollider 3.14.1; it is not device-specific MacBook
+  Neo validation.
