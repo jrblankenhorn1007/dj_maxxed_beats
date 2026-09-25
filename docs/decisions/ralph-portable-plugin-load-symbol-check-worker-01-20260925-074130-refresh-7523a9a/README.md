@@ -17,5 +17,7 @@
 
 PR #24 passed the independent review gate (round 1 clean) and both hosted
 headless checks. The coordinator completed the required post-merge memory
-review; the memory/status follow-up is recorded separately and remains
-pending its normal PR merge and verification.
+review. Its durable PR #13 URL-path lesson was indexed in categorized memory
+through PR #25, merged at
+`ba59eb507e03bff97a1c9e9d54a93a0c88265a25` and verified on fetched
+`origin/main`; see the separate coordinator decision record.
