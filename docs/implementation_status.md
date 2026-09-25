@@ -83,8 +83,9 @@ unimplemented.
   analysis of both C++ components, all nine DSP assertions, and the plugin
   build with `-Wall -Wextra -Werror`; the `_load` symbol was verified. No
   analyzer output artifacts or compiler warnings were produced.
-- **Full local headless suite:** With explicit paths to the already verified
-  SuperCollider 3.14.1 CLI runtime,
+- **Full local headless suite:** After rebasing the task branch onto fetched
+  `origin/main` at `1926bdab3c358088f359cf73f0d8025a66c7d0d0`, with explicit
+  paths to the verified SuperCollider 3.14.1 CLI runtime,
   `bash scripts/run_headless_tests.sh` passed all nine DSP assertions and all
   15 discovered Python tests, including the plugin/NRT render. This local run
   used macOS 26.5.2 arm64 and launched no GUI, SCIDE, real-time server, or

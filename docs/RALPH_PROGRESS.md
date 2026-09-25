@@ -974,3 +974,21 @@ Ralph-Status: IN_PROGRESS
   observed. Windows 10 x64, an actual MacBook Neo, GUI/SCIDE, and real-time
   audio remain outside this CI gate.
 - **Integration state:** No PR or remote merge is claimed.
+
+## CI quality gate — latest-base retest — 2026-09-25
+
+- **Rebase:** Fetched `origin/main` at
+  `1926bdab3c358088f359cf73f0d8025a66c7d0d0` and rebased
+  `ralph/ci-quality-pipeline-20260925-0412` onto it without conflicts.
+  Upstream changes were limited to Git workflow memory and README follow-up
+  records.
+- **Implementation commit after rebase:**
+  `0ed695472f44c52a0379eb61ee691d45fe590684`.
+- **Full regression command:** `bash scripts/run_headless_tests.sh`, with
+  `SCLANG` and `SCSYNTH` set to the verified SuperCollider 3.14.1 CLI
+  executables. The full quality/build/Python/NRT gate passed: 9 DSP assertions
+  and all 15 discovered Python tests, including plugin loading and NRT render.
+  Result: `Ran 15 tests in 11.239s`, `OK`. Machine-specific runtime paths are
+  intentionally omitted from this repository record.
+- **Integration state:** The task branch is unpublished. No hosted run for the
+  strict quality-gate commits, PR, or remote merge is claimed.
