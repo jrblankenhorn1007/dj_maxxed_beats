@@ -167,3 +167,23 @@
   "statement": "I, worker-01, sign off iteration 1 for retire-maxxed-local-tdd-skill at implementation commit 0e8671f9bf5cfe5957238e799bbf0c1b30751940; PR creation remains blocked, and no merge is claimed."
 }
 ```
+
+## Superseded branch transition — CANCELLED
+
+- `origin/main` advanced after the first branch was published; this branch was
+  preserved and not rebased or force-pushed. The refreshed branch
+  `ralph/retire-beats-tdd-skill-worker-01-20260925-0108-refresh-570bb69` was
+  created from current `origin/main`
+  `f9e1bb3edafff1cc6d24c640a8e0ed38f5bf49fe` and now owns the active change.
+- The previous PR-creation blocker was recovered: the GitHub CLI exists at
+  `/Users/jrblankenhorn/.local/bin/gh` outside the default `PATH`, and
+  `gh auth status --hostname github.com` passed using existing authentication.
+  PR #10 was opened for the refreshed branch. This original branch has no PR
+  and will not be merged.
+- The original branch is `CANCELLED`, its decision record uses
+  `pr-not-opened.md`, and there are no unresolved blockers for this
+  superseded branch. No merge was attempted.
+- Two status-validation shell commands used a mistyped worktree path and
+  exited before their requested checks completed. The corrected commands
+  passed staged and unstaged `git diff --check` and listed only the intended
+  scoped status changes.

@@ -484,3 +484,14 @@ Ralph-Status: IN_PROGRESS
   `pr-pending.md` remains in place. The next step is to open the normal PR
   using the GitHub create-PR link from the push output or provide a
   PR-capable tool. No merge is claimed.
+
+### Initial worker branch superseded — CANCELLED
+
+- The existing GitHub CLI was later found at
+  `/Users/jrblankenhorn/.local/bin/gh` outside the default `PATH`; its existing
+  authentication passed verification without changing configuration.
+- After `origin/main` advanced through PRs #8 and #9, the published initial
+  worker branch was preserved and a fresh branch was created from the latest
+  `origin/main`. PR #10 is open for that refreshed branch.
+- This initial branch is `CANCELLED`; its pending-PR record is now
+  `pr-not-opened.md`. No merge was attempted.

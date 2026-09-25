@@ -10,7 +10,7 @@
 
 ## Agent / PR records
 
-- [worker-01 / PR pending](agents/worker-01/pr-pending.md)
+- [worker-01 / PR not opened](agents/worker-01/pr-not-opened.md)
 
-The pending record will be moved to a numbered PR record and this index updated
-when the normal pull request is opened.
+This original branch was superseded by the refreshed branch whose PR #10 is
+open; no PR was opened for this branch.

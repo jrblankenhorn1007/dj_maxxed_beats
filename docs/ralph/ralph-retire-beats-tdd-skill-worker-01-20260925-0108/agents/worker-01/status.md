@@ -7,18 +7,18 @@ runtime_agent_id: null
 branch: "ralph/retire-beats-tdd-skill-worker-01-20260925-0108"
 branch_slug: "ralph-retire-beats-tdd-skill-worker-01-20260925-0108"
 iteration: 1
-status: BLOCKED
+status: CANCELLED
 started_at_utc: "2026-09-25T01:26:46Z"
-updated_at_utc: "2026-09-25T01:39:31Z"
+updated_at_utc: "2026-09-25T01:51:34Z"
 base_origin_main_sha: "58b4f916603cc8e140c5e8c1bbca1290bb2dede6"
 rebased_onto_origin_main_sha: null
 implementation_commit_sha: "0e8671f9bf5cfe5957238e799bbf0c1b30751940"
 pull_request:
-  status: PENDING
+  status: NOT_OPENED
   number: null
   url: null
 merge_actor_worker_id: null
-decision_record_path: "docs/decisions/ralph-retire-beats-tdd-skill-worker-01-20260925-0108/agents/worker-01/pr-pending.md"
+decision_record_path: "docs/decisions/ralph-retire-beats-tdd-skill-worker-01-20260925-0108/agents/worker-01/pr-not-opened.md"
 decision_index_path: "docs/decisions/ralph-retire-beats-tdd-skill-worker-01-20260925-0108/README.md"
 merge:
   status: PENDING
@@ -68,11 +68,14 @@ checks:
     result: BLOCKED
   - command: "Open the GitHub PR-creation page in the integrated browser"
     result: BLOCKED
+  - command: "test -x /Users/jrblankenhorn/.local/bin/gh"
+    result: PASS
+  - command: "'/Users/jrblankenhorn/.local/bin/gh' auth status --hostname github.com"
+    result: PASS
   - command: "Documentation-only scope; product behavior tests"
     result: NOT_RUN
-blockers:
-  - "PR creation is unavailable in this worker environment: gh is not installed and the integrated browser page tool failed; the published branch has no PR."
-next_action: "Coordinator/user: open a PR for the published branch using the GitHub URL from the push output or provide a PR-capable tool. Worker-01: replace the pending record with the assigned PR number and report the updated state. Do not merge."
+blockers: []
+next_action: "None; this first published branch is superseded by the refreshed branch with PR #10. Preserve this branch/worktree; do not merge."
 worker_sign_off:
   status: RECEIVED
   attestation_kind: SELF_ATTESTATION

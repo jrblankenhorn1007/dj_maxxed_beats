@@ -1,4 +1,4 @@
-# Worker-01 — PR pending
+# Worker-01 — PR not opened
 
 - **Run/task:** `skills-routing-20260925-0108` /
   `retire-maxxed-local-tdd-skill`
@@ -10,8 +10,8 @@
 - **Rebased `origin/main`:** none
 - **Implementation commit:**
   `0e8671f9bf5cfe5957238e799bbf0c1b30751940`
-- **Pull request:** Pending creation; the normal integration process expects a
-  PR. The branch was published successfully, but no PR is open.
+- **Pull request:** No PR was opened for this branch; it was superseded by the
+  refreshed branch and its PR #10.
 
 ## Decisions
 
@@ -39,10 +39,19 @@
 - These check-expression issues were resolved before sign-off; no unresolved
   documentation-check blockers remain.
 
-## Current blocker
+## Disposition
 
-PR creation is unavailable in the worker environment: the `gh` executable is
-not installed and the integrated browser page tool failed on both the PR
-creation URL and repository page. A read-only pull-request search found no PR
-for this branch. The branch remains published; the coordinator/user must open
-the normal PR or provide a PR-capable tool. No merge has been attempted.
+The GitHub CLI was later found at `/Users/jrblankenhorn/.local/bin/gh`
+(version 2.101.0), and its existing authentication was verified without
+changing configuration. A fresh branch was created from the latest
+`origin/main` after the published base advanced; PR #10 was opened for that
+refreshed branch. This original branch is `CANCELLED` and preserved for audit.
+No merge was attempted.
+
+## Recovered status-command issue
+
+Two status-validation commands initially used a mistyped worktree path and
+exited before their requested checks completed. They were immediately
+repeated with the correct path; both `git diff --cached --check` and
+`git diff --check` passed, and the final status listed only the intended
+scoped records.
