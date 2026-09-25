@@ -7,7 +7,12 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 ENTRYPOINT = ROOT / "scripts" / "run_headless_tests.sh"
+QUALITY_ENTRYPOINT = ROOT / "scripts" / "run_quality_checks.sh"
 WORKFLOW = ROOT / ".github" / "workflows" / "headless-tests.yml"
+PLUGIN_BUILD_SCRIPT = (
+    ROOT / "plugin" / "ChaosOsc" / "Tests" / "build_plugin_smoke_test.sh"
+)
+CPP_TEST_SCRIPT = ROOT / "plugin" / "ChaosOsc" / "Tests" / "run_tests.sh"
 SC_DMG_URL = (
     "https://github.com/supercollider/supercollider/releases/download/"
     "Version-3.14.1/SuperCollider-3.14.1-macOS-universal.dmg"
@@ -22,16 +27,54 @@ class HeadlessTestPipelineContractTests(unittest.TestCase):
         self.assertTrue(path.is_file(), missing_message)
         return path.read_text(encoding="utf-8")
 
-    def test_entrypoint_runs_cpp_tests_and_discovers_all_python_tests(self):
+    def test_entrypoint_runs_quality_checks_and_discovers_all_python_tests(self):
         source = self._read_required_file(
             ENTRYPOINT,
             "missing required entrypoint scripts/run_headless_tests.sh",
         )
 
-        self.assertIn("plugin/ChaosOsc/Tests/run_tests.sh", source)
+        self.assertIn("bash scripts/run_quality_checks.sh", source)
         self.assertIn("python3 -m unittest discover -s tests", source)
         self.assertIn("-p 'test_*.py'", source)
         self.assertTrue((ROOT / "tests" / "test_chaososc_nrt.py").is_file())
+
+    def test_quality_checks_cover_source_syntax_analysis_and_builds(self):
+        source = self._read_required_file(
+            QUALITY_ENTRYPOINT,
+            "missing required entrypoint scripts/run_quality_checks.sh",
+        )
+
+        for expected in (
+            "bash -n",
+            "python3 -m compileall",
+            "--analyze",
+            "-analyzer-output=text",
+            "plugin/ChaosOsc/Tests/run_tests.sh",
+            "plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh",
+        ):
+            with self.subTest(expected=expected):
+                self.assertIn(expected, source)
+
+    def test_cpp_builds_fail_on_project_warnings(self):
+        unit_test_source = self._read_required_file(
+            CPP_TEST_SCRIPT,
+            "missing required C++ unit test script",
+        )
+        plugin_build_source = self._read_required_file(
+            PLUGIN_BUILD_SCRIPT,
+            "missing required plugin build script",
+        )
+        quality_source = self._read_required_file(
+            QUALITY_ENTRYPOINT,
+            "missing required quality-check entrypoint",
+        )
+
+        self.assertIn("-Werror", unit_test_source)
+        self.assertIn("-Werror", plugin_build_source)
+        self.assertIn("-analyzer-output=text", plugin_build_source)
+        self.assertIn("-isystem", plugin_build_source)
+        self.assertIn("command -v nm", quality_source)
+        self.assertIn("required to verify the plugin load symbol", quality_source)
 
     def test_missing_runtime_tools_fail_with_actionable_diagnostics(self):
         self._read_required_file(

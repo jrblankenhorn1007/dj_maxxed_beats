@@ -14,7 +14,7 @@ mkdir -p "${bin_dir}"
 
 bin="${bin_dir}/test_chaos_osc_core"
 
-"${CXX:-clang++}" -std=c++17 -Wall -Wextra -O2 \
+"${CXX:-clang++}" -std=c++17 -Wall -Wextra -Werror -O2 \
     "${script_dir}/test_chaos_osc_core.cpp" \
     -o "${bin}"
 
