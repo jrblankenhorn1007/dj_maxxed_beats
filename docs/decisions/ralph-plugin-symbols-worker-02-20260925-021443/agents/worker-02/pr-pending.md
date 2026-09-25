@@ -8,8 +8,10 @@
 - **Exact branch:** `ralph/plugin-symbols-worker-02-20260925-021443`
 - **Starting base:** `origin/main`
   `f9e1bb3edafff1cc6d24c640a8e0ed38f5bf49fe`
-- **Rebased base:** pending
-- **Implementation commit:** pending
+- **Rebased base:** `origin/main`
+  `0736add11eae7b7f745d7b7bf9806c116d72eed6`
+- **Implementation commit:**
+  `00c24f247b4bc8313217b237352e9004bae5aea0`
 - **PR:** pending normal publication and creation
 - **Current integration state:** `IN_PROGRESS`; do not merge until the
   coordinator authorizes this exact PR.

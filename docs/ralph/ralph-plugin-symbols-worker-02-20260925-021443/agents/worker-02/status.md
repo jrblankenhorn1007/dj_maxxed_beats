@@ -9,10 +9,10 @@ branch_slug: "ralph-plugin-symbols-worker-02-20260925-021443"
 iteration: 1
 status: IN_PROGRESS
 started_at_utc: "2026-09-25T02:19:06Z"
-updated_at_utc: "2026-09-25T02:26:32Z"
+updated_at_utc: "2026-09-25T02:30:59Z"
 base_origin_main_sha: "f9e1bb3edafff1cc6d24c640a8e0ed38f5bf49fe"
-rebased_onto_origin_main_sha: null
-implementation_commit_sha: null
+rebased_onto_origin_main_sha: "0736add11eae7b7f745d7b7bf9806c116d72eed6"
+implementation_commit_sha: "00c24f247b4bc8313217b237352e9004bae5aea0"
 pull_request:
   status: PENDING
   number: null
@@ -37,7 +37,7 @@ checks:
     result: NOT_RUN
     note: "Pinned SuperCollider headers are not cached in this worktree; running the build smoke test would fetch them."
 blockers: []
-next_action: "Fetch and rebase onto the latest origin/main, rerun targeted checks, then publish and open a PR for coordinator authorization."
+next_action: "Publish the rebased branch and open a PR, then update this leaf to AWAITING_MERGE and request coordinator authorization."
 worker_sign_off:
   status: NOT_YET_SUBMITTED
   attestation_kind: SELF_ATTESTATION
