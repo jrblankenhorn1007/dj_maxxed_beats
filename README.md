@@ -33,6 +33,28 @@ no extension to install or assistant window to open.
 Run these commands from the repository root. They test the current prototype;
 they are not commands for installing or running an AI music application.
 
+### Full headless test suite
+
+```sh
+bash scripts/run_headless_tests.sh
+```
+
+This is the recommended complete check. It runs the DSP C++ tests and all
+Python tests, including the SuperCollider plugin/NRT integration. It requires
+Bash, Python 3, a C++17 compiler, and matching `sclang` and `scsynth`
+executables. Put both SuperCollider command-line tools on `PATH`, or provide
+their paths:
+
+```sh
+SCLANG=/absolute/path/to/sclang \
+SCSYNTH=/absolute/path/to/scsynth \
+bash scripts/run_headless_tests.sh
+```
+
+The plugin build also needs network access to fetch its pinned API headers
+when they are not already cached. The suite does not launch SCIDE, a GUI, a
+real-time server, or audio hardware.
+
 ### Pure DSP test
 
 ```sh
@@ -89,8 +111,9 @@ The project targets **Windows 10 x64** and **Apple Silicon macOS**, with
 explicit validation planned on an actual **MacBook Neo**. These are project
 targets, not claims of current platform support.
 
-The latest runtime verification is **macOS 26.5.2 arm64 with SuperCollider
-3.14.1**. It was performed on an Apple Silicon Mac, not an actual MacBook Neo.
+The latest local runtime verification is **macOS 26.5.2 arm64 with
+SuperCollider 3.14.1**. GitHub Actions also runs the headless suite on macOS
+14 with SuperCollider 3.14.1. Neither run was on an actual MacBook Neo.
 Windows 10 x64, a real MacBook Neo, real-time audition, the GUI/SCIDE workflow,
 SuperCollider versions other than 3.14.1, and release binaries remain
 unverified. Packaging and release support have not been implemented.
