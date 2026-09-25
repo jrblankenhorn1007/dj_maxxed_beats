@@ -528,3 +528,22 @@ Ralph-Status: IN_PROGRESS
   worker remains `AWAITING_MERGE`; the coordinator will use the repository's
   normal merge process, fetch `origin`, verify the resulting merge SHA on
   `origin/main`, and complete the post-merge memory review.
+
+## Coordinator post-merge verification and memory review — 2026-09-25T01:39:25Z
+
+- **PR #8:** Merged through the normal GitHub pull-request process at
+  `2026-09-25T01:37:42Z`. Merge SHA:
+  `570bb69028f6ddf9bffa7391ba5d050852459941`.
+- **Verification:** `git fetch origin` advanced `origin/main` to the merge
+  SHA; `git merge-base --is-ancestor
+  570bb69028f6ddf9bffa7391ba5d050852459941 origin/main` passed. The clean
+  integration worktree was fast-forwarded and `HEAD` matched `origin/main`.
+- **Memory review:** Re-read `.github/memory/README.md` and
+  `.github/memory/testing.md`, and checked their scope against the merged
+  workflow migration. The task added no durable lesson beyond the decision in
+  DEC-023; the memory store remains unchanged and no memory-only merge is
+  needed.
+- **Status:** Updated the worker leaf and aggregate dashboard to `COMPLETE`
+  on a fresh follow-up branch based on the verified merge SHA. This
+  workflow-maintenance task does not advance the product implementation
+  iteration counter.
