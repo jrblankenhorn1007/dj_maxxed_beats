@@ -11,16 +11,17 @@
 # for (see supercollider's PluginLoad(name) macro / server plugin loading in
 # WritingUGens.schelp).
 #
-# What this does NOT prove, because scsynth/sclang are not installed in this
-# development environment: that scsynth actually loads and runs this plugin
+# What this does NOT prove: that scsynth actually loads and runs this plugin
 # at audio-rate/control-rate without dropouts, that NRT rendering with it
-# succeeds, or ABI compatibility with a real scsynth build on any platform.
-# Those remain open verification tasks (see docs/RALPH_PROGRESS.md).
+# succeeds, or ABI compatibility with an installed server. The separate
+# tests/test_chaososc_nrt.py integration test exercises loading and NRT
+# rendering when a matching SuperCollider runtime is available.
 set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 plugin_root="$(cd "${script_dir}/../.." && pwd)"
-sc_api_cache="${plugin_root}/.sc-plugin-api-cache"
+sc_api_commit="426edf6d8742e1cc3bd85b51ca0c4e595d37a903"
+sc_api_cache="${plugin_root}/.sc-plugin-api-cache/${sc_api_commit}"
 bin_dir="${script_dir}/.build"
 mkdir -p "${bin_dir}"
 

@@ -434,8 +434,12 @@ introduce only the smallest maintainable harness needed to run it.
 
 ## Source review
 
-The local upstream checkout is in [`supercollider/`](../supercollider/) at
-commit `ea52528` (`develop` at checkout time). Key references:
+The read-only upstream source-review checkout is in
+[`supercollider/`](../supercollider/) at commit `ea52528` (`develop` at
+checkout time). The initial runtime/API compatibility target is the official
+SuperCollider 3.14.1 release (`Version-3.14.1`, commit
+`426edf6d8742e1cc3bd85b51ca0c4e595d37a903`); plugin API headers are pinned to
+that release so the built plugin matches its server interface. Key references:
 
 - [SuperCollider platform support and overview](../supercollider/README.md)
 - [Writing Unit Generators](../supercollider/HelpSource/Guides/WritingUGens.schelp)

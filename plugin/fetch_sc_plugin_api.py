@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
 """Fetches the read-only SuperCollider server plugin API headers (the
 public, documented interface a plugin builds against: SC_PlugIn.hpp and its
-transitive local includes) at the exact commit pinned in
-docs/IMPLEMENTATION_PLAN.md (`ea52528`), so plugin sources can be compiled
-against the real interface without a full local SuperCollider source
-checkout or build.
+transitive local includes) at the SuperCollider 3.14.1 release commit pinned
+in docs/IMPLEMENTATION_PLAN.md, so plugin sources can be compiled against the
+real interface without a full local SuperCollider source checkout or build.
 
 These headers are NOT vendored into this repository: this script downloads
-them into a gitignored cache directory (plugin/.sc-plugin-api-cache/) that
-plugin build scripts fetch on demand (skipping files already cached). This
-keeps the repository free of upstream GPL-3.0 source files while still
-letting plugin C++ be compiled and smoke-tested against the exact pinned
-public interface. It never writes to, or depends on, the sibling
-`supercollider/` reference checkout, which remains read-only and is not
-required for this script to work.
+them into a gitignored, revision-scoped cache directory
+(plugin/.sc-plugin-api-cache/<commit>) that plugin build scripts fetch on
+demand (skipping files already cached for that commit). This keeps the
+repository free of upstream GPL-3.0 source files while still letting plugin
+C++ be compiled and smoke-tested against the exact pinned public interface.
+It never writes to, or depends on, the sibling `supercollider/` reference
+checkout, which remains read-only and is not required for this script to work.
 
 Usage: python3 plugin/fetch_sc_plugin_api.py
 Requires network access to raw.githubusercontent.com.
@@ -24,7 +23,7 @@ import sys
 import urllib.error
 import urllib.request
 
-SC_COMMIT = "ea52528"
+SC_COMMIT = "426edf6d8742e1cc3bd85b51ca0c4e595d37a903"
 BASE_URL = f"https://raw.githubusercontent.com/supercollider/supercollider/{SC_COMMIT}/"
 
 # The only two directories the plugin-facing interface headers live in at
@@ -45,7 +44,7 @@ INCLUDE_RE = re.compile(r'#\s*include\s+"([^"]+)"')
 
 def cache_dir():
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(script_dir, ".sc-plugin-api-cache")
+    return os.path.join(script_dir, ".sc-plugin-api-cache", SC_COMMIT)
 
 
 def fetch(rel_path, dest_root):

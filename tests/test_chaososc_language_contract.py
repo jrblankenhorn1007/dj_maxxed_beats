@@ -33,6 +33,8 @@ class ChaosOscLanguageContractTests(unittest.TestCase):
         for expected in (
             "ChaosOsc.ar(chaosAmount, seed)",
             "chaosAmount",
+            "Audio-rate inputs are read per sample",
+            "control-rate inputs are broadcast across each audio block",
             "seed",
             "captured when the Synth is created",
         ):

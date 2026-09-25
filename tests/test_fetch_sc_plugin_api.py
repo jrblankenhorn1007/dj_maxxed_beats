@@ -19,6 +19,20 @@ spec.loader.exec_module(fetch_sc_plugin_api)
 
 
 class FetchScPluginApiTests(unittest.TestCase):
+    def test_headers_are_pinned_to_the_supported_release(self):
+        self.assertEqual(
+            fetch_sc_plugin_api.SC_COMMIT,
+            "426edf6d8742e1cc3bd85b51ca0c4e595d37a903",
+        )
+
+    def test_header_cache_is_scoped_to_the_pinned_revision(self):
+        expected = (
+            Path(fetch_sc_plugin_api.__file__).resolve().parent
+            / ".sc-plugin-api-cache"
+            / fetch_sc_plugin_api.SC_COMMIT
+        )
+        self.assertEqual(Path(fetch_sc_plugin_api.cache_dir()), expected)
+
     def test_fetch_propagates_network_errors(self):
         with tempfile.TemporaryDirectory() as cache_dir:
             with patch.object(
