@@ -499,4 +499,7 @@ credentials and private user data out of this file.
   `--check`/`--auto` runner, model pin, unlimited shell loop, or
   `--allow-all-tools` invocation. Earlier runner decisions remain as history;
   this workflow-maintenance change does not advance the product implementation
-  iteration number, which remains `4`.
+  iteration number. At the migration's original base (`b1c77ae`) that number
+  was `4`; the subsequent update to `5` in the latest current status came from
+  the independent, already-pending iteration-5 memory follow-up (PR #7), not
+  this workflow change.

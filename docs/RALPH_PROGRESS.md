@@ -422,7 +422,8 @@ Ralph-Status: IN_PROGRESS
 ## Workflow migration — shared Ralph Loop entrypoint (2026-09-24)
 
 - **Scope:** Documentation and workflow maintenance only; no product behavior
-  changed. The existing product implementation iteration number remains `4`.
+  changed. At the original migration base, the product implementation
+  iteration number was `4`; this workflow change did not advance it.
 - **Branch/base:** `ralph/replace-beats-local-ralph-runner-worker-01-20260925-0105`,
   based on `origin/main` at `b1c77ae9192491a86be5d42e86aebc10e3057a2d`.
 - **Decision:** The project prompt now invokes the canonical shared Ralph Loop
@@ -445,9 +446,11 @@ Ralph-Status: IN_PROGRESS
   were not rerun because product code and behavior are unchanged. No
   project-local `.github/memory/` store or category files were found; the
   coordinator owns the required post-merge memory review.
-- **Next action:** Coordinator to review and integrate the workflow migration,
-  verify the resulting commit on fetched `origin/main`, and complete the
-  post-merge memory review.
+- **Next action:** Coordinator to establish the normal PR path and authorize
+  the worker-owned merge; the worker then merges only after authorization and
+  with an available normal merge tool. The coordinator independently verifies
+  the resulting commit on fetched `origin/main` and completes the post-merge
+  memory review.
 
 ## Coordinator post-merge review — Iteration 5
 
@@ -479,3 +482,24 @@ Ralph-Status: IN_PROGRESS
 - Because the first branch was already published, it is preserved unchanged.
   The migration is being replayed on a fresh branch from this latest
   `origin/main`; no force-push or direct-main write was used.
+
+## Replacement-branch verification — 2026-09-25
+
+- **Branch/base/implementation commit:** `ralph/replace-beats-local-ralph-runner-worker-01-20260925-0105-refresh-58b4f91`,
+  `58b4f916603cc8e140c5e8c1bbca1290bb2dede6`,
+  `6e13eeea00bbbfb7a046926c4e0732beb05e9a8b`.
+- **Checks:**
+  - `cd /Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-replace-beats-local-ralph-runner-worker-01-20260925-0105-refresh-58b4f91 && git diff --check && git diff --cached --check && git diff origin/main...HEAD --check` — passed.
+  - `cd /Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-replace-beats-local-ralph-runner-worker-01-20260925-0105-refresh-58b4f91 && ! git grep -n -E 'scripts/ralph-loop\.sh|tests/ralph-(status-reporting|iteration-worktrees)\.sh|--allow-all-tools|GPT-6 Luna|gpt-6-luna|RALPH_READY_(CONTINUE|COMPLETE)|ralph-loop\.sh --(check|auto)' -- docs/README.md docs/IMPLEMENTATION_PLAN.md docs/RALPH_IMPLEMENTATION_PROMPT.md docs/implementation_status.md` — passed; no matches.
+  - `cd /Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-replace-beats-local-ralph-runner-worker-01-20260925-0105-refresh-58b4f91 && test ! -e scripts/ralph-loop.sh && test ! -e tests/ralph-iteration-worktrees.sh && test ! -e tests/ralph-status-reporting.sh && rg -n '\*\*Completed implementation iteration:\*\* `5`' docs/implementation_status.md` — passed; the latest-main value `5` is preserved.
+  - `cd /Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-replace-beats-local-ralph-runner-worker-01-20260925-0105-refresh-58b4f91 && git diff --exit-code origin/main...HEAD -- .github/skills/tdd/SKILL.md` — passed; the shared TDD pointer is unchanged.
+  - `cd /Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-replace-beats-local-ralph-runner-worker-01-20260925-0105-refresh-58b4f91 && ! rg -n '^(<<<<<<<|=======|>>>>>>>)' docs` — passed; no conflict markers remain.
+  - Inline Python Markdown-link validation across the active documents and
+    branch decision indexes passed, excluding only the optional
+    `../supercollider/` references absent from the fresh worktree.
+- **TDD/product tests:** Red/Green/Refactor was not applicable; product tests,
+  GUI runs, and platform tests were not rerun because product behavior is
+  unchanged.
+- **Integration:** The replacement branch is awaiting PR creation and
+  coordinator integration readiness. No merge or remote-main verification is
+  claimed.
