@@ -160,4 +160,18 @@ implementation source or test changes followed it.
   its normal merge and final status reconciliation remain pending.
 - The worker assignment awaits only the coordinator-owned memory/status
   follow-up; no additional worker implementation is pending.
+
+## Memory follow-up verification — 2026-09-25T09:46:46Z
+
+- The coordinator completed the post-merge review and recorded the durable
+  PR #13 URL-path lesson in `.github/memory/cross-platform.md`, indexed by
+  `.github/memory/README.md`.
+- The normal memory follow-up PR #25 merged at
+  `ba59eb507e03bff97a1c9e9d54a93a0c88265a25`; after fetching and pulling
+  `origin/main`, that merge SHA and implementation merge
+  `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6` were verified reachable.
+- Worker status is now `COMPLETE`. Its self-attestation remains bound to
+  `4cb936134e7ccef09c248de7fe761783891fa6ec` and is not a cryptographic
+  signature. No action on the worker branch/worktree is required; preserve
+  both.
 *** End of File

@@ -156,5 +156,7 @@ unimplemented.
 - **Post-merge memory review:** review of merged PR #13 found a durable
   cross-platform rule: URL path fragments must use protocol/POSIX separators,
   not host filesystem normalization. The categorized memory update and final
-  status reconciliation are pending normal integration on the coordinator's
-  fresh follow-up branch.
+  memory update was merged through PR #25 at
+  `ba59eb507e03bff97a1c9e9d54a93a0c88265a25` and verified on fetched
+  `origin/main`. The final coordinator status/decision-record publication is
+  a separate documentation-only PR; no recursive memory review is needed.

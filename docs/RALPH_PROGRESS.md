@@ -844,13 +844,63 @@ Ralph-Status: IN_PROGRESS
   backslash-separated URL candidates that received expected 404s and were
   silently omitted. The durable rule is to normalize URL/protocol paths with
   protocol semantics (POSIX URL separators), independently of host filesystem
-  conventions. A new `.github/memory/cross-platform.md` entry and index link
-  are on the coordinator's follow-up branch; its PR/merge verification is
-  still pending.
+  conventions. The categorized `.github/memory/cross-platform.md` entry and
+  index link were merged in PR #25 at
+  `ba59eb507e03bff97a1c9e9d54a93a0c88265a25` and verified on fetched
+  `origin/main`.
 - **TDD for this follow-up:** Not applicable; this branch changes categorized
   memory and coordination/status records only. Documentation and YAML
   integrity checks will be recorded before publication.
-- **Completion gate:** The implementation merge is verified, but the Ralph
-  iteration remains `IN_PROGRESS` until the memory/status follow-up is
-  merged and verified on fetched `origin/main`, and the coordinator publishes
-  the final aggregate disposition.
+- **Completion gate:** The implementation and required memory merge are
+  verified. The Ralph run's final worker/coordinator snapshot and decision
+  record are being synchronized through this separate documentation-only PR;
+  unrelated legacy runs remain in progress in the aggregate dashboard.
+
+## PR #25 memory follow-up integration — coordinator
+
+- **Memory update:** The durable PR #13 URL-path lesson was merged in PR #25
+  on branch `ralph/portable-symbol-memory-status-20260925-0917-ffbb4a3`.
+  The memory implementation commit was
+  `2e2c57a4b6f96722d381df00fee40774557134b9`.
+- **Independent review:** Ralph Code Reviewer reported `CLEAN` for PR #25's
+  exact base `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6` and head
+  `e89a2f2ee596a98fa79ef6f92fd7addbe85a5597` (round 1 of 2, no findings).
+- **Hosted checks:** `headless-tests` runs `36119118272` and `36119169173`
+  both completed successfully.
+- **Merge:** The coordinator used
+  `gh -R jrblankenhorn1007/dj_maxxed_beats pr merge 25 --merge`;
+  GitHub reported merge SHA
+  `ba59eb507e03bff97a1c9e9d54a93a0c88265a25` at
+  `2026-09-25T09:42:04Z`.
+- **Remote verification:** After the post-merge `git pull --ff-only`,
+  `origin/main` was `ba59eb507e03bff97a1c9e9d54a93a0c88265a25`.
+  Ancestry checks confirmed PR #25's merge SHA, PR #24's implementation
+  merge `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6`, and PR #13's header
+  merge `c448dae05f792ef868557e7d67a0a1becb7e6895` are all reachable from
+  fetched `origin/main`.
+- **Disposition:** `DURABLE_LESSON_CAPTURED`; `.github/memory/README.md`
+  indexes `.github/memory/cross-platform.md`, which records the POSIX URL
+  path rule and evidence from the Windows `ntpath` simulation. No separate
+  new lesson was inferred from mocked ELF/Windows symbol outputs.
+- **Final aggregate record:** A fresh status-only coordinator branch from
+  `ba59eb507e03bff97a1c9e9d54a93a0c88265a25` is carrying the final
+  `docs/ralph-status.md`, worker/coordinator leaf, and PR decision-record
+  reconciliation through its own normal PR. This is a records-only
+  continuation; it does not trigger another Project Memory review.
+
+## Final aggregate status validation — 2026-09-25T09:51:22Z
+
+- **Branch/base:** `ralph/portable-symbol-final-status-20260925-0943-ba59eb5`,
+  created from PR #25 merge `ba59eb507e03bff97a1c9e9d54a93a0c88265a25`.
+- **TDD Red/Green/Refactor:** Not applicable; the branch changes only
+  progress, status, and decision records, not runtime behavior.
+- **Supporting regression:** `PYTHONDONTWRITEBYTECODE=1 python3
+  tests/test_fetch_sc_plugin_api.py` — PASS (7 tests). This reconfirms the
+  merged PR #13 Windows URL-path case that supports the memory lesson.
+- **Status format:** `ruby -e 'require "yaml";
+  YAML.load_file("docs/ralph-status.md");
+  puts "docs/ralph-status.md YAML syntax: OK"'` — PASS.
+- **Diff hygiene:** `git diff --check` — PASS.
+- **Platform gaps:** No new platform build/runtime was performed by this
+  records-only continuation. Native ELF and Windows x64 remain unvalidated;
+  the symbol behaviors there are mocked as recorded above.

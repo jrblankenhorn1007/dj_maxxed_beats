@@ -1,13 +1,12 @@
 schema_version: 2
 snapshot_path: "docs/ralph-status.md"
-snapshot_revision: 4
-updated_at_utc: "2026-09-25T09:31:30Z"
+snapshot_revision: 5
+updated_at_utc: "2026-09-25T09:51:22Z"
 overall_status: IN_PROGRESS
 current_run_ids:
   - "skills-routing-20260925-0108"
   - "headless-integration-tests-20260925-0246"
   - "ralph-main-review-20260925-021443"
-  - "ralph-cross-platform-finish-20260925-0607"
 
 runs:
   - run_id: "ralph-shared-workflow-move-20260925-0105"
@@ -58,12 +57,12 @@ runs:
     active_worker_count: 1
     base_origin_main_sha: "f9e1bb3edafff1cc6d24c640a8e0ed38f5bf49fe"
     created_at_utc: "2026-09-25T02:19:06Z"
-    updated_at_utc: "2026-09-25T09:26:07Z"
-    next_action: "PR #13 memory review is complete and its durable URL-path lesson is on the shared follow-up branch. The original worker sign-off is still unavailable; do not invent it or alter its preserved branch."
+    updated_at_utc: "2026-09-25T09:51:22Z"
+    next_action: "PR #13's memory review and durable URL-path update are complete and verified through PR #25. The original worker sign-off is still unavailable; do not invent it or alter its preserved branch."
     memory_review:
       status: COMPLETE
       outcome: DURABLE_LESSON_CAPTURED
-      memory_update: PENDING
+      memory_update: VERIFIED
       sources:
         - ".github/memory/README.md"
         - ".github/memory/cross-platform.md"
@@ -71,6 +70,21 @@ runs:
         - "plugin/fetch_sc_plugin_api.py"
       followup_branch: "ralph/portable-symbol-memory-status-20260925-0917-ffbb4a3"
       followup_implementation_commit_sha: "2e2c57a4b6f96722d381df00fee40774557134b9"
+      followup_pull_request:
+        number: 25
+        url: "https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/25"
+        state: MERGED
+        base_sha: "ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6"
+        head_sha: "e89a2f2ee596a98fa79ef6f92fd7addbe85a5597"
+        merged_at_utc: "2026-09-25T09:42:04Z"
+        merge_sha: "ba59eb507e03bff97a1c9e9d54a93a0c88265a25"
+        review_status: CLEAN
+        hosted_checks: "PASS: 36119118272, 36119169173"
+        merge_verification:
+          status: VERIFIED
+          verified_origin_main_sha: "ba59eb507e03bff97a1c9e9d54a93a0c88265a25"
+          verification_method: "git merge-base --is-ancestor ba59eb507e03bff97a1c9e9d54a93a0c88265a25 origin/main"
+          verified_at_utc: "2026-09-25T09:43:45Z"
 
   - run_id: "readme-refresh-20260925-0248"
     task_ids: ["improve-root-readme"]
@@ -107,14 +121,14 @@ runs:
 
   - run_id: "ralph-cross-platform-finish-20260925-0607"
     task_ids: ["portable-plugin-load-symbol-check"]
-    aggregate_status: IN_PROGRESS
+    aggregate_status: COMPLETE
     requested_worker_count: 1
     effective_worker_count: 1
     active_worker_count: 0
     base_origin_main_sha: "c448dae05f792ef868557e7d67a0a1becb7e6895"
     created_at_utc: "2026-09-25T06:23:53.187Z"
-    updated_at_utc: "2026-09-25T09:31:30Z"
-    next_action: "PR #24 implementation is merged and verified; complete the coordinator-owned memory/status follow-up and verify it on fetched origin/main before marking this run complete."
+    updated_at_utc: "2026-09-25T09:51:22Z"
+    next_action: "None; PR #24 implementation and PR #25 memory follow-up are merged and verified. Final aggregate records are synchronized in this status-only follow-up."
     split_plan:
       - task_id: "portable-plugin-load-symbol-check"
         worker_id: "worker-01"
@@ -144,9 +158,9 @@ runs:
       merged_at_utc: "2026-09-25T09:08:38Z"
       merge_actor_worker_id: "worker-01"
       status: VERIFIED
-      verified_origin_main_sha: "ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6"
+      verified_origin_main_sha: "ba59eb507e03bff97a1c9e9d54a93a0c88265a25"
       verification_method: "git merge-base --is-ancestor ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6 origin/main"
-      verified_at_utc: "2026-09-25T09:09:17Z"
+      verified_at_utc: "2026-09-25T09:43:45Z"
     checks:
       - command: "PYTHONDONTWRITEBYTECODE=1 python3 tests/test_plugin_smoke_symbol_check.py"
         result: "PASS (8 mocked tests after expected Red)"
@@ -180,19 +194,29 @@ runs:
     memory_review:
       status: COMPLETE
       outcome: DURABLE_LESSON_CAPTURED
-      memory_update: PENDING
+      memory_update: VERIFIED
       sources:
         - ".github/memory/README.md"
-        - ".github/memory/git-workflow.md"
-        - ".github/memory/testing.md"
+        - ".github/memory/cross-platform.md"
         - "plugin/fetch_sc_plugin_api.py"
         - "tests/test_fetch_sc_plugin_api.py"
       followup_branch: "ralph/portable-symbol-memory-status-20260925-0917-ffbb4a3"
       followup_implementation_commit_sha: "2e2c57a4b6f96722d381df00fee40774557134b9"
       followup_pull_request:
-        status: PENDING
-        number: null
-        url: null
+        status: MERGED
+        number: 25
+        url: "https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/25"
+        base_sha: "ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6"
+        head_sha: "e89a2f2ee596a98fa79ef6f92fd7addbe85a5597"
+        merge_sha: "ba59eb507e03bff97a1c9e9d54a93a0c88265a25"
+        merged_at_utc: "2026-09-25T09:42:04Z"
+        review_status: CLEAN
+        hosted_checks: "PASS: 36119118272, 36119169173"
+        merge_verification:
+          status: VERIFIED
+          verified_origin_main_sha: "ba59eb507e03bff97a1c9e9d54a93a0c88265a25"
+          verification_method: "git merge-base --is-ancestor ba59eb507e03bff97a1c9e9d54a93a0c88265a25 origin/main"
+          verified_at_utc: "2026-09-25T09:43:45Z"
 
 branch_agent_index:
   - run_id: "ralph-shared-workflow-move-20260925-0105"
@@ -319,8 +343,9 @@ branch_agent_index:
     merge_verification:
       status: VERIFIED
       merge_sha: "c448dae05f792ef868557e7d67a0a1becb7e6895"
-      verified_origin_main_sha: "1926bdab3c358088f359cf73f0d8025a66c7d0d0"
+      verified_origin_main_sha: "ba59eb507e03bff97a1c9e9d54a93a0c88265a25"
       verification_method: "git merge-base --is-ancestor c448dae05f792ef868557e7d67a0a1becb7e6895 origin/main"
+      verified_at_utc: "2026-09-25T09:43:45Z"
     next_action: "The worker leaf still has no self-attestation and records a pending PR. Complete the post-merge status and memory review."
   - run_id: "readme-refresh-20260925-0248"
     task_ids: ["improve-root-readme"]
@@ -393,8 +418,8 @@ branch_agent_index:
     worker_name: "worker-01 / portable ChaosOsc symbol check (fresh-main continuation)"
     branch: "ralph/portable-plugin-load-symbol-check-worker-01-20260925-074130-refresh-7523a9a"
     branch_slug: "ralph-portable-plugin-load-symbol-check-worker-01-20260925-074130-refresh-7523a9a"
-    status: AWAITING_MERGE
-    leaf_status: AWAITING_MERGE
+    status: COMPLETE
+    leaf_status: COMPLETE
     iteration: 2
     status_path: "docs/ralph/ralph-portable-plugin-load-symbol-check-worker-01-20260925-074130-refresh-7523a9a/agents/worker-01/status.md"
     progress_path: "docs/ralph/ralph-portable-plugin-load-symbol-check-worker-01-20260925-074130-refresh-7523a9a/agents/worker-01/progress.md"
@@ -441,7 +466,7 @@ branch_agent_index:
       - command: "GitHub PR #24 headless-tests runs 36112124375 and 36112177699"
         result: "PASS (both runs)"
     resource_usage:
-      time_spent_seconds: 7098
+      time_spent_seconds: 8614
       time_basis: WALL_CLOCK_ELAPSED
       token_spend:
         status: NOT_REPORTED
@@ -450,33 +475,35 @@ branch_agent_index:
         total_tokens: null
         cached_input_tokens: null
         source: null
-    next_action: "Coordinator memory/status follow-up remains pending; worker implementation is merged and verified."
+    next_action: "None; the implementation and required memory follow-up are merged and verified. Preserve this worker branch/worktree."
   - run_id: "ralph-cross-platform-finish-20260925-0607"
     task_ids: ["portable-plugin-load-symbol-check"]
     worker_id: "coordinator-01"
     worker_name: "coordinator-01 / post-merge memory and status follow-up"
     branch: "ralph/portable-symbol-memory-status-20260925-0917-ffbb4a3"
     branch_slug: "ralph-portable-symbol-memory-status-20260925-0917-ffbb4a3"
-    status: IN_PROGRESS
-    leaf_status: IN_PROGRESS
+    status: COMPLETE
+    leaf_status: COMPLETE
     iteration: 2
     status_path: "docs/ralph/ralph-portable-symbol-memory-status-20260925-0917-ffbb4a3/agents/coordinator-01/status.md"
     progress_path: "docs/ralph/ralph-portable-symbol-memory-status-20260925-0917-ffbb4a3/agents/coordinator-01/progress.md"
-    decision_record_path: "docs/decisions/ralph-portable-symbol-memory-status-20260925-0917-ffbb4a3/agents/coordinator-01/pr-pending.md"
+    decision_record_path: "docs/decisions/ralph-portable-symbol-memory-status-20260925-0917-ffbb4a3/agents/coordinator-01/pr-25.md"
     decision_index_path: "docs/decisions/ralph-portable-symbol-memory-status-20260925-0917-ffbb4a3/README.md"
     implementation_commit_sha: "2e2c57a4b6f96722d381df00fee40774557134b9"
     pull_request:
-      status: PENDING
-      number: null
-      url: null
-      base_sha: null
-      head_sha: null
+      status: MERGED
+      number: 25
+      url: "https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/25"
+      base_sha: "ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6"
+      head_sha: "e89a2f2ee596a98fa79ef6f92fd7addbe85a5597"
+      merged_at_utc: "2026-09-25T09:42:04Z"
+      merge_sha: "ba59eb507e03bff97a1c9e9d54a93a0c88265a25"
     review:
-      status: PENDING
+      status: CLEAN
       reviewer_agents: ["Ralph Code Reviewer"]
-      reviewed_base_sha: null
-      reviewed_head_sha: null
-      rounds_completed: 0
+      reviewed_base_sha: "ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6"
+      reviewed_head_sha: "e89a2f2ee596a98fa79ef6f92fd7addbe85a5597"
+      rounds_completed: 1
       max_rounds: 2
       unresolved_finding_count: 0
       author_decision:
@@ -484,8 +511,19 @@ branch_agent_index:
         choice: null
         rationale: null
         recorded_at_utc: null
+    hosted_checks:
+      - run_id: 36119118272
+        result: PASS
+      - run_id: 36119169173
+        result: PASS
+    merge_verification:
+      status: VERIFIED
+      merge_sha: "ba59eb507e03bff97a1c9e9d54a93a0c88265a25"
+      verified_origin_main_sha: "ba59eb507e03bff97a1c9e9d54a93a0c88265a25"
+      verification_method: "git merge-base --is-ancestor ba59eb507e03bff97a1c9e9d54a93a0c88265a25 origin/main"
+      verified_at_utc: "2026-09-25T09:43:45Z"
     resource_usage:
-      time_spent_seconds: 801
+      time_spent_seconds: 1992
       time_basis: WALL_CLOCK_ELAPSED
       token_spend:
         status: NOT_REPORTED
@@ -494,4 +532,8 @@ branch_agent_index:
         total_tokens: null
         cached_input_tokens: null
         source: null
-    next_action: "Publish the complete fresh memory/status follow-up PR, obtain independent code review, and use the normal merge path."
+    memory_followup:
+      status: VERIFIED
+      merge_sha: "ba59eb507e03bff97a1c9e9d54a93a0c88265a25"
+      verified_origin_main_sha: "ba59eb507e03bff97a1c9e9d54a93a0c88265a25"
+    next_action: "None; PR #25 and its memory update are merged and verified. Final aggregate records are synchronized in the separate status-only follow-up."
