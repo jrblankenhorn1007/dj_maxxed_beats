@@ -9,10 +9,10 @@ branch_slug: "ralph-readme-documentation-followup-20260925-0412"
 iteration: 1
 status: IN_PROGRESS
 started_at_utc: "2026-09-25T04:12:00Z"
-updated_at_utc: "2026-09-25T06:29:16Z"
+updated_at_utc: "2026-09-25T06:30:55Z"
 base_origin_main_sha: "c448dae05f792ef868557e7d67a0a1becb7e6895"
 rebased_onto_origin_main_sha: "c448dae05f792ef868557e7d67a0a1becb7e6895"
-implementation_commit_sha: null
+implementation_commit_sha: "908a28c30103c3cbe6f14d81e1c16f4187775ee5"
 pull_request:
   status: PENDING
   number: null
@@ -45,8 +45,8 @@ memory_review:
   outcome: null
   memory_update: PENDING
 coordinator_attestation:
-  status: PENDING
-  attestation_kind: null
+  status: RECEIVED
+  attestation_kind: SELF_ATTESTATION
   cryptographic_signature_status: NOT_CRYPTOGRAPHICALLY_SIGNED
-  attested_at_utc: null
-  statement: null
+  attested_at_utc: "2026-09-25T06:30:55Z"
+  statement: "I, coordinator-01, sign off iteration 1 for improve-root-readme at exact implementation commit 908a28c30103c3cbe6f14d81e1c16f4187775ee5. Targeted documentation checks passed; the replacement PR is not yet opened and no merge is claimed."

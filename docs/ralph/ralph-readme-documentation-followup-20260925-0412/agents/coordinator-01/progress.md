@@ -57,3 +57,10 @@ Ralph-Status: IN_PROGRESS
   SuperCollider 3.14.1 CI coverage cited by the README; it does not validate
   this documentation-only branch.
 - Product behavior tests — NOT RUN; this is a documentation-only change.
+
+## Implementation commit and sign-off
+
+- **Implementation commit:** `908a28c30103c3cbe6f14d81e1c16f4187775ee5`.
+- **Coordinator sign-off:** `SELF_ATTESTATION`, not cryptographically signed,
+  for that exact commit. The replacement PR has not yet been opened, and no
+  merge is claimed.
