@@ -469,3 +469,18 @@ Ralph-Status: IN_PROGRESS
   rewritten. Historical DEC-017 in `docs/decision_log.md` still contains its
   earlier shared links; that exception is retained because the decision log is
   append-only. No unrelated product tests were run or claimed.
+
+### Worker-01 publish and PR handoff
+
+- `git fetch origin` passed before publishing; `origin/main` remained
+  `58b4f916603cc8e140c5e8c1bbca1290bb2dede6`.
+- `git push --set-upstream origin
+  ralph/retire-beats-tdd-skill-worker-01-20260925-0108` passed. The published
+  branch tip before the final handoff-status update was
+  `3b22156d70b1317fc56ece8c4cc0d59fac843bd0`.
+- PR creation is blocked: the `gh` executable is unavailable, the integrated
+  browser page tool failed to open the PR-creation and repository pages, and
+  a read-only GitHub search found no PR. The branch is preserved and
+  `pr-pending.md` remains in place. The next step is to open the normal PR
+  using the GitHub create-PR link from the push output or provide a
+  PR-capable tool. No merge is claimed.

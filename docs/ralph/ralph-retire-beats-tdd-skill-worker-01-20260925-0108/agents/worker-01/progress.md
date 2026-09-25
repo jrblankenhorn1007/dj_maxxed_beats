@@ -42,8 +42,10 @@
     `rg --hidden -n --glob '*.md' --glob '!.git/**' --glob '!docs/RALPH_PROGRESS.md' --glob '!docs/decision_log.md' --glob '!docs/ralph/**' --glob '!docs/decisions/**' -F '../.github/skills/tdd/SKILL.md' .`
     — PASS; no matches. The `Local TDD skill pointer` label search with the
     same exclusions also returned no matches.
-  - Prompt link counts — PASS: four canonical shared-skill links and one
-    separate canonical Ralph Loop agent-configuration link.
+  - Prompt link counts:
+    `test "$(grep -cE '^- \[(Ralph Loop skill|TDD skill|Project Memory skill|SuperCollider AI Music Agent prompt)\]' docs/RALPH_IMPLEMENTATION_PROMPT.md)" -eq 4 && test "$(grep -c '\[Ralph Loop agent\]' docs/RALPH_IMPLEMENTATION_PROMPT.md)" -eq 1`
+    — PASS: four applicable shared-skill links and one separate
+    agent-configuration link.
 - **Recovered check setup issues:** An initial shared-URL search used
   exclusions with absolute file paths, so `rg` still reported the prompt and
   old decision history; repeating the search from the worktree root with
@@ -62,3 +64,106 @@
 - **PR state:** Pending creation; no merge has been attempted.
 - **Memory review:** Deferred to the coordinator after the implementation
   content is merged and verified, per the shared post-merge process.
+
+## Publish / PR state transition — BLOCKED
+
+- **Pre-publish refresh:** `git fetch origin` passed; `origin/main` remained
+  `58b4f916603cc8e140c5e8c1bbca1290bb2dede6`, and the remote worker branch
+  matched the local tip before the status update.
+- **Branch publish:** `git push --set-upstream origin
+  ralph/retire-beats-tdd-skill-worker-01-20260925-0108` passed. The published
+  branch tip at the time of this state transition was status commit
+  `3b22156d70b1317fc56ece8c4cc0d59fac843bd0`.
+- **PR creation attempt:** `command -v gh && gh --version && gh auth status
+  --hostname github.com` returned exit 1 at `command -v gh`; no GitHub CLI is
+  installed and no CLI authentication check ran. The integrated browser page
+  tool failed to open both the PR-creation URL (including its URL-encoded
+  branch variant) and the repository page. GitHub's read-only pull-request
+  search for
+  `head:jrblankenhorn1007:ralph/retire-beats-tdd-skill-worker-01-20260925-0108`
+  returned zero results. Thus a branch is published, but no PR is open; the
+  pending record is retained and PR creation is the current blocker.
+- **Next action:** Coordinator/user must open a PR for the already-published
+  branch using
+  `https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/new/ralph/retire-beats-tdd-skill-worker-01-20260925-0108`
+  or provide a PR-capable tool. Worker-01 can then update the pending decision
+  record and leaf status. No merge was attempted.
+- **Worker sign-off:** `SELF_ATTESTATION` at implementation commit
+  `0e8671f9bf5cfe5957238e799bbf0c1b30751940`, attested at
+  `2026-09-25T01:39:31Z`; `NOT_CRYPTOGRAPHICALLY_SIGNED`. No merge or PR is
+  claimed.
+
+### Full worker sign-off payload
+
+```json
+{
+  "run_id": "skills-routing-20260925-0108",
+  "task_ids": ["retire-maxxed-local-tdd-skill"],
+  "worker_id": "worker-01",
+  "worker_name": "worker-01 - Maxxed Beats skill references",
+  "runtime_agent_id": null,
+  "iteration": 1,
+  "branch": "ralph/retire-beats-tdd-skill-worker-01-20260925-0108",
+  "worktree": "/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-retire-beats-tdd-skill-worker-01-20260925-0108",
+  "pull_request": {
+    "status": "PENDING",
+    "number": null,
+    "url": null
+  },
+  "decision_record_path": "docs/decisions/ralph-retire-beats-tdd-skill-worker-01-20260925-0108/agents/worker-01/pr-pending.md",
+  "base_origin_main_sha": "58b4f916603cc8e140c5e8c1bbca1290bb2dede6",
+  "rebased_onto_origin_main_sha": null,
+  "implementation_commit_sha": "0e8671f9bf5cfe5957238e799bbf0c1b30751940",
+  "checks": [
+    { "command": "git diff --check", "result": "PASS" },
+    { "command": "test ! -e .github/skills/tdd/SKILL.md", "result": "PASS" },
+    {
+      "command": "rg --hidden -n --glob '*.md' --glob '!.git/**' --glob '!docs/RALPH_IMPLEMENTATION_PROMPT.md' --glob '!docs/RALPH_PROGRESS.md' --glob '!docs/decision_log.md' 'https://github\\.com/jrblankenhorn1007/copilot_skills' .",
+      "result": "PASS (no matches; rg exit 1 expected)"
+    },
+    {
+      "command": "rg --hidden -n --glob '*.md' --glob '!.git/**' --glob '!docs/RALPH_PROGRESS.md' 'https://github\\.com/jrblankenhorn1007/copilot_skills' .",
+      "result": "PASS (only operational prompt and preserved DEC-017 history)"
+    },
+    {
+      "command": "rg --hidden -n --glob '*.md' --glob '!.git/**' --glob '!docs/RALPH_PROGRESS.md' --glob '!docs/decision_log.md' --glob '!docs/ralph/**' --glob '!docs/decisions/**' -F '../.github/skills/tdd/SKILL.md' .",
+      "result": "PASS (no matches; rg exit 1 expected)"
+    },
+    {
+      "command": "rg --hidden -n --glob '*.md' --glob '!.git/**' --glob '!docs/RALPH_PROGRESS.md' --glob '!docs/decision_log.md' --glob '!docs/ralph/**' --glob '!docs/decisions/**' -F 'Local TDD skill pointer' .",
+      "result": "PASS (no matches; rg exit 1 expected)"
+    },
+    {
+      "command": "test \"$(grep -cE '^- \\[(Ralph Loop skill|TDD skill|Project Memory skill|SuperCollider AI Music Agent prompt)\\]' docs/RALPH_IMPLEMENTATION_PROMPT.md)\" -eq 4 && test \"$(grep -c '\\[Ralph Loop agent\\]' docs/RALPH_IMPLEMENTATION_PROMPT.md)\" -eq 1",
+      "result": "PASS"
+    },
+    {
+      "command": "git fetch origin",
+      "result": "PASS (origin/main remained 58b4f916603cc8e140c5e8c1bbca1290bb2dede6)"
+    },
+    {
+      "command": "git push --set-upstream origin ralph/retire-beats-tdd-skill-worker-01-20260925-0108",
+      "result": "PASS"
+    },
+    {
+      "command": "command -v gh",
+      "result": "BLOCKED (no gh executable)"
+    },
+    {
+      "command": "Open the GitHub PR-creation page in the integrated browser",
+      "result": "BLOCKED (browser page tool failed)"
+    },
+    {
+      "command": "SuperCollider/product behavior tests",
+      "result": "NOT_RUN (documentation-only scope)"
+    }
+  ],
+  "blockers": [
+    "No PR creation tool was available: gh is not installed and the integrated browser page tool failed."
+  ],
+  "attested_at_utc": "2026-09-25T01:39:31Z",
+  "attestation_kind": "SELF_ATTESTATION",
+  "cryptographic_signature_status": "NOT_CRYPTOGRAPHICALLY_SIGNED",
+  "statement": "I, worker-01, sign off iteration 1 for retire-maxxed-local-tdd-skill at implementation commit 0e8671f9bf5cfe5957238e799bbf0c1b30751940; PR creation remains blocked, and no merge is claimed."
+}
+```

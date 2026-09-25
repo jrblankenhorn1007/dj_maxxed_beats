@@ -10,7 +10,8 @@
 - **Rebased `origin/main`:** none
 - **Implementation commit:**
   `0e8671f9bf5cfe5957238e799bbf0c1b30751940`
-- **Pull request:** Pending creation; the normal integration process expects a PR.
+- **Pull request:** Pending creation; the normal integration process expects a
+  PR. The branch was published successfully, but no PR is open.
 
 ## Decisions
 
@@ -36,4 +37,12 @@
   this worker's own audit records. Exact searches scoped to current project
   guidance (excluding generated worker/decision records) returned no matches.
 - These check-expression issues were resolved before sign-off; no unresolved
-  blockers remain.
+  documentation-check blockers remain.
+
+## Current blocker
+
+PR creation is unavailable in the worker environment: the `gh` executable is
+not installed and the integrated browser page tool failed on both the PR
+creation URL and repository page. A read-only pull-request search found no PR
+for this branch. The branch remains published; the coordinator/user must open
+the normal PR or provide a PR-capable tool. No merge has been attempted.
