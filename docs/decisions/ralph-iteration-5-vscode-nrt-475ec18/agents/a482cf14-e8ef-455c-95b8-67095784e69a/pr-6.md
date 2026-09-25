@@ -4,8 +4,11 @@
 - **Runtime/session ID:** `a482cf14-e8ef-455c-95b8-67095784e69a`
 - **Branch:** `refs/heads/ralph/iteration-5-vscode-nrt-475ec18`
 - **Base SHA:** `475ec183f262594a6f4ab3d08cf1ee9bec833553`
-- **Implementation commit SHA:** pending
-- **Pull request:** pending publication and creation
+- **Implementation commit SHA:** `1a1a8faeb2f4e6a44b9e95af0f4a41f27c688c17`
+- **Pull request:** [#6](https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/6)
+  (open, base `main`; merge not claimed)
+- **Merge method:** Repository allows merge commits; merging is left to the
+  coordinator.
 
 ## Decisions
 
@@ -36,6 +39,9 @@
   built-in plugin directory in the `-U` path. De-duplicating resolved plugin
   paths and disabling default synthdef loading (`-D 0`) resolved the harness
   issue.
+- The first PR-creation tool request was rejected before execution because
+  its body contained a NUL byte. Retrying with plain text created PR #6; no
+  remote request was sent by the rejected call.
 - Once the plugin loaded, repeated NRT renders differed by up to
   `0.1996920258`, and the control-rate amount signal differed before its
   update. `ChaosOsc::next()` had read beyond a control-rate input buffer.
