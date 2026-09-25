@@ -27,14 +27,8 @@ language environment cannot provide secure asynchronous API access.
 ## Project documents
 
 - [Implementation plan](./IMPLEMENTATION_PLAN.md)
-- [Canonical TDD skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd/SKILL.md)
-- [Canonical Ralph Loop skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/SKILL.md)
-- [SuperCollider AI Music Agent Ralph prompt](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/references/ralph-loop.md)
-- [Canonical Ralph Loop agent](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/agents/ralph-loop.agent.md)
-- [Copilot Skills repository](https://github.com/jrblankenhorn1007/copilot_skills)
-- [Development Ralph-loop prompt](./RALPH_IMPLEMENTATION_PROMPT.md)
+- [Development Ralph implementation prompt](./RALPH_IMPLEMENTATION_PROMPT.md)
 - [Copilot CLI Ralph runner](../scripts/ralph-loop.sh)
-- [Local TDD skill pointer](../.github/skills/tdd/SKILL.md)
 - [Visual application test plan](./VISUAL_TEST_PLAN.md)
 - [Decision log](./decision_log.md)
 - [Current implementation status](./implementation_status.md)
@@ -42,10 +36,10 @@ language environment cannot provide secure asynchronous API access.
 
 Project-facing documentation is organized under `docs/`, with plugin design
 notes under `docs/plugin/`. The root `README.md` is a short repository landing
-page. The `LICENSE` and `.github/skills/tdd/SKILL.md` stay at the repository
-root/canonical Copilot skill path. The local skill and prompt files point to
-the shared `copilot_skills` repository; they do not duplicate its workflow
-instructions.
+page. The [Ralph implementation prompt](./RALPH_IMPLEMENTATION_PROMPT.md) is
+the project's entry point for shared-skill routing and the local development
+workflow; consult it rather than duplicating those references here. `LICENSE`
+remains at the repository root.
 
 The development loop builds and tests the extension. The in-app music loop
 generates and renders a limited set of musical variations; these are separate
@@ -55,29 +49,19 @@ loops.
 
 Install and authenticate [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/set-up-copilot-cli/install-copilot-cli)
 and [GitHub CLI](https://cli.github.com/). The GitHub CLI must be authenticated
-for the repository that receives iteration pull requests. Install the
-canonical `ralph-loop.agent.md` from the shared `copilot_skills` repository in
-`$COPILOT_HOME/agents/` (default: `~/.copilot/agents/`). Run the loop from the
-clean `main` worktree tracking `origin/main`, then check the local
-prerequisites:
+for the repository that receives iteration pull requests. Follow the project's
+[Ralph implementation prompt](./RALPH_IMPLEMENTATION_PROMPT.md) for current
+shared-skill routing and agent configuration. Run the loop from the clean
+`main` worktree tracking `origin/main`, then check the local prerequisites:
 
 ```bash
 scripts/ralph-loop.sh --check
 ```
 
-Follow the canonical
-[Ralph Loop skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/SKILL.md)
-for the outer iteration and the
-[TDD skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd/SKILL.md)
-for behavior changes. When an iteration concerns the SuperCollider music
-product, also consult the
-[project-specific music-agent prompt](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/references/ralph-loop.md).
-Use the shared
-[Ralph Loop agent](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/agents/ralph-loop.agent.md).
-The local
-[`RALPH_IMPLEMENTATION_PROMPT.md`](./RALPH_IMPLEMENTATION_PROMPT.md) is a
-compatibility pointer to that shared workflow and this project's source-of-
-truth files.
+The local [Ralph implementation prompt](./RALPH_IMPLEMENTATION_PROMPT.md)
+routes each task to the applicable shared skills and the configured agent,
+while this documentation remains the source for project-specific operating
+details.
 
 The runner pins Copilot CLI to **GPT-6 Luna** (`gpt-6-luna`) with `--model`;
 it does not silently fall back if the model is unavailable to your account or

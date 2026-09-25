@@ -475,3 +475,27 @@ credentials and private user data out of this file.
   behavior, and control-rate updates on macOS arm64 with SuperCollider
   3.14.1. Windows 10 x64, actual MacBook Neo, real-time audition, and other
   SuperCollider release ABIs remain unverified.
+
+### DEC-023 — Centralize active shared-skill routing in the project prompt
+
+- **Date:** 2026-09-25
+- **Context:** Shared TDD, Ralph Loop, and agent guidance was linked from the
+  implementation plan and documentation index as well as from
+  `docs/RALPH_IMPLEMENTATION_PROMPT.md`. A project-local TDD pointer added
+  another discovery point, while applicability information was scattered
+  across those documents. DEC-017 records the earlier pointer arrangement.
+- **Decision:** Retire `.github/skills/tdd/SKILL.md` and make
+  `docs/RALPH_IMPLEMENTATION_PROMPT.md` the only current operational project
+  document that links to shared skills. Keep the Ralph Loop agent link there
+  separately as agent configuration. Other current project guidance points
+  readers to that prompt; retain product acceptance criteria and test strategy
+  in `docs/IMPLEMENTATION_PLAN.md`.
+- **Alternatives:** Keep the local TDD redirect, repeat canonical skill links
+  in every project document, or remove local discovery guidance altogether.
+- **Rationale:** One project entry point can state when each shared reference
+  applies without duplicating links or confusing a configured agent with a
+  skill; the plan remains authoritative for product-specific requirements.
+- **Consequences:** The current README and plan route workflow readers to the
+  project prompt. Existing append-only progress and decision records,
+  including DEC-017's historical links, are preserved; no behavior change is
+  implied by this documentation-only update.

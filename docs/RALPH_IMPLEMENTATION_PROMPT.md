@@ -1,28 +1,26 @@
 # Ralph Implementation Prompt
 
-This file is a compatibility pointer read by the local Copilot CLI runner,
-not a second source of general TDD or Ralph-loop instructions.
+This is the project's operational entry point for its local Ralph runner,
+shared-skill routing, and project-specific source-of-truth files. Shared
+workflow details remain in the canonical skills; product requirements and
+runner-specific protocol remain in this repository.
 
-## Canonical workflow
+## Relevant skills
 
-Follow the shared
-[Ralph Loop skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/SKILL.md)
-for isolated iterations and verified remote integration. For behavior
-changes, also follow the shared
-[TDD skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd/SKILL.md)
-and use the shared
-[Ralph Loop agent](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/agents/ralph-loop.agent.md).
+- [Ralph Loop skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/SKILL.md) — **Always:** use for every Ralph iteration.
+- [TDD skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd/SKILL.md) — **Behavior changes:** use test-first for behavior-changing implementation.
+- [Project Memory skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/project-memory/SKILL.md) — **Post-merge review:** review lessons after implementation content is merged and verified.
+- [SuperCollider AI Music Agent prompt](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/references/ralph-loop.md) — **Only when the task concerns this SuperCollider music product:** use for domain-specific context.
 
-When an iteration implements or validates the SuperCollider music product,
-consult the Ralph Loop skill's
-[SuperCollider AI Music Agent prompt](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/references/ralph-loop.md)
-for domain-specific context. Use it only when relevant; this project's
-[implementation plan](./IMPLEMENTATION_PLAN.md) remains the source of product
-acceptance criteria, and the local runner and status files remain authoritative
-for project protocol.
+## Shared agent configuration
 
-The shared repository owns the general test-first and iteration workflow; do
-not duplicate those instructions here.
+The local runner selects the shared
+[Ralph Loop agent](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/agents/ralph-loop.agent.md)
+as its agent configuration; this agent definition is not an additional skill.
+
+This project's [implementation plan](./IMPLEMENTATION_PLAN.md) remains the
+source of product acceptance criteria, and the local runner and status files
+remain authoritative for project protocol.
 
 ## Project sources of truth
 

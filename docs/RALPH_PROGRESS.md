@@ -431,3 +431,41 @@ Ralph-Status: IN_PROGRESS
   testing lessons. The coordinator recorded them in
   `.github/memory/testing.md` on a fresh follow-up branch. This memory-only
   follow-up is part of iteration 5 and does not trigger another memory review.
+
+## Coordinated skills-routing documentation assignment — worker-01, iteration 1
+
+- **Run/task:** `skills-routing-20260925-0108` /
+  `retire-maxxed-local-tdd-skill`.
+- **Scope:** Retire `.github/skills/tdd/SKILL.md`, centralize current shared
+  skill links and applicability in `docs/RALPH_IMPLEMENTATION_PROMPT.md`, and
+  route other current project guidance to that prompt. Product acceptance
+  criteria and SuperCollider test strategy remain in
+  `docs/IMPLEMENTATION_PLAN.md`.
+- **Refresh evidence:** The dispatch supplied `b1c77ae9192491a86be5d42e86aebc10e3057a2d`,
+  but the clean attached Maxxed Beats `main` worktree and fetched `origin/main`
+  were both at `58b4f916603cc8e140c5e8c1bbca1290bb2dede6`; `git pull --ff-only`
+  reported `Already up to date`. The fresh worker branch was based on the
+  current fetched `origin/main` at that SHA. The shared skills checkout was
+  clean on `main` and matched its `origin/main` at
+  `485b4a64c871f581f9295e46c867b188b0e3ccee`; it was not pulled again while
+  the other worker was active.
+- **TDD applicability:** Not applicable; this assignment changes documentation
+  and removes a documentation pointer only. No behavior Red/Green/Refactor
+  phase or product tests were claimed.
+- **Documentation verification:** From the worker worktree root,
+  `git diff --check` passed and `test ! -e .github/skills/tdd/SKILL.md`
+  passed. The following current-guidance URL search produced no matches
+  (expected `rg` exit 1):
+  `rg --hidden -n --glob '*.md' --glob '!.git/**' --glob '!docs/RALPH_IMPLEMENTATION_PROMPT.md' --glob '!docs/RALPH_PROGRESS.md' --glob '!docs/decision_log.md' 'https://github\.com/jrblankenhorn1007/copilot_skills' .`.
+  The full URL audit
+  `rg --hidden -n --glob '*.md' --glob '!.git/**' --glob '!docs/RALPH_PROGRESS.md' 'https://github\.com/jrblankenhorn1007/copilot_skills' .`
+  found only the four applicable skill links and separate agent link in the
+  operational prompt, plus earlier historical links in DEC-017. Exact local
+  pointer checks for `../.github/skills/tdd/SKILL.md` and the label
+  `Local TDD skill pointer` found no matches in current guidance. Prompt link
+  counts were four skill links and one separate Ralph Loop agent-configuration
+  link.
+- **Append-only history:** Existing progress and decision entries were not
+  rewritten. Historical DEC-017 in `docs/decision_log.md` still contains its
+  earlier shared links; that exception is retained because the decision log is
+  append-only. No unrelated product tests were run or claimed.

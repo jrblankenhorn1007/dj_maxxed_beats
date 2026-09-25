@@ -71,19 +71,12 @@ The same composition can be auditioned live or rendered offline.
 These are distinct features with different jobs:
 
 1. **Development Ralph loop (outside SuperCollider):** repeatedly implements and
-   verifies the product against this plan. Follow the canonical
-   [Ralph Loop skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/SKILL.md),
-   [TDD skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd/SKILL.md),
-   and [Ralph Loop agent](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/agents/ralph-loop.agent.md)
-   for iteration mechanics and test-first development. When relevant to
-   SuperCollider music-product work, consult the skill's
-   [project-specific music-agent prompt](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/references/ralph-loop.md).
-   Those shared
-   instructions are maintained in the
-   [`copilot_skills` repository](https://github.com/jrblankenhorn1007/copilot_skills),
-   not copied into this plan. This plan remains the source of truth for the
-   product's acceptance criteria; the development loop changes extension and
-   plugin code, not music-generation behavior. The local runner
+   verifies the product against this plan. Use the project's
+   [Ralph implementation prompt](./RALPH_IMPLEMENTATION_PROMPT.md) for current
+   shared-skill routing and local development-loop guidance rather than
+   duplicating those references here. This plan remains the source of truth for
+   the product's acceptance criteria; the development loop changes extension
+   and plugin code, not music-generation behavior. The local runner
    ([`../scripts/ralph-loop.sh`](../scripts/ralph-loop.sh)) uses a fresh
    worktree and branch for each iteration and verifies the configured PR merge
    on `origin/main` before it emits a final marker or starts another pass.
@@ -262,18 +255,19 @@ change important behavior.
 - Decide whether the MVP only renders offline or also controls a running
   `sclang` session. Default: file-based compositions and offline render.
 - Turn the product acceptance criteria into a prioritized test list before
-  implementation. Follow the canonical
-  [TDD skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd/SKILL.md)
-  for test-first mechanics rather than keeping a separate copy here.
+  implementation. Follow the shared test-first workflow routed from the
+  project's [Ralph implementation prompt](./RALPH_IMPLEMENTATION_PROMPT.md);
+  keep this plan focused on product-specific acceptance criteria and test
+  coverage.
 
 ### 1. Validate the SuperCollider integration
 
 - Validate the minimal C++ UGen API and its observable DSP contract with
-  focused tests and short NRT renders, following the test-first process in the
-  [canonical TDD skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd/SKILL.md).
-  Then implement its sclang class and help, use it in a procedural
-  composition, convert that composition to a `Score`, and render a WAV using
-  NRT mode.
+  focused tests and short NRT renders, following the shared test-first process
+  routed from the project's
+  [Ralph implementation prompt](./RALPH_IMPLEMENTATION_PROMPT.md). Then
+  implement its sclang class and help, use it in a procedural composition,
+  convert that composition to a `Score`, and render a WAV using NRT mode.
 - Install a minimal Quark/extension and open a small GUI from SCIDE without
   changing SuperCollider core.
 - Verify the workflow does not need a running real-time server or audio device.
@@ -317,15 +311,10 @@ change important behavior.
 
 ## Test plan: TDD
 
-Follow the canonical
-[TDD skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/tdd/SKILL.md)
-for test-first development and iteration evidence, and the
-[Ralph Loop skill](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/SKILL.md)
-for outer-loop mechanics. When working on the SuperCollider music product,
-consult its
-[project-specific Ralph prompt](https://github.com/jrblankenhorn1007/copilot_skills/blob/main/.github/skills/ralph-loop/references/ralph-loop.md).
-This plan retains project-specific coverage criteria below; it does not
-duplicate the shared Red-Green-Refactor procedure. Use the
+Use the project's [Ralph implementation prompt](./RALPH_IMPLEMENTATION_PROMPT.md)
+for current shared-skill routing and test-first development mechanics. This
+plan retains project-specific coverage criteria below; it does not duplicate
+the shared Red-Green-Refactor procedure. Use the
 [visual application test plan](./VISUAL_TEST_PLAN.md) for GUI acceptance.
 
 ### Coverage strategy
@@ -403,8 +392,9 @@ introduce only the smallest maintainable harness needed to run it.
   available; per-session totals aggregate correctly. Missing or stale rates
   are explicit, never shown as zero.
 - **TDD evidence:** keep project verification results in
-  `RALPH_PROGRESS.md`; the canonical skill defines the required test-first
-  evidence for each behavior change.
+  `RALPH_PROGRESS.md`; follow the shared test-first workflow routed from the
+  project's [Ralph implementation prompt](./RALPH_IMPLEMENTATION_PROMPT.md)
+  for behavior changes.
 - **Agent quality:** representative music and editing tasks produce valid
   SuperCollider code, explain edits, surface uncertainty, and never claim
   success after a failed operation.
