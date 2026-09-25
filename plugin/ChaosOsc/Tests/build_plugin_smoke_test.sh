@@ -40,15 +40,25 @@ echo "Built shared plugin library: ${out_lib}"
 # The plugin loader looks up the C-linkage symbols PluginLoad(ChaosOscUGens)
 # expands to (see SC_InterfaceTable.h): the exported `load` entry point
 # (plus `api_version`/`server_type`), not a symbol containing the macro
-# argument -- confirm the actual required symbol is present so a missing/
-# garbled PluginLoad invocation is caught here rather than only at scsynth
-# load time.
+# argument. `nm` spells that symbol `_load` on Darwin and `load` on ELF/COFF;
+# confirm the exact entry point is present so a missing/garbled PluginLoad
+# invocation is caught here rather than only at scsynth load time.
 if command -v nm >/dev/null 2>&1; then
-    if nm -gU "${out_lib}" 2>/dev/null | grep -qE '\b_load$'; then
-        echo "Verified exported plugin load symbol: _load"
+    if ! nm_output="$(nm -gU "${out_lib}" 2>/dev/null)"; then
+        echo "ERROR: 'nm -gU' failed to inspect ${out_lib}" >&2
+        exit 1
+    fi
+
+    load_symbol="$(
+        printf '%s\n' "${nm_output}" |
+            awk '{ sub(/\r$/, "", $NF); if ($NF == "_load" || $NF == "load") { print $NF; exit } }'
+    )"
+    if [[ -n "${load_symbol}" ]]; then
+        echo "Verified exported plugin load symbol: ${load_symbol}"
     else
-        echo "ERROR: expected exported symbol '_load' not found in ${out_lib}" >&2
-        nm -gU "${out_lib}" 2>/dev/null | grep -i load || true
+        printf "ERROR: expected exported symbol 'load' or '_load' not found in %s\n" \
+            "${out_lib}" >&2
+        printf '%s\n' "${nm_output}" | grep -i load || true
         exit 1
     fi
 else
