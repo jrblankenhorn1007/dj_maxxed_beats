@@ -111,3 +111,17 @@ weakened.
   not yet numbered; `pr-pending.md` is committed before first publication.
 - Post-merge Project Memory review is coordinator-owned and remains pending.
   No shared memory change is made before the implementation merge.
+
+## Final pre-publication verification — 2026-09-25T08:15:20Z
+
+After all worker-owned pre-publication status and decision records were
+committed, reran the final branch command:
+
+```text
+SCLANG=/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-headless-integration-tests-worker-01-20260925-0246/.runtime/mount/SuperCollider.app/Contents/MacOS/sclang SCSYNTH=/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-headless-integration-tests-worker-01-20260925-0246/.runtime/mount/SuperCollider.app/Contents/Resources/scsynth bash scripts/run_headless_tests.sh
+```
+
+All nine DSP assertions and all 21 Python tests passed, including ChaosOsc
+NRT and the eight new mocked symbol cases (`Ran 21 tests in 57.623s`, `OK`).
+This later full-suite run is the final pre-publication verification; no
+implementation source or test changes followed it.
