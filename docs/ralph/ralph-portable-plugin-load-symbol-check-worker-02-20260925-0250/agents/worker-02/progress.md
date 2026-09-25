@@ -66,7 +66,14 @@ Ralph-Status: IN_PROGRESS
   `llvm-nm` and MinGW `nm` are unavailable. The regression mocks `nm` output
   and confirms symbol-check logic only; no native ELF/Windows build or
   Windows 10 runtime is claimed.
-- **Next:** Inspect the full scoped diff, finish branch records, commit, fetch
-  before publication, and open a new worker-owned PR. Remain
-  `AWAITING_MERGE` until the coordinator reviews the sign-off and authorizes
-  this exact PR; do not merge without that authorization.
+- **Implementation commit:** `b1d68a2a2641a7e521f3004107d593ee7875b1d8`
+  (`Support portable ChaosOsc plugin load symbols`). The first commit contains
+  all seven scoped code/test/leaf-status/branch-decision paths and the required
+  Copilot co-author trailer. Git reported a clean worktree after the commit.
+- **Recovered record-edit issue:** A multi-file metadata patch stopped on a
+  context mismatch after updating the status file. The partial state was
+  inspected and the remaining records were updated with smaller patches; no
+  source/test changes were lost. `git diff --check` passed afterward.
+- **Next:** Fetch and publish the verified branch, then open a worker-owned
+  PR. Remain `AWAITING_MERGE` until the coordinator reviews the sign-off and
+  authorizes this exact PR; do not merge without that authorization.

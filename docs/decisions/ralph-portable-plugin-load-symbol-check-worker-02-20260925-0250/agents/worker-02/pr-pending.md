@@ -7,11 +7,13 @@
 - **Branch:** `ralph/portable-plugin-load-symbol-check-worker-02-20260925-0250`
 - **Base `origin/main`:**
   `0736add11eae7b7f745d7b7bf9806c116d72eed6`
-- **Implementation commit:** pending.
+- **Implementation commit:**
+  `b1d68a2a2641a7e521f3004107d593ee7875b1d8`
+  (`Support portable ChaosOsc plugin load symbols`).
 - **PR number/URL:** pending; expected to use the repository's normal PR path
   after the branch is verified and published.
 
-## Decision under investigation
+## Decision
 
 - **Context:** The smoke script matched only a trailing `_load` symbol, while
   this project targets Windows 10 x64 as well as Apple Silicon macOS. The NRT
@@ -32,5 +34,8 @@
   spelling. Mocked `nm` output verifies the smoke check logic only; no native
   ELF/Windows plugin build or runtime is claimed. Missing `nm` continues to
   produce the existing warning and skip behavior.
-- **Recovered operational issues:** None at dispatch.
+- **Recovered operational issue:** A multi-file metadata patch stopped on a
+  context mismatch after updating the status file. The partial state was
+  inspected; remaining edits were applied individually and `git diff --check`
+  passed. No source/test changes were lost.
 - **Unresolved blockers:** None at dispatch.
