@@ -18,6 +18,7 @@ Usage: python3 plugin/fetch_sc_plugin_api.py
 Requires network access to raw.githubusercontent.com.
 """
 import os
+import posixpath
 import re
 import sys
 import urllib.error
@@ -117,7 +118,7 @@ def resolve_headers(dest_root):
         for m in INCLUDE_RE.finditer(content):
             inc = m.group(1)
             for candidate_dir in [rel_dir] + SEARCH_DIRS:
-                candidate = os.path.normpath(candidate_dir + inc)
+                candidate = posixpath.normpath(candidate_dir + inc)
                 if candidate not in seen:
                     to_fetch.append(candidate)
 

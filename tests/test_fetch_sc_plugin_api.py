@@ -1,7 +1,9 @@
 import importlib.util
+import ntpath
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from urllib.error import HTTPError, URLError
 from unittest.mock import patch
 
@@ -96,6 +98,54 @@ class FetchScPluginApiTests(unittest.TestCase):
         self.assertIn("include/plugin_interface/SC_PlugIn.hpp", resolved)
         self.assertIn(real_candidate, resolved)
         self.assertNotIn("include/plugin_interface/SC_Types.h", resolved)
+
+    def test_generated_http_candidate_paths_use_posix_separators_on_windows(self):
+        """HTTP URL paths must not inherit Windows filesystem separators."""
+        requested_paths = []
+
+        def fake_urlopen(url, timeout=20):
+            rel_path = url[len(fetch_sc_plugin_api.BASE_URL):]
+            requested_paths.append(rel_path)
+            if rel_path == fetch_sc_plugin_api.ENTRY_POINTS[0]:
+                return _FakeResponse(b'#include "SC_Types.h"\n')
+            if rel_path == fetch_sc_plugin_api.ENTRY_POINTS[1]:
+                return _FakeResponse(b"")
+            if rel_path == "include/common/SC_Types.h":
+                return _FakeResponse(b"// SC_Types.h\n")
+            raise HTTPError(url, 404, "Not Found", None, None)
+
+        host_path = fetch_sc_plugin_api.os.path
+        simulated_windows_os = SimpleNamespace(
+            path=SimpleNamespace(
+                normpath=ntpath.normpath,
+                dirname=host_path.dirname,
+                join=host_path.join,
+                isfile=host_path.isfile,
+            ),
+            makedirs=fetch_sc_plugin_api.os.makedirs,
+        )
+        with tempfile.TemporaryDirectory() as cache_dir:
+            # Replace only the script's filesystem adapter so the URL-path
+            # normalizer can be tested under Windows filesystem semantics
+            # without changing the host's own path-module functions.
+            with patch.object(
+                fetch_sc_plugin_api,
+                "os",
+                simulated_windows_os,
+            ), patch.object(
+                fetch_sc_plugin_api.urllib.request,
+                "urlopen",
+                side_effect=fake_urlopen,
+            ):
+                resolved = fetch_sc_plugin_api.resolve_headers(cache_dir)
+
+        self.assertTrue(requested_paths)
+        self.assertTrue(
+            all("\\" not in path for path in requested_paths),
+            f"Generated HTTP candidate path used a Windows separator: "
+            f"{requested_paths}",
+        )
+        self.assertIn("include/common/SC_Types.h", resolved)
 
     def test_non_404_http_errors_are_not_swallowed(self):
         """A genuine outage (e.g. a 503) while resolving headers must abort
