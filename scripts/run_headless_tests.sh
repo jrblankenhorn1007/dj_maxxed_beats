@@ -46,6 +46,7 @@ test_tmp_dir="${repo_root}/tests/.build/test-tmp"
 mkdir -p "${test_tmp_dir}"
 export TMPDIR="${test_tmp_dir}"
 export PYTHONDONTWRITEBYTECODE=1
+export PYTHONWARNINGS=error
 
 printf '\n==> Static analysis and warning-free builds\n'
 bash scripts/run_quality_checks.sh

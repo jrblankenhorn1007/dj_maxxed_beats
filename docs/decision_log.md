@@ -588,3 +588,36 @@ credentials and private user data out of this file.
   validated. Windows 10 x64, MacBook Neo, GUI/SCIDE, and real-time audition
   remain unverified. This build-validation/test-infrastructure continuation
   does not advance the product implementation iteration counter (`5`).
+### DEC-027 — Require static analysis and warning-free CI builds
+
+- **Date:** 2026-09-25
+- **Context:** DEC-025 provided a repeatable DSP/Python/NRT suite, but C++
+  diagnostics were not fatal, source syntax and static analysis were not
+  explicit gates, and every Ralph role did not have one documented rule for
+  running and reviewing CI.
+- **Decision:** Make `scripts/run_quality_checks.sh` the shared source-quality
+  entrypoint and invoke it from `scripts/run_headless_tests.sh`. Check
+  first-party Bash/Python syntax, treat Python warnings as errors, analyze the
+  ChaosOsc DSP/plugin with Clang's static analyzer, and build/run the DSP unit
+  test and plugin with `-Wall -Wextra -Werror`. Require Clang analysis and the
+  plugin-symbol inspection instead of warning and skipping when unavailable.
+  Keep the pinned SuperCollider API headers as system headers so external
+  warnings do not obscure warnings in project code. Run this gate with the
+  Python/NRT suite from the existing GitHub Actions workflow on every push
+  and pull request. Document the exact checks and merge requirements in the
+  project Ralph prompt for implementation workers, reviewers, coordinators,
+  and retries.
+- **Alternatives:** Add external Python/shell lint dependencies that are not
+  currently part of the project; silently skip missing static-analysis tools;
+  or promote all upstream-header diagnostics to project failures.
+- **Rationale:** The existing Clang/macOS build toolchain supplies useful
+  analysis without adding package dependencies. Failing on project warnings
+  makes compilation a reliable regression gate, while classifying the
+  release-pinned external headers as system headers keeps that gate focused
+  on code owned by this project.
+- **Consequences:** The single full-suite command now runs syntax checks,
+  static analysis, warning-as-error DSP/plugin builds, all Python tests, and
+  real SuperCollider NRT integration. The current hosted workflow remains
+  macOS-only; Windows, MacBook Neo, GUI/SCIDE, and real-time audio validation
+  are not claimed. This CI/documentation change does not advance the product
+  implementation iteration counter.

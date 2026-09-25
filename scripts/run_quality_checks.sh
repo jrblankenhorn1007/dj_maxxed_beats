@@ -16,7 +16,7 @@ bash -n \
 printf '\n==> Python syntax checks\n'
 python_cache_dir="${repo_root}/tests/.build/python-cache"
 mkdir -p "${python_cache_dir}"
-PYTHONPYCACHEPREFIX="${python_cache_dir}" \
+PYTHONPYCACHEPREFIX="${python_cache_dir}" PYTHONWARNINGS=error \
     python3 -m compileall -q -f plugin/fetch_sc_plugin_api.py tests
 
 if ! command -v nm >/dev/null 2>&1; then

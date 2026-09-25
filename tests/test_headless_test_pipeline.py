@@ -34,6 +34,7 @@ class HeadlessTestPipelineContractTests(unittest.TestCase):
         )
 
         self.assertIn("bash scripts/run_quality_checks.sh", source)
+        self.assertIn("PYTHONWARNINGS=error", source)
         self.assertIn("python3 -m unittest discover -s tests", source)
         self.assertIn("-p 'test_*.py'", source)
         self.assertTrue((ROOT / "tests" / "test_chaososc_nrt.py").is_file())
@@ -46,6 +47,7 @@ class HeadlessTestPipelineContractTests(unittest.TestCase):
 
         for expected in (
             "bash -n",
+            "PYTHONWARNINGS=error",
             "python3 -m compileall",
             "--analyze",
             "-analyzer-output=text",
