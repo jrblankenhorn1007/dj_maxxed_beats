@@ -8,8 +8,8 @@ worker_name: "worker-01 / portable ChaosOsc symbol check"
 runtime_agent_id: "copilotcli:/a17ae5a3-53fe-4381-a9fd-f590086cec29"
 branch: "ralph/portable-plugin-load-symbol-check-worker-01-20260925-0607"
 base_origin_main_sha: "c448dae05f792ef868557e7d67a0a1becb7e6895"
-rebased_onto_origin_main_sha: null
-implementation_commit_sha: null
+rebased_onto_origin_main_sha: "9c8c1b679b765ace2b4ae1dac49c1ed827f43171"
+implementation_commit_sha: "c153421ffb0a8e5ef96f230ce92eb6bf5ddc95d5"
 pull_request:
   status: PENDING
   number: null
@@ -17,9 +17,9 @@ pull_request:
 iteration: 1
 status: IN_PROGRESS
 started_at_utc: "2026-09-25T06:23:53.187Z"
-updated_at_utc: "2026-09-25T06:46:46Z"
+updated_at_utc: "2026-09-25T06:52:47Z"
 resource_usage:
-  time_spent_seconds: 1373
+  time_spent_seconds: 1734
   time_basis: WALL_CLOCK_ELAPSED
   token_spend:
     status: NOT_REPORTED
@@ -88,3 +88,26 @@ resource_usage:
 - **Next:** Commit, rebase the unpublished iteration, rerun its targeted
   checks, then publish and open the worker-owned PR. Do not merge without
   coordinator authorization for that exact PR.
+
+## Post-rebase verification — 2026-09-25T06:52:47Z
+
+- **Remote movement:** Before first publication, `git fetch origin` found
+  `origin/main` at `9c8c1b679b765ace2b4ae1dac49c1ed827f43171`, eight commits
+  beyond the starting base. The unpublished implementation commit was
+  rebased from `56be866...` to
+  `c153421ffb0a8e5ef96f230ce92eb6bf5ddc95d5` on that tip, with no conflicts.
+  The post-rebase diff still contains only the ten worker-owned files; all
+  upstream changes were preserved.
+- **Targeted checks after rebase:** Ran
+  `SCLANG=/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-headless-integration-tests-worker-01-20260925-0246/.runtime/mount/SuperCollider.app/Contents/MacOS/sclang SCSYNTH=/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-headless-integration-tests-worker-01-20260925-0246/.runtime/mount/SuperCollider.app/Contents/Resources/scsynth bash scripts/run_headless_tests.sh`.
+  Result: all 9 DSP assertions and 19 Python tests passed
+  (`Ran 19 tests in 72.748s`, `OK`), including the NRT and mocked symbol
+  tests. `bash -n plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh` and
+  `git diff --check origin/main...HEAD` also passed.
+- **Base verification:** `git merge-base --is-ancestor origin/main HEAD`
+  passed with fetched `origin/main` at
+  `9c8c1b679b765ace2b4ae1dac49c1ed827f43171`.
+- **Next:** Fetch `origin` again before first publication, publish this fresh
+  rebased branch, open the normal direct worker-owned PR, update the pending
+  PR record to its assigned number, and await coordinator review. Do not merge
+  without authorization for that exact PR.

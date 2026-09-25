@@ -9,9 +9,9 @@ branch_slug: "ralph-portable-plugin-load-symbol-check-worker-01-20260925-0607"
 iteration: 1
 status: IN_PROGRESS
 started_at_utc: "2026-09-25T06:23:53.187Z"
-updated_at_utc: "2026-09-25T06:46:46Z"
+updated_at_utc: "2026-09-25T06:52:47Z"
 resource_usage:
-  time_spent_seconds: 1373
+  time_spent_seconds: 1734
   time_basis: WALL_CLOCK_ELAPSED
   token_spend:
     status: NOT_REPORTED
@@ -21,8 +21,8 @@ resource_usage:
     cached_input_tokens: null
     source: null
 base_origin_main_sha: "c448dae05f792ef868557e7d67a0a1becb7e6895"
-rebased_onto_origin_main_sha: null
-implementation_commit_sha: null
+rebased_onto_origin_main_sha: "9c8c1b679b765ace2b4ae1dac49c1ed827f43171"
+implementation_commit_sha: "c153421ffb0a8e5ef96f230ce92eb6bf5ddc95d5"
 pull_request:
   status: PENDING
   number: null
@@ -48,8 +48,12 @@ checks:
     result: "PASS: 9 DSP assertions and 19 Python tests."
   - command: "bash plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh"
     result: "PASS: actual Darwin build verified _load."
+  - command: "SCLANG=<pinned SuperCollider 3.14.1 sclang> SCSYNTH=<pinned SuperCollider 3.14.1 scsynth> bash scripts/run_headless_tests.sh"
+    result: "PASS after rebase: 9 DSP assertions and 19 Python tests."
+  - command: "bash -n plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh && git diff --check origin/main...HEAD"
+    result: "PASS after rebase."
 blockers: []
-next_action: "Commit the verified iteration, rebase onto the newly fetched origin/main 9c8c1b679b765ace2b4ae1dac49c1ed827f43171, rerun targeted checks, then publish and open the normal worker-owned PR."
+next_action: "Fetch origin before publication, push the rebased branch, create the direct worker-owned PR, then report AWAITING_MERGE without merging until authorized."
 worker_sign_off:
   status: NOT_SUBMITTED
   attestation_kind: SELF_ATTESTATION

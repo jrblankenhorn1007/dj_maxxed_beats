@@ -6,8 +6,9 @@
 - **Runtime session:** `copilotcli:/a17ae5a3-53fe-4381-a9fd-f590086cec29`
 - **Branch:** `ralph/portable-plugin-load-symbol-check-worker-01-20260925-0607`
 - **Worktree:** `/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-portable-plugin-load-symbol-check-worker-01-20260925-0607`
-- **Base `origin/main`:** `c448dae05f792ef868557e7d67a0a1becb7e6895`
-- **Implementation commit:** Pending.
+- **Starting `origin/main`:** `c448dae05f792ef868557e7d67a0a1becb7e6895`
+- **Rebased `origin/main`:** `9c8c1b679b765ace2b4ae1dac49c1ed827f43171`
+- **Implementation commit:** `c153421ffb0a8e5ef96f230ce92eb6bf5ddc95d5`
 - **Pull request:** Pending; the authorized workflow is a normal direct
   worker-owned PR. This record will be renamed to `pr-<number>.md` and the
   branch index updated when GitHub assigns the PR number.
@@ -38,6 +39,9 @@
 - `PYTHONDONTWRITEBYTECODE=1 python3 tests/test_plugin_smoke_symbol_check.py`
   — meaningful Red: 6 tests ran, 5 failed against the current implementation
   for the portability, exact/defined-symbol, and nm-error-reporting behaviors.
+- After rebase, the same focused suite passed all 6 tests; the full headless
+  suite passed all 9 DSP assertions and 19 Python tests, and the actual macOS
+  smoke build and pinned SuperCollider 3.14.1 NRT integration passed.
 - A preflight inspection command was initially issued with invalid
   `git branch` syntax (`git branch -vv --no-abbrev main`) and returned
   `fatal: a branch named 'main' already exists`; it did not create or change a

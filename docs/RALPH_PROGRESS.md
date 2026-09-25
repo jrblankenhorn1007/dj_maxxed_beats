@@ -756,3 +756,19 @@ Ralph-Status: IN_PROGRESS
 - **Integration and memory:** Normal worker-owned PR publication is pending.
   No merge or `origin/main` integration is claimed. Post-merge memory review
   remains coordinator-owned; this worker did not edit `.github/memory/**`.
+- **Pre-publication rebase:** The required `git fetch origin` found
+  `origin/main` advanced from the starting base
+  `c448dae05f792ef868557e7d67a0a1becb7e6895` to
+  `9c8c1b679b765ace2b4ae1dac49c1ed827f43171` through eight upstream commits,
+  including PR #20. Rebased the committed, unpublished iteration without
+  conflicts; the new implementation commit is
+  `c153421ffb0a8e5ef96f230ce92eb6bf5ddc95d5`. `git diff --stat
+  origin/main...HEAD` still showed only the ten assigned implementation,
+  test, and evidence files.
+- **Post-rebase checks:** With the pinned SuperCollider 3.14.1 CLI paths,
+  `bash scripts/run_headless_tests.sh` passed all 9 DSP assertions and all 19
+  Python tests (`Ran 19 tests in 72.748s`, `OK`). Also passed
+  `bash -n plugin/ChaosOsc/Tests/build_plugin_smoke_test.sh`,
+  `git diff --check origin/main...HEAD`, and
+  `git merge-base --is-ancestor origin/main HEAD`. The rebased branch remains
+  unpublished pending a final fetch and normal PR creation.
