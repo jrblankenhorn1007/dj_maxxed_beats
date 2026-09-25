@@ -8,7 +8,8 @@
 - **Branch base:** `7523a9a0b87ffc5304686e2e64509fc4a6941bb7`
 - **Coordinator-assigned base before refresh:** `1926bdab3c358088f359cf73f0d8025a66c7d0d0`
 - **Implementation commit:** `4cb936134e7ccef09c248de7fe761783891fa6ec`
-- **PR #24:** Merged at `2026-09-25T09:08:38Z`; integration SHA
+- **PR #24:** [merged pull request](https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/24)
+  at `2026-09-25T09:08:38Z`; integration SHA
   `ffbb4a36d642dd87b8fc3f45abd0b88399b5cea6` verified on `origin/main`.
 
 ## Agent / PR records
