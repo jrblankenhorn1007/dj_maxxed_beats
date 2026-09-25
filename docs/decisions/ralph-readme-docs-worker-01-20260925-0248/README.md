@@ -8,4 +8,4 @@
 
 ## Worker and PR records
 
-- [worker-01 — PR pending](agents/worker-01/pr-pending.md)
+- [worker-01 — PR #17](agents/worker-01/pr-17.md)
