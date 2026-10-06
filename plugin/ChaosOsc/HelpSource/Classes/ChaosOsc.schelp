@@ -7,7 +7,7 @@ ChaosOsc generates a deterministic chaotic signal using a logistic map. It is
 provided by the ChaosOsc server plugin and produces an audio-rate signal in
 the range -1 to 1.
 
-The constructor is ::ChaosOsc.ar(chaosAmount, seed)::.
+The constructor is code::ChaosOsc.ar(chaosAmount, seed)::.
 
 CLASSMETHODS::
 
