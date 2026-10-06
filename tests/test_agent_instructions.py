@@ -78,12 +78,22 @@ class AgentInstructionContractTests(unittest.TestCase):
             supercollider,
             (
                 "3.14.1",
-                "chaososc.ar(chaosamount, seed)",
+                "chaososc.ar(chaosamount, seed, freq, mul, add)",
+                "chaososc.kr(chaosamount, seed, freq, mul, add)",
+                "`inf`",
+                "bit-identical",
                 "control-rate",
+                "once per output sample",
+                "linearly interpolate",
+                "holds the current value",
+                "nan",
+                "not zero-mean",
+                "leakdc.ar",
                 "seed is captured when the synth is created",
                 "do not invent",
             ),
         )
+        self.assertNotIn("planned update-rate control", supercollider)
 
     def test_safety_prevents_false_success_and_credential_disclosure(self):
         safety = self.read_instruction("SAFETY.md")
