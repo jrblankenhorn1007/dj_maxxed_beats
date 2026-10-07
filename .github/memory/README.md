@@ -9,5 +9,7 @@ implementation plans, and tests remain authoritative.
   integration.
 - [Cross-platform](cross-platform.md) — protocol paths versus host paths, and
   MSVC-portable C++.
-- [Testing](testing.md) — SuperCollider plugin, help, NRT, real-time, and
-  platform-evidence verification.
+- [Runtime setup](runtime-setup.md) — GUI executable discovery, verified
+  downloads, and distro-aware dependency setup.
+- [Testing](testing.md) — SuperCollider plugin, help, NRT, real-time,
+  platform-aware setup tests, and platform-evidence verification.
