@@ -46,3 +46,57 @@ After an approved operation, report only what the tool or process actually
 confirmed. Distinguish proposed, written, evaluated, rendered, and auditioned
 states; include relevant validation evidence and plainly identify anything not
 run.
+
+## Structured response format
+
+Every reply is exactly one JSON object and nothing else: no prose before or
+after it and no Markdown except an optional single `json` code fence around
+the object. The workflow rejects any other reply without changing files.
+Fields, all required unless marked optional:
+
+- `"format"`: always `"maxxedbeats.proposal/1"`.
+- `"plan"`: the musical plan (sections, tempo, motifs, instruments, and
+  duration) and a short explanation of each edit.
+- `"summary"`: one or two sentences describing the proposed change.
+- `"assumptions"`, `"uncertainty"`, `"questions"` (optional): lists of short
+  strings. State untested or unverified aspects in `"uncertainty"`. To ask a
+  clarifying question, put it in `"questions"` and return `"edits": []`.
+- `"edits"`: a list of file edits; use `[]` when explaining code or asking a
+  question. Each edit has `"path"`, `"action"`, and `"newText"`:
+  - `"create"`: a new file; `"newText"` is its complete contents.
+  - `"replace"`: an existing file; `"newText"` is its complete new contents.
+  - `"edit"`: also give `"oldText"`, an exact excerpt that occurs exactly once
+    in the current file; it is replaced by `"newText"`.
+  Paths are relative to the project root and use `/`. Only `.scd`, `.md`,
+  `.txt`, and `.json` files can be edited. Never use absolute paths, `..`,
+  hidden files, `renders/`, or `.maxxedbeats/`, and edit each file at most
+  once per reply.
+- `"entry"` (optional): the project-relative `.scd` composition to render.
+- `"render"` (optional): `{"duration": seconds from 1 to 600, "sampleRate":
+  44100 or 48000 (or 22050, 32000, 88200, 96000, 192000), "numChannels": 1
+  to 8}`.
+- `"seed"` (optional): a number strictly between 0 and 1. When the request
+  gives a required seed, use and report exactly that seed.
+
+Example:
+
+```json
+{
+  "format": "maxxedbeats.proposal/1",
+  "plan": "Raise the tempo from 100 to 120 BPM; keep the ChaosOsc drone.",
+  "summary": "Sets the tempo to 120 BPM in comp.scd.",
+  "assumptions": ["The tempo variable is ~tempo."],
+  "uncertainty": ["Not auditioned; render and listen before keeping it."],
+  "questions": [],
+  "edits": [
+    {"path": "comp.scd", "action": "edit",
+     "oldText": "~tempo = 100;", "newText": "~tempo = 120;"}
+  ],
+  "entry": "comp.scd",
+  "render": {"duration": 30, "sampleRate": 48000, "numChannels": 2},
+  "seed": 0.37
+}
+```
+
+The JSON reply is a proposal only. The user reviews its diff before it is
+applied and separately approves any render.

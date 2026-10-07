@@ -44,3 +44,25 @@ language class are available.
 Keep provider calls, file access, project editing, and other blocking work out
 of UGen/audio callbacks. Treat composition code as executable code, not as
 data that is automatically safe to evaluate.
+
+## Renderable composition files
+
+An approved render runs the entry `.scd` file in a separate headless `sclang`
+process and then renders the result with `scsynth` in NRT mode. Write entry
+files so that:
+
+- the last expression returns a `Score` (or an Array of `[time, OSC message]`
+  pairs) that sends `[0.0, [\d_recv, def.asBytes]]` for every SynthDef it
+  uses; do not boot a server or call `.play`, `.add`, `s.sync`, or `Server`;
+- settings come from `~mbRender` (`duration`, `sampleRate`, `numChannels`,
+  `seed`), with defaults such as `~mbRender ? (duration: 30, seed: 0.37)` so
+  the file still evaluates elsewhere;
+- events stay within `~mbRender[\duration]`: later events are dropped and the
+  render ends exactly at that duration;
+- `~mbRender[\seed]` drives deterministic choices (the language random seed is
+  also set from it);
+- peaks stay below full scale (about -1 dBFS) and the result is not silent.
+  The workflow checks build and render success, duration, format, non-finite
+  samples, silence, and clipping, but not musical quality;
+- only built-in classes, `ChaosOsc`, and the MaxxedBeats classes are used, and
+  the file does not read or write files, start processes, or use the network.
