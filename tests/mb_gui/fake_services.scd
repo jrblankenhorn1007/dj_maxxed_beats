@@ -146,10 +146,16 @@
 			f[\pending][\render] = [onSuccess, onFailure, onProgress];
 			handle.(\render)
 		},
-		startVariations: { |project, providerId, modelId, prompt, maxCandidates, onCandidate, onDone, onFailure|
-			log.(\startVariations, providerId, modelId, prompt, maxCandidates);
+		startVariations: { |project, providerId, modelId, prompt, maxCandidates, approveRenders, settings, context,
+			onCandidate, onDone, onFailure|
+			log.(\startVariations, providerId, modelId, prompt, maxCandidates, approveRenders, settings, context);
 			f[\pending][\variations] = [onCandidate, onDone, onFailure];
 			(session: 1)
+		},
+		renderCandidate: { |session, index, onProgress, onSuccess, onFailure|
+			log.(\renderCandidate, index);
+			f[\pending][\renderCandidate] = [onSuccess, onFailure, onProgress];
+			handle.(\renderCandidate)
 		},
 		stopVariations: { |session| log.(\stopVariations) },
 		applyVariation: { |session, index, confirmed, onSuccess, onFailure|

@@ -46,10 +46,12 @@ MBGuiController {
 
 	// Runs `function`; a synchronous exception becomes a visible error.
 	// Answers whether the function completed without throwing.
+	// MBWorkflowTry instead of `try`: on sclang 3.14.1 a plain `try` that
+	// catches an error raised during argument evaluation corrupts the caller.
 	attempt { |function, failureStatus|
-		var failed = false;
-		try { function.value } { |e| failed = true; this.showError(e, failureStatus) };
-		^failed.not
+		var outcome = MBWorkflowTry.value({ function.value; \mbGuiOk });
+		if(outcome.isKindOf(Exception)) { this.showError(outcome, failureStatus); ^false };
+		^true
 	}
 
 	notify { if(closed.not) { this.changed(\state) } }
@@ -142,9 +144,9 @@ MBGuiController {
 		};
 		if(modelsStale and: { models.notEmpty }) {
 			parts.add("Model list may be stale (last refreshed "
-				++ (modelsLastRefreshed ? "unknown") ++ ").")
+				++ MBGuiFormat.timeText(modelsLastRefreshed) ++ ").")
 		} {
-			if(modelsLastRefreshed.notNil) { parts.add("Model list refreshed " ++ modelsLastRefreshed ++ ".") };
+			if(modelsLastRefreshed.notNil) { parts.add("Model list refreshed " ++ MBGuiFormat.timeText(modelsLastRefreshed) ++ ".") };
 		};
 		modelMessage = parts.join(" ");
 	}
@@ -193,7 +195,8 @@ MBGuiController {
 				++ providerId ++ (info[\note] !? { |n| ": " ++ n } ? "") ++ "."))
 		};
 		this.attempt({
-			this.call(\selectModel, providerId, info[\id].asString);
+			var problem = this.call(\selectModel, providerId, info[\id].asString);
+			if(problem.isKindOf(Exception)) { problem.throw };
 			modelId = info[\id].asString;
 			error = nil;
 		}, "Could not save the model selection.");
@@ -344,7 +347,7 @@ MBGuiController {
 
 	isWorking { ^busy.notNil or: { variation[\running] == true } }
 
-	cancellable { ^#[\propose, \render].includes(busy) }
+	cancellable { ^#[\propose, \render, \renderCandidate].includes(busy) }
 
 	requestBlocker { |prompt|
 		^case
@@ -396,6 +399,7 @@ MBGuiController {
 		this.endBusy;
 		proposal = result;
 		proposalState = if(edits.isEmpty) { \noEdits } { \pending };
+		this.adoptProposalSettings(result);
 		lastUsage = result[\usage];
 		conversation.add((role: \assistant, provider: providerId, model: modelId,
 			text: (result[\summary] ? "(no summary)").asString));
@@ -405,6 +409,20 @@ MBGuiController {
 			"Proposal ready (" ++ edits.size ++ " file change(s)): review the diff, then Approve or Reject."
 		} { "The DJ replied without file changes." };
 		this.notify;
+	}
+
+	// The proposal may suggest an entry file and render settings; adopt the
+	// ones the window offers, so the render panel shows what will be used.
+	adoptProposalSettings { |result|
+		var suggested = result[\render], settings = renderSettings.copy;
+		var entry = result[\entry];
+		if(suggested.notNil) {
+			suggested[\duration] !? { |d| if(d.isNumber and: { d > 0 } and: { d <= 600 }) { settings[\duration] = d } };
+			suggested[\sampleRate] !? { |r| if(#[44100, 48000, 96000].includes(r)) { settings[\sampleRate] = r } };
+			suggested[\numChannels] !? { |c| if(#[1, 2].includes(c)) { settings[\numChannels] = c } };
+			renderSettings = settings;
+		};
+		if(entry.notNil and: { entry.asString.toLower.endsWith(".scd") }) { entryPath = entry.asString };
 	}
 
 	approveProposal {
@@ -509,7 +527,7 @@ MBGuiController {
 		progress = 0;
 		renderResult = nil;
 		ok = this.attempt({
-			busyHandle = this.call(\render, project[\project], entryPath, renderSettings.copy, true,
+			busyHandle = this.call(\render, project[\project], entryPath, this.renderRequestSettings, true,
 				this.guard(myToken, { |p| this.renderProgress(p) }),
 				this.guard(myToken, { |result|
 					var warnings = MBGuiFormat.checkWarnings(result[\checks]);
@@ -530,11 +548,21 @@ MBGuiController {
 		if(ok.not and: { token == myToken }) { this.endBusy; progress = nil; this.notify };
 	}
 
+	renderRequestSettings {
+		var settings = renderSettings.copy;
+		if(proposal.notNil and: { proposalState == \applied }) {
+			proposal[\seed] !? { |seed| settings[\seed] = seed };
+			settings[\metadata] = (summary: proposal[\summary], prompt: proposal[\prompt],
+				provider: proposal[\provider] !? (_.asString), model: proposal[\model], plan: proposal[\plan]);
+		};
+		^settings
+	}
+
 	renderProgress { |p|
 		var fraction = if(p.isNumber) { p } { p !? { p[\fraction] } };
 		var message = if(p.isNumber.not and: { p.notNil }) { p[\message] };
 		if(fraction.isNumber) { progress = fraction.clip(0, 1) };
-		status = "Rendering " ++ entryPath ++ "..."
+		status = (if(busy == \renderCandidate) { "Rendering candidate" } { "Rendering " ++ entryPath }) ++ "..."
 			++ (if(progress.notNil) { " " ++ (progress * 100).round.asInteger ++ "%" } { "" })
 			++ (message !? { |m| " " ++ m } ? "");
 		this.notify;
@@ -575,26 +603,42 @@ MBGuiController {
 
 	// ---- variations --------------------------------------------------------
 
-	startVariations { |prompt, maxCandidates|
-		var blocker = this.requestBlocker(prompt), myToken, max, ok;
+	// Rendering candidates evaluates generated code in a separate process, so
+	// `renderCandidates: true` first asks for confirmation; only then does the
+	// session receive approveRenders: true.
+	startVariations { |prompt, maxCandidates, renderCandidates = false, contextFiles|
+		var blocker = this.requestBlocker(prompt), max;
 		if(blocker.notNil) { ^this.showError(blocker, "Variation session not started: " ++ blocker.detail) };
 		max = (maxCandidates ? maxCandidatesLimit).asInteger.clip(1, maxCandidatesLimit);
+		if(renderCandidates != true) { ^this.runVariations(prompt, max, false, contextFiles) };
+		this.requestConfirm(\variations, "Generate up to " ++ max ++ " candidate(s) with " ++ this.djText
+			++ " (one provider request each; may incur cost) and render each one ("
+			++ renderSettings[\duration] ++ " s) by evaluating its generated code in a separate headless "
+			++ "sclang/scsynth process? Your project is not changed.", {
+				this.runVariations(prompt, max, true, contextFiles)
+			});
+	}
+
+	runVariations { |prompt, max, approveRenders, contextFiles|
+		var myToken, ok, context;
 		varToken = varToken + 1;
 		myToken = varToken;
+		context = (files: (contextFiles ? []).asArray, entry: entryPath);
 		variation = (running: true, candidates: List.new, max: max, prompt: prompt.asString,
-			status: "Generating candidate 1 of " ++ max ++ "...");
+			renders: approveRenders, status: "Generating candidate 1 of " ++ max ++ "...");
 		error = nil;
-		status = "Variation session started with " ++ this.djText ++ " (up to " ++ max ++ " candidates).";
+		status = "Variation session started with " ++ this.djText ++ " (up to " ++ max ++ " candidates"
+			++ (if(approveRenders) { ", rendering each" } { ", not rendered" }) ++ ").";
 		this.notify;
 		ok = this.attempt({
 			variation[\session] = this.call(\startVariations, project[\project], providerId, modelId,
-				prompt.asString, max,
+				prompt.asString, max, approveRenders, renderSettings.copy, context,
 				this.varGuard(myToken, { |candidate| this.candidateArrived(candidate) }),
 				this.varGuard(myToken, { |...ignored|
 					variation[\running] = false;
 					variation[\status] = "Finished: " ++ variation[\candidates].size ++ " of "
 						++ variation[\max] ++ " candidate(s).";
-					status = "Variation session finished.";
+					status = "Variation session finished; the original project is unchanged.";
 					this.refreshUsage;
 					this.notify;
 				}),
@@ -613,14 +657,44 @@ MBGuiController {
 		};
 	}
 
+	renderCandidate { |index|
+		var candidate = this.candidateAt(index);
+		if(candidate.isNil) { ^this };
+		if(this.isWorking) { ^this.showError(MBError(\validation, "Stop the variation session and wait for running work first.")) };
+		this.requestConfirm(\renderCandidate, "Render candidate #" ++ (index + 1) ++ "? Its generated code is "
+			++ "evaluated in a separate headless sclang process and rendered offline with scsynth; the project is not changed.", {
+				var myToken = this.beginBusy(\renderCandidate, "Rendering candidate #" ++ (index + 1) ++ "...");
+				var ok = this.attempt({
+					busyHandle = this.call(\renderCandidate, variation[\session], index,
+						this.guard(myToken, { |p| this.renderProgress(p) }),
+						this.guard(myToken, { |updated|
+							this.endBusy;
+							progress = 1;
+							if(updated.notNil) { variation[\candidates][index] = updated };
+							error = nil;
+							status = "Rendered candidate #" ++ (index + 1) ++ ".";
+							this.notify;
+						}),
+						this.guard(myToken, { |e|
+							this.endBusy;
+							progress = nil;
+							this.showError(e, "Rendering candidate #" ++ (index + 1) ++ " failed.");
+						}))
+				}, "Rendering the candidate failed.");
+				if(ok.not and: { token == myToken }) { this.endBusy; this.notify };
+			});
+	}
+
 	candidateArrived { |candidate|
 		var candidates = variation[\candidates];
-		if(candidates.size >= variation[\max]) { ^this };
+		// A candidate beyond the limit means the service ignored the cap: stop it.
+		if(candidates.size >= variation[\max]) { ^this.stopVariations("limit reached") };
 		candidates.add(candidate);
 		variation[\status] = "Running: " ++ candidates.size ++ " of " ++ variation[\max] ++ " candidate(s).";
-		status = "Variation candidate " ++ candidates.size ++ " of " ++ variation[\max] ++ " ready.";
+		status = "Variation candidate " ++ candidates.size ++ " of " ++ variation[\max]
+			++ (if(candidate[\status] == \failed) { " failed." } { " ready." });
 		this.refreshUsage;
-		if(candidates.size >= variation[\max]) { this.stopVariations("limit reached") } { this.notify };
+		this.notify;
 	}
 
 	stopVariations { |reason|

@@ -18,6 +18,7 @@ MBTestStubProviderRegistry {
 	classvar instance;
 	var <providers;
 	*default { ^instance ?? { instance = super.new.init } }
+	*new { |store| ^super.new.init }
 	init {
 		providers = [
 			MBTestStubProvider(\openai, "OpenAI"),
@@ -110,15 +111,20 @@ MBTestStubRenderer {
 
 MBTestStubVariationSession {
 	var <agent, <project, <maxCandidates;
-	*new { |agent, project, maxCandidates = 4|
-		MBTestStubLog.add(\sessionNew, maxCandidates);
+	*new { |agent, project, maxCandidates = 4, renderSettings, context|
+		MBTestStubLog.add(\sessionNew, maxCandidates, renderSettings !? { renderSettings[\duration] }, context !? { context[\entry] });
 		^super.newCopyArgs(agent, project, maxCandidates)
 	}
-	start { |prompt, onCandidate, onDone, onFailure|
-		MBTestStubLog.add(\sessionStart, prompt);
+	start { |prompt, onCandidate, onDone, onFailure, approveRenders = false|
+		MBTestStubLog.add(\sessionStart, prompt, approveRenders);
 		onCandidate.value((seed: 1, summary: "stub candidate"));
 	}
 	stop { MBTestStubLog.add(\sessionStop) }
+	renderCandidate { |index, approved, onProgress, onSuccess, onFailure|
+		MBTestStubLog.add(\renderCandidate, index, approved);
+		onSuccess.value((seed: 1, summary: "stub candidate", render: (path: "/stub/c.wav")));
+		^MBTestStubHandle(\renderCandidate)
+	}
 	candidates { ^[] }
 	apply { |index, confirmed, onSuccess, onFailure|
 		MBTestStubLog.add(\sessionApply, index, confirmed);

@@ -92,6 +92,9 @@ MBGuiFormat {
 		requests = totals[\requests];
 		^(if(requests.notNil) { requests.asString ++ " request(s) — " } { "" })
 			++ this.tokenText(totals) ++ " — " ++ this.costText(totals)
+			++ (if((totals[\unpricedRequests] ? 0) > 0) {
+				" · " ++ totals[\unpricedRequests] ++ " request(s) unpriced (not included in USD)"
+			} { "" })
 	}
 
 	*creditNote {
@@ -171,11 +174,31 @@ MBGuiFormat {
 		var checks = candidate[\checks] ?? { if(render.notNil) { render[\checks] } };
 		var parts = ["#" ++ (index + 1)];
 		if(candidate[\seed].notNil) { parts = parts.add("seed " ++ candidate[\seed]) };
-		parts = parts.add(
-			if(this.candidateAudioPath(candidate).isNil) { "not rendered" } { this.checksText(checks) }
-		);
+		parts = parts.add(case
+			{ candidate[\status] == \failed } {
+				"FAILED" ++ (candidate[\error] !? { |e| " (" ++ this.asError(e).kind ++ "): " ++ this.asError(e).detail } ? "")
+			}
+			{ candidate[\status] == \rendering } { "rendering..." }
+			{ this.candidateAudioPath(candidate).isNil } { "not rendered" }
+			{ this.checksText(checks) });
 		parts = parts.add((candidate[\summary] ? candidate[\plan] ? "").asString);
 		^parts.join(" — ")
+	}
+
+	*timeText { |time|
+		if(time.isNil) { ^"unknown" };
+		^if(time.isNumber) { Date(rawSeconds: time).format("%Y-%m-%d %H:%M") } { time.asString }
+	}
+
+	*planText { |proposal|
+		var text = (proposal[\plan] ? "(no plan)").asString;
+		[[\assumptions, "Assumptions"], [\uncertainty, "Uncertainty"], [\questions, "Questions for you"]].do { |pair|
+			var items = proposal[pair[0]];
+			if(items.notNil and: { items.notEmpty }) {
+				text = text ++ "\n\n" ++ pair[1] ++ ":\n" ++ items.collect { |item| "- " ++ item }.join("\n")
+			};
+		};
+		^text
 	}
 
 	*diffText { |edits|

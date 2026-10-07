@@ -132,6 +132,10 @@ def new_work_dir(prefix):
 
 
 def run_scenario(name, work_dir, extra_args=(), timeout=600):
+    return run_scenario_file(SCENARIO_DIR / (name + ".scd"), work_dir, extra_args, timeout)
+
+
+def run_scenario_file(script, work_dir, extra_args=(), timeout=600):
     sclang = resolve_executable("SCLANG", "sclang")
     home = work_dir / "home"
     home.mkdir(parents=True, exist_ok=True)
@@ -141,7 +145,7 @@ def run_scenario(name, work_dir, extra_args=(), timeout=600):
         str(EXTENSION_CLASSES),
         "--include-path",
         str(CHAOSOSC_CLASSES),
-        str(SCENARIO_DIR / (name + ".scd")),
+        str(script),
         str(work_dir),
         str(ROOT),
     ] + [str(argument) for argument in extra_args]

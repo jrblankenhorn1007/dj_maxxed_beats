@@ -67,8 +67,18 @@ try {
 	check.("factory/render", MBTestStubLog.of(\render)[0] == [\render, "main.scd", true, 3] and: { results[\progress] == [0.5] });
 	s[\cancel].value(results[\handle]);
 	check.("factory/cancel", MBTestStubLog.of(\cancel)[0] == [\cancel, \render]);
-	results[\session] = s[\startVariations].value(results[\opened][0][\project], \openai, "stub-model", "vary", 3, record.(\candidate), record.(\done), nil);
-	check.("factory/variationsStart", MBTestStubLog.of(\sessionNew)[0] == [\sessionNew, 3] and: { results[\candidate].notNil });
+	results[\session] = s[\startVariations].value(results[\opened][0][\project], \openai, "stub-model", "vary", 3, true,
+		(duration: 5), (files: [], entry: "main.scd"), record.(\candidate), record.(\done), nil);
+	check.("factory/variationsStart", MBTestStubLog.of(\sessionNew)[0] == [\sessionNew, 3, 5, "main.scd"]
+		and: { MBTestStubLog.of(\sessionStart)[0] == [\sessionStart, "vary", true] } and: { results[\candidate].notNil },
+		MBTestStubLog.calls.cs);
+	s[\renderCandidate].value(results[\session], 0, nil, record.(\candRendered), nil);
+	check.("factory/renderCandidateApproved", MBTestStubLog.of(\renderCandidate)[0] == [\renderCandidate, 0, true]
+		and: { results[\candRendered].notNil });
+	s[\startVariations].value(results[\opened][0][\project], \openai, "other-model", "vary", 3, true, (), (),
+		nil, nil, record.(\varRefused));
+	check.("factory/variationsRefuseUnselectedModel", results[\varRefused][0].kind == \unavailableModel
+		and: { MBTestStubLog.of(\sessionNew).size == 1 });
 	s[\stopVariations].value(results[\session]);
 	s[\applyVariation].value(results[\session], 0, true, record.(\varApplied), nil);
 	check.("factory/variationsStopApply", MBTestStubLog.of(\sessionStop).size == 1 and: { MBTestStubLog.of(\sessionApply)[0] == [\sessionApply, 0, true] });

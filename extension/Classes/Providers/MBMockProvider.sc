@@ -30,25 +30,99 @@ MBMockProvider : MBProvider {
 	}
 
 	// Stable across runs and platforms (unlike String.hash).
-	*digest { |string|
+	*digestValue { |string|
 		var value = 5381;
 		string.do { |char| value = ((value * 33) + (char.ascii & 255)) % 16777213 };
-		^value.asHexString(6).toLower
+		^value
 	}
 
-	// Placeholder format until the workflow layer defines the composition
-	// response format; JSON so it can be parsed and asserted on.
+	*digest { |string| ^this.digestValue(string).asHexString(6).toLower }
+
+	// Text between `start` and the next `stop` in `text`, or nil.
+	*between { |text, start, stop|
+		var from = text.find(start), to;
+		if(from.isNil) { ^nil };
+		from = from + start.size;
+		to = text.find(stop, offset: from) ? text.size;
+		^text.copyRange(from, to - 1)
+	}
+
+	// A valid maxxedbeats.proposal/1 reply (docs/design/workflow.md) whose
+	// edit is a renderable ChaosOsc composition. It depends only on the
+	// request: the seed (the workflow's "Required seed", else derived from the
+	// request digest) picks root, chaos amount, and the note pattern, so each
+	// variation candidate differs. The entry being rendered, else the first
+	// selected .scd file, is replaced; otherwise a new mock-<digest>.scd is created.
 	*defaultResponder {
 		^{ |request|
-			var last = request[\messages].last[\content], digest;
-			digest = this.digest(request[\model].asString ++ "\n" ++ (request[\system] ? "")
-				++ "\n" ++ request[\messages].collect { |m| m[\role].asString ++ ":" ++ m[\content] }.join("\n"));
+			var last = request[\messages].last[\content], text, number, digest, seed, seedText;
+			var entry, target, action, roots, scales, scale, root, bpm, chaos, step, code, variation, describe;
+			text = request[\model].asString ++ "\n" ++ (request[\system] ? "")
+				++ "\n" ++ request[\messages].collect { |m| m[\role].asString ++ ":" ++ m[\content] }.join("\n");
+			number = this.digestValue(text);
+			digest = this.digest(text);
+			seedText = this.between(last, "Use seed ", " ");
+			seed = seedText !? { seedText.asFloat };
+			if(seed.isNil or: { seed <= 0 } or: { seed >= 1 }) { seed = ((number % 9000) + 500) / 10000 };
+			entry = this.between(last, "## Composition to render\n\n", "\n");
+			target = if(entry.notNil and: { entry.toLower.endsWith(".scd") }) { entry } {
+				this.between(last, "### File: ", "\n") !? { |file| if(file.toLower.endsWith(".scd")) { file } }
+			};
+			action = if(target.notNil) { "replace" } { "create" };
+			target = target ?? { "mock-" ++ digest ++ ".scd" };
+			roots = [98.0, 110.0, 130.81, 146.83, 164.81];
+			scales = [["minor pentatonic", [0, 3, 5, 7, 10]], ["major pentatonic", [0, 2, 4, 7, 9]],
+				["phrygian", [0, 1, 3, 7, 8]]];
+			scale = scales[number % scales.size];
+			root = roots[(seed * roots.size).floor.asInteger.clip(0, roots.size - 1)];
+			bpm = 92 + ((number % 7) * 6);
+			chaos = (3.55 + (seed * 0.4)).round(0.001);
+			step = if(seed > 0.5) { 2 } { 1 };
+			variation = this.between(last, "This is candidate ", " in a");
+			describe = scale[0] ++ " ChaosOsc pattern on " ++ root ++ " Hz at " ++ bpm ++ " BPM, chaos "
+				++ chaos ++ ", seed " ++ seed ++ (variation !? { |v| " (candidate " ++ v ++ ")" } ? "");
+			code = [
+				"// MaxxedBeats mock DJ sketch " ++ digest ++ ": deterministic and offline (no model was called).",
+				"// " ++ describe,
+				"(",
+				"var settings = ~mbRender ? (duration: 8, seed: " ++ seed ++ ");",
+				"var duration = settings[\\duration] ? 8;",
+				"var seed = settings[\\seed] ? " ++ seed ++ ";",
+				"var root = " ++ root ++ ", step = 60 / " ++ bpm ++ " / " ++ step ++ ", chaos = " ++ chaos ++ ";",
+				"var degrees = " ++ scale[1].asCompileString ++ ";",
+				"var def = SynthDef(\\mbMockVoice, { |out = 0, freq = 220, seed = 0.5, amp = 0.15, sustain = 0.25|",
+				"\tvar env = EnvGen.kr(Env.perc(0.005, sustain), doneAction: 2);",
+				"\tvar grit = LeakDC.ar(ChaosOsc.ar(chaos, seed, freq * 2));",
+				"\tvar tone = SinOsc.ar(freq * (1 + (grit * 0.01)));",
+				"\tOut.ar(out, Pan2.ar((tone * 0.75) + (grit * 0.2), (seed * 1.6) - 0.8) * env * amp);",
+				"});",
+				"var events = [[0.0, [\\d_recv, def.asBytes]]];",
+				"var time = 0, index = 0;",
+				"thisThread.randSeed = (seed * 1000000).asInteger;",
+				"while { time < duration } {",
+				"\tevents = events.add([time, [\\s_new, \\mbMockVoice, 2000 + index, 0, 0,",
+				"\t\t\\freq, root * (2 ** ((degrees.choose + (12 * [0, 0, 1].choose)) / 12)),",
+				"\t\t\\seed, (seed + (index * 0.0137)).wrap(0.01, 0.99),",
+				"\t\t\\amp, 0.12 + 0.06.rand, \\sustain, step * 0.9]]);",
+				"\ttime = time + step;",
+				"\tindex = index + 1;",
+				"};",
+				"Score(events)",
+				")",
+				""
+			].join("\n");
 			MBJSON.encode((
-				mock: true,
-				digest: digest,
-				plan: "Mock plan " ++ digest ++ " for: " ++ last.keep(80),
-				summary: "Deterministic mock response (no provider was called)",
-				edits: []
+				format: "maxxedbeats.proposal/1",
+				plan: "Mock DJ sketch: " ++ describe ++ ". Short plucked notes; ChaosOsc adds grit and pitch drift.",
+				summary: (if(action == "replace") { "Replaces " } { "Creates " }) ++ target
+					++ " with a deterministic ChaosOsc sketch (mock " ++ digest ++ ").",
+				assumptions: ["The mock DJ does not read the musical intent of the prompt; output depends only on the request and seed."],
+				uncertainty: ["Offline mock response: not composed by a language model. Render and listen before keeping it."],
+				questions: [],
+				edits: [(path: target, action: action, newText: code)],
+				entry: target,
+				render: (duration: 8, sampleRate: 48000, numChannels: 2),
+				seed: seed
 			))
 		}
 	}

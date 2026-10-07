@@ -177,6 +177,7 @@ MBGuiWindow {
 		views[\duration] = NumberBox().value_(8).clipLo_(0).clipHi_(600).decimals_(1).fixedWidth_(60);
 		views[\sampleRate] = PopUpMenu().items_(["44100", "48000", "96000"]).value_(1);
 		views[\channels] = PopUpMenu().items_(["1", "2"]).value_(1);
+		[\duration, \sampleRate, \channels].do { |key| views[key].action = { controller.setRenderSettings(this.renderSettingsFromViews) } };
 		left = VLayout(
 			this.label("Context files sent to the DJ (select; none = prompt only)"),
 			views[\contextFiles],
@@ -233,8 +234,11 @@ MBGuiWindow {
 			HLayout(
 				this.label("Max candidates (1-" ++ MBGuiController.maxCandidatesLimit ++ ")"),
 				views[\varMax],
+				this.keep(\varRender, CheckBox(text: "Render each candidate (asks first)").value_(true)),
 				this.button(\varStart, "Start session", {
-					controller.startVariations(views[\varPrompt].string, views[\varMax].value.asInteger)
+					controller.setRenderSettings(this.renderSettingsFromViews);
+					controller.startVariations(views[\varPrompt].string, views[\varMax].value.asInteger,
+						views[\varRender].value, this.selectedContextFiles)
 				}),
 				this.button(\varStop, "Stop", { controller.stopVariations }),
 				[this.keep(\varStatus, StaticText().string_("")), stretch: 1]
@@ -243,6 +247,7 @@ MBGuiWindow {
 			HLayout(
 				this.button(\audition, "Audition selected", { controller.auditionCandidate(views[\candidates].value) }),
 				this.button(\stopAudition, "Stop", { controller.stopPlayback }),
+				this.button(\renderCandidate, "Render selected...", { controller.renderCandidate(views[\candidates].value) }),
 				this.button(\applyCandidate, "Apply selected...", { controller.applyCandidate(views[\candidates].value) }),
 				nil
 			)
@@ -297,22 +302,28 @@ MBGuiWindow {
 
 	// ---- user actions that read several widgets ------------------------------
 
-	send {
+	selectedContextFiles {
 		var files = controller.projectFiles;
-		var selected = (views[\contextFiles].selection ? []).collect { |i| files[i] }.reject(_.isNil);
+		^(views[\contextFiles].selection ? []).collect { |i| files[i] }.reject(_.isNil)
+	}
+
+	send {
 		var prompt = views[\prompt].string;
-		controller.send(prompt, selected);
+		controller.send(prompt, this.selectedContextFiles);
 		if(controller.busy == \propose) { views[\prompt].string = "" };
 	}
 
-	render {
-		var settings = (
+	renderSettingsFromViews {
+		^(
 			duration: views[\duration].value,
 			sampleRate: views[\sampleRate].item.asInteger,
 			numChannels: views[\channels].item.asInteger
-		);
+		)
+	}
+
+	render {
 		var scd = controller.scdFiles;
-		controller.requestRender(settings, if(scd.notEmpty) { scd[views[\entry].value ? 0] });
+		controller.requestRender(this.renderSettingsFromViews, if(scd.notEmpty) { scd[views[\entry].value ? 0] });
 	}
 
 	// ---- redraw from controller state ---------------------------------------
@@ -351,7 +362,10 @@ MBGuiWindow {
 			views[\entry].value = scd.indexOfEqual(c.entryPath)
 		};
 		views[\conversation].string = c.conversation.collect { |m| this.conversationLine(m) }.join("\n\n");
-		views[\plan].string = if(c.proposal.isNil) { "No proposal yet." } { (c.proposal[\plan] ? "(no plan)").asString };
+		views[\plan].string = if(c.proposal.isNil) { "No proposal yet." } { MBGuiFormat.planText(c.proposal) };
+		views[\duration].value = c.renderSettings[\duration];
+		views[\sampleRate].value = ["44100", "48000", "96000"].indexOfEqual(c.renderSettings[\sampleRate].asString) ? 1;
+		views[\channels].value = ["1", "2"].indexOfEqual(c.renderSettings[\numChannels].asString) ? 1;
 		views[\diff].string = if(c.proposal.isNil) { "" } {
 			this.proposalHeader ++ MBGuiFormat.diffText(c.proposal[\edits])
 		};
@@ -373,6 +387,7 @@ MBGuiWindow {
 		this.setItems(\candidates, candidates.collect { |cand, i| MBGuiFormat.candidateLine(cand, i) }.asArray);
 		views[\audition].enabled = candidates.notEmpty;
 		views[\applyCandidate].enabled = candidates.notEmpty and: { working.not } and: { variation[\session].notNil };
+		views[\renderCandidate].enabled = candidates.notEmpty and: { working.not } and: { variation[\session].notNil };
 
 		keyProviderIds.do { |id|
 			var key = { |name| (name ++ "_" ++ id).asSymbol };
