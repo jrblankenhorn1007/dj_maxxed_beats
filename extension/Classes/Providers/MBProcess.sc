@@ -110,8 +110,12 @@ MBProcess {
 		if(finished) { ^this };
 		finished = true;
 		reason = why;
-		watchdog !? { watchdog.stop };
-		poller !? { poller.stop };
+		// Never stop the Routine that is running this method (the watchdog or
+		// the exit poller): stopping the current Routine ends it right here,
+		// before onExit runs. A running poller ends by itself (finished).
+		[watchdog, poller].do { |routine|
+			if(routine.notNil and: { routine !== thisThread }) { routine.stop }
+		};
 		if(MBProviderPaths.isWindows) { this.prReleaseWindowsPipe(why != \exited) };
 		onExit.value(code, why);
 	}

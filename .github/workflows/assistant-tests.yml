@@ -186,11 +186,6 @@ jobs:
             if (-not (Test-Path -LiteralPath (Join-Path $extensions $file))) { throw "missing after install: $file" }
           }
 
-      - name: Diagnostic probe of the Windows PowerShell helper (temporary)
-        continue-on-error: true
-        timeout-minutes: 8
-        run: python scripts/ci_windows_helper_probe.py .runtime/SuperCollider/sclang.exe
-
       - name: Assistant smoke test against the installed copy
         run: >-
           python scripts/ci_assistant_smoke.py

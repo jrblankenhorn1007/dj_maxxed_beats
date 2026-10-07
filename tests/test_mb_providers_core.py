@@ -332,6 +332,48 @@ class CredentialAndMockTests(unittest.TestCase):
                           "Mock DJ (offline)", None])
 
 
+class ProcessRunnerTests(unittest.TestCase):
+    """MBProcess reports exit codes, enforces its watchdog timeout, and stays
+    cancellable on every platform (Windows: argv + exit-code file polling)."""
+
+    def test_exit_code_watchdog_timeout_and_cancel(self):
+        body = r"""
+		var dir = MBProviderPaths.newRunDir, slow, quick, t0, run;
+		if(MBProviderPaths.isWindows) {
+			// The real helper: an absent, test-only credential exits with 1.
+			quick = MBProviderPaths.windowsHelperArgv("has", ["-Target", "MaxxedBeatsTest-" ++ 100000000.rand ++ ":openai"]);
+			slow = [MBProviderPaths.powershellPath, "-NoLogo", "-NoProfile", "-NonInteractive", "-InputFormat", "None",
+				"-Command", "Start-Sleep -Seconds 20"];
+		} {
+			quick = "exit 1";
+			slow = "sleep 20";
+		};
+		run = { |script, timeout, cancelAfter|
+			var calls = 0, p;
+			t0 = ~elapsed.();
+			~await.({ |done|
+				p = MBProcess.run(script, MBProviderPaths.newRunDir, nil, timeout, { |code, why|
+					calls = calls + 1; done.(code, why, ~elapsed.() - t0) });
+				cancelAfter !? { AppClock.sched(cancelAfter, { p.cancel; nil }) };
+			}) ++ [{ 1.0.wait; calls }.value]
+		};
+		~emit.(\quick, run.(quick, 60));
+		~emit.(\timeout, run.(slow, 2));
+		~emit.(\cancel, run.(slow, 60, 0.5));
+		"""
+        run = run_sclang("process_runner", body, timeout=120)
+        code, why, elapsed, calls = run.get("quick")
+        self.assertEqual((code, why, calls), (1, "exited", 1))
+        self.assertLess(elapsed, 30)
+        code, why, elapsed, calls = run.get("timeout")
+        self.assertEqual((code, why, calls), (None, "timeout", 1))
+        self.assertGreater(elapsed, 1.9)
+        self.assertLess(elapsed, 6)
+        code, why, elapsed, calls = run.get("cancel")
+        self.assertEqual((code, why, calls), (None, "cancelled", 1))
+        self.assertLess(elapsed, 2)
+
+
 class PlatformBackendCommandTests(unittest.TestCase):
     def test_backend_commands_never_carry_the_key(self):
         body = r"""
