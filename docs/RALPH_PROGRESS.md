@@ -1377,8 +1377,11 @@ Ralph-Status: IN_PROGRESS
 - **Status evidence:** the coordinator self-attested that exact implementation
   commit. Staged whitespace checks, schema-v2 dashboard/leaf/resource and
   memory-handoff synchronization, and local branch Markdown-link checks pass.
-- **Integration:** the implementation is committed locally, but the PR is
-  not yet opened and no merge or `origin/main` integration is claimed.
-  Continue with final status/diff validation, publication, exact-head
-  Windows/macOS checks, independent review, protected merge, and post-merge
-  memory review.
+- **Integration:** PR [#41](https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/41)
+  is open from `ralph/copilot-windows-onboarding-20261007-1640`, with base
+  `dac46c31f6711ad0d90d40b9634ba92aa5a0203b` and exact PR head
+  `b7b19a596837b5fd667680385224a162b3e91ee6`. Hosted checks have started;
+  one Linux ChaosOsc build passed, while the remaining exact-head checks are
+  pending or in progress. No merge or `origin/main` integration is claimed.
+  Continue with all hosted checks, independent review, protected merge, and
+  post-merge memory review.
