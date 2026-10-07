@@ -34,6 +34,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache pinned SuperCollider plugin API headers
+        uses: actions/cache@v4
+        with:
+          path: plugin/.sc-plugin-api-cache
+          key: sc-plugin-api-${{ runner.os }}-426edf6d8742e1cc3bd85b51ca0c4e595d37a903
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
