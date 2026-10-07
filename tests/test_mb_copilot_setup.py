@@ -108,7 +108,8 @@ class CopilotSetupTests(unittest.TestCase):
                 install_cli=True, platform_name="darwin", architecture="arm64")
         self.assertEqual(result, str(expected_path.absolute()))
         self.assertEqual(expected_path.read_bytes(), payload)
-        self.assertEqual(stat.S_IMODE(expected_path.stat().st_mode), 0o755)
+        if os.name != "nt":
+            self.assertEqual(stat.S_IMODE(expected_path.stat().st_mode), 0o755)
         resolve.assert_called_once_with({})
         urlopen.assert_called_once()
         self.assertEqual(
@@ -223,6 +224,7 @@ class CopilotSetupTests(unittest.TestCase):
         self.assertIn([cli_path, "--version"], calls)
         self.assertTrue(all(call.kwargs.get("shell") is not True for call in run.call_args_list))
 
+    @unittest.skipIf(os.name == "nt", "Windows CLI setup is delegated to the packaged WinGet helper")
     def test_setup_installs_missing_cli_inside_the_private_runtime_directory(self):
         settings_directory = self.root / "settings"
         runtime_directory = self.root / "runtime"
@@ -252,6 +254,18 @@ class CopilotSetupTests(unittest.TestCase):
         resolve.assert_called_once_with({})
         install_cli.assert_called_once_with(
             runtime_directory / "cli", platform_name=sys.platform, architecture=None)
+
+    @unittest.skipUnless(os.name == "nt", "Windows CLI setup is delegated to the packaged WinGet helper")
+    def test_windows_runtime_setup_directs_users_to_the_packaged_cli_helper(self):
+        with mock.patch.object(
+                self.setup, "resolve_cli",
+                side_effect=self.setup.BackendError("config", "missing")):
+            with self.assertRaisesRegex(self.setup.SetupError, "Setup-Copilot.cmd"):
+                self.setup.setup_runtime(
+                    install_cli=True,
+                    python_version=(3, 13),
+                    settings_dir=self.root / "settings",
+                    runtime_dir=self.root / "runtime")
 
     def test_setup_refuses_python_below_311_before_installing(self):
         with mock.patch.object(self.setup, "resolve_cli",
