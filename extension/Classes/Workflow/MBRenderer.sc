@@ -274,7 +274,9 @@ MBRenderer {
 	// class extension that points its user folders into the isolated home
 	// and skips the user's startup files.
 	prWriteWindowsConfig {
-		var isolation = workDir +/+ "isolation", appSupport = workDir +/+ "home" +/+ "AppData" +/+ "Local" +/+ "SuperCollider";
+		// Short folder names: Windows paths are limited to 260 characters and
+		// variation candidates already nest projects inside the project.
+		var isolation = workDir +/+ "isolation", appSupport = workDir +/+ "home" +/+ "sc";
 		var paths = [MBRenderer.classLibraryFor(sclang)] ++ includePaths ++ [isolation];
 		File.mkdir(isolation);
 		File.mkdir(appSupport);

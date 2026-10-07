@@ -44,7 +44,7 @@ MBRenderProcess {
 	*commandLine { |argv, environment, logPath|
 		var pairs = environment.keys.asArray.sort.collect { |key| [key.asString, environment[key].asString] };
 		^if(this.isWindows) {
-			[MBProviderPaths.powershellPath, "-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
+			[MBProviderPaths.powershellPath, "-NoLogo", "-NoProfile", "-NonInteractive", "-InputFormat", "None", "-ExecutionPolicy", "Bypass",
 				"-File", this.launcherPath, "-Spec", this.specPath(logPath)]
 		} {
 			"exec env -i " ++ pairs.collect { |pair| this.quotePosix(pair[0] ++ "=" ++ pair[1]) }.join(" ")

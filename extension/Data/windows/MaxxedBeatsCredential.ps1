@@ -3,8 +3,9 @@ MaxxedBeats helper for Windows 10 (1803+) and 11: Windows Credential Manager
 (generic credentials, CredRead/CredWrite/CredDelete) and the curl.exe
 request runner. PowerShell 5.1+.
 
-Started by MBProcess (sclang) through Pipe.argv, so its stdin is a pipe from
-sclang. It prints nothing; results go to files in the private run directory:
+Started by MBProcess (sclang) through Pipe.argv with -InputFormat None, so
+its stdin is a pipe from sclang that only this script reads (one line). It
+prints nothing; results go to files in the private run directory:
 stderr.txt (an error message without secrets) and, written last,
 exit-code.txt (the exit code). sclang polls for exit-code.txt.
 
@@ -110,10 +111,19 @@ function ConvertTo-CommandLineArgument([string]$Value) {
     return $builder.ToString()
 }
 
+# One line from the raw stdin handle (sclang's pipe). PowerShell is started
+# with -InputFormat None, so the host itself never reads or waits for stdin.
 function Read-StdinLine {
-    $line = [Console]::In.ReadLine()
-    if ($null -eq $line) { return '' }
-    return $line.Trim()
+    $stream = [Console]::OpenStandardInput()
+    $buffer = New-Object System.IO.MemoryStream
+    while ($buffer.Length -lt 1024) {
+        $next = $stream.ReadByte()
+        if ($next -lt 0 -or $next -eq 10) { break }
+        $buffer.WriteByte([byte]$next)
+    }
+    $line = [Text.Encoding]::ASCII.GetString($buffer.ToArray()).Trim()
+    $buffer.SetLength(0)
+    return $line
 }
 
 function Require-Target {

@@ -137,9 +137,12 @@ def run_sclang(name, body, timeout=40, workdir=None, expect_done=True):
         PROLOGUE.replace("%TIMEOUT%", str(timeout)).replace("%BODY%", body),
         encoding="utf-8",
     )
+    # stdin stays an open, silent pipe, as when SCIDE runs sclang: helper
+    # processes must never wait for (or read) sclang's stdin.
     proc = subprocess.Popen(
         [resolve_sclang(), "--include-path", str(CLASSES_DIR), str(script)],
-        cwd=str(ROOT), env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        cwd=str(ROOT), env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
     )
     lines = []
     reader = threading.Thread(target=_collect, args=(proc, lines))
@@ -150,12 +153,15 @@ def run_sclang(name, body, timeout=40, workdir=None, expect_done=True):
         proc.kill()
     reader.join(5)
     proc.wait(10)
+    proc.stdin.close()
     output = "".join(lines)
     results = []
     for line in output.splitlines():
         if line.startswith("MBTEST {"):
             results.append(json.loads(line[len("MBTEST "):]))
     if expect_done and "MBTEST_DONE" not in output:
+        sys.stderr.write("\n[{}] sclang snippet did not finish:\n{}\n".format(name, output[-6000:]))
+        sys.stderr.flush()
         raise AssertionError("sclang snippet did not finish:\n" + output[-6000:])
     return SclangRun(results, output, proc.returncode, home, workdir)
 

@@ -6,6 +6,7 @@ choose propose a musical plan and changes to your `.scd` project, you review
 and approve them, and SuperCollider renders the result offline to a WAV file.
 
 - [Install](#install)
+  - [Windows (no developer tools)](#windows-no-developer-tools)
 - [Open the assistant](#open-the-assistant)
 - [Choose your DJ: provider and model](#choose-your-dj-provider-and-model)
 - [API keys: add, replace, validate, remove](#api-keys-add-replace-validate-remove)
@@ -18,7 +19,10 @@ and approve them, and SuperCollider renders the result offline to a WAV file.
 
 ## Install
 
-Prerequisites:
+On Windows you can skip everything below and use the ready-made package:
+see [Windows (no developer tools)](#windows-no-developer-tools).
+
+Installing from source needs these prerequisites:
 
 | | macOS (Apple Silicon or Intel) | Windows 10/11 x64 | Linux |
 | --- | --- | --- | --- |
@@ -55,6 +59,58 @@ Afterwards, in SCIDE:
 The installer warns if another copy of MaxxedBeats is in your Extensions
 folder or on an include path in `sclang_conf.yaml`; remove duplicates, or
 sclang reports duplicate classes.
+
+### Windows (no developer tools)
+
+`MaxxedBeats-Windows-x64.zip` contains the MaxxedBeats Quark (with its agent
+instructions), the ChaosOsc plugin prebuilt with MSVC (`ChaosOsc.scx`),
+`install.ps1`, `uninstall.ps1`, and a short `README.txt`. You need no
+Python, CMake, or compiler. It is built by the **Assistant Tests** workflow
+(job "Windows package") on every push to this repository; open a successful
+run on GitHub's **Actions** tab and download the artifact
+**MaxxedBeats-Windows-x64** (GitHub delivers it as
+`MaxxedBeats-Windows-x64.zip`).
+
+Requirements: Windows 10 version 1803 or newer, or Windows 11 (64-bit), and
+SuperCollider 3.14.1 for Windows (64-bit) from
+<https://supercollider.github.io/downloads>. The assistant uses `curl.exe`
+and Windows PowerShell, which are part of Windows.
+
+Step by step:
+
+1. Install SuperCollider 3.14.1 and start it once, then close it.
+2. Download `MaxxedBeats-Windows-x64.zip`, right-click it, choose
+   **Extract All...**, and open the extracted folder (it contains
+   `install.ps1`). Do not run anything from inside the zip.
+3. Click the folder's address bar, type
+   `powershell -ExecutionPolicy Bypass -File install.ps1` and press Enter.
+   The script copies `MaxxedBeats\` and `ChaosOsc\` into
+   `%LOCALAPPDATA%\SuperCollider\Extensions` and prints the next steps. It
+   refuses to touch a `MaxxedBeats` or `ChaosOsc` folder there that it did
+   not install (no marker file) and then changes nothing.
+4. Start SuperCollider (if it is already open: **Language > Recompile Class
+   Library**), then evaluate `s.reboot;` and `MaxxedBeats.gui;`.
+5. In the window, choose **Mock DJ (offline)** to try it without a key, or
+   OpenAI / Anthropic after saving your API key on **Keys & Privacy**. Keys
+   are kept in Windows Credential Manager (entries `MaxxedBeats:openai` and
+   `MaxxedBeats:anthropic`), never in files.
+
+To update, extract the newer zip and run its `install.ps1` again (it replaces
+the marked folders). To uninstall, run
+`powershell -ExecutionPolicy Bypass -File uninstall.ps1` from the extracted
+folder, then recompile the class library. Either script only ever replaces
+or removes folders carrying the MaxxedBeats install marker, so it is
+compatible with `scripts/install_maxxedbeats.py`.
+
+How it works on Windows: provider requests run `%SystemRoot%\System32\curl.exe`
+(TLS verified against the Windows certificate store) through a small
+PowerShell helper that reads the key from Credential Manager and writes it
+only to curl's standard input. Approved renders run a separate `sclang.exe`
+and `scsynth.exe` (with a cleared environment and their own class library
+configuration, so your startup file and other Extensions are not loaded)
+and use the ChaosOsc you installed. CI verifies all of this on a hosted
+Windows runner; checking it on a physical PC (sound and window appearance)
+is still a manual step.
 
 ## Open the assistant
 
@@ -199,7 +255,9 @@ unchanged until you apply one.
 | Symptom | What to do |
 | --- | --- |
 | `MaxxedBeats` is not defined | Run the installer, then recompile the class library. |
-| "missing classes" error in the window | The installation is incomplete; re-run `python3 scripts/install_maxxedbeats.py` and recompile. |
+| "missing classes" error in the window | The installation is incomplete; re-run `python3 scripts/install_maxxedbeats.py` (Windows package: `install.ps1`) and recompile. |
+| Windows: `install.ps1` "cannot be loaded because running scripts is disabled" | Start it as shown: `powershell -ExecutionPolicy Bypass -File install.ps1` (this changes no system setting). |
+| Windows: "Could not ... in Windows Credential Manager" | Make sure you are signed in to a normal Windows user account; the key store is per user. |
 | Duplicate class errors after recompiling | Remove other MaxxedBeats copies or include paths named by the installer's warnings. |
 | "No API key is stored" / auth error | Save the key on **Keys & Privacy**, then **Validate**. Check the key has API access and billing enabled. |
 | Model unavailable | Press **Refresh models** and select a listed model. |

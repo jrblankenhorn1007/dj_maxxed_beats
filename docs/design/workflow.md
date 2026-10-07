@@ -133,9 +133,13 @@ undo (`undone: true`).
    defaults `MBRenderer.defaultSclang/defaultScsynth/defaultPluginPaths/
    defaultBuiltinPluginPaths`. macOS defaults are the running app's
    `Contents/MacOS/sclang`, `Contents/Resources/scsynth`, and
-   `Contents/Resources/plugins`; plugin folders default to
-   `Platform.userExtensionDir` and `Platform.systemExtensionDir` (where the
-   installer puts ChaosOsc). Missing tools → `\config`.
+   `Contents/Resources/plugins`; Windows uses `sclang.exe`, `scsynth.exe`, and
+   `plugins` in `Platform.resourceDir`. Plugin folders default to
+   `Platform.userExtensionDir`, `Platform.systemExtensionDir`, and the folder
+   of the installed ChaosOsc class when it holds `ChaosOsc.scx`/`.so`
+   (`MBRenderer.chaosOscPluginDirs`; on Windows
+   `%LOCALAPPDATA%\SuperCollider\Extensions\ChaosOsc`). Missing tools →
+   `\config`.
 2. **Reservation** – output `<project>/renders/<entry>-<YYYYMMDD-HHMMSS>[-N].wav`;
    the `.json` sidecar is written immediately as a placeholder so concurrent
    renders never share a name. Nothing is ever overwritten. Diagnostics go
@@ -151,6 +155,23 @@ undo (`undone: true`).
    Array of `[time, msg…]` events, drops events at or after the duration,
    adds an end marker one sample before the duration, and writes the Score.
    Timeout, cancellation, or a class-library compile failure kills the child.
+   **Windows** (verified on the hosted Windows runner): sclang finds the
+   user's folders with `SHGetKnownFolderPath`, not environment variables, so
+   isolation is explicit. The child runs `sclang.exe -l <work>/sclang_conf.yaml
+   runner.scd`; the YAML sets `excludeDefaultPaths: true` and lists
+   `<sclang dir>/SCClassLibrary`, the Quark's `Classes`, the ChaosOsc class
+   folder, and `<work>/isolation`, which holds a generated class extension
+   that points `Platform.userAppSupportDir`/`userConfigDir`/`userExtensionDir`
+   into the isolated home and disables startup files (no user startup file,
+   Quarks, or other Extensions are loaded). Both children are started by
+   `Data/windows/MaxxedBeatsLaunch.ps1` from a JSON spec written next to the
+   log (`<log>-launch.json`: program, args, environment, log): a cleared
+   environment with only `HOME USERPROFILE APPDATA LOCALAPPDATA TEMP TMP
+   SystemRoot windir PATH` (System32) and the XDG/LANG entries, stdin closed,
+   stdout then stderr in the log, no window. No shell parses any path, so
+   spaces, backslashes, and `& % ^` are safe. Kill = `taskkill /F /T /PID`
+   (the launcher's tree); the exit callback fires once the whole tree has
+   exited, then the isolated `home/` and `tmp/` are deleted.
 4. **Render** – `scsynth -U <builtin:plugins…> -o <channels> -m 65536 -D 0
    -N score.osc _ out.wav <rate> WAV <format>` with the same isolation. A
    `UGen '<name>' not installed` line becomes an actionable `\render` error.
@@ -208,8 +229,10 @@ backup, undo).
    and stale proposals are refused instead of merged.
 3. **Undo refuses after later user changes** rather than overwriting them.
 4. **Render isolation by `env -i` and an isolated HOME** for both child
-   processes; generated code never runs in the user's interpreter and never
-   sees inherited environment secrets. This is isolation, not a sandbox.
+   processes (Windows: a cleared environment via the PowerShell launcher plus
+   `sclang -l` with `excludeDefaultPaths` and redirected user folders);
+   generated code never runs in the user's interpreter and never sees
+   inherited environment secrets. This is isolation, not a sandbox.
 5. **End marker one sample before the duration** so block-aligned renders
    have exactly the requested length.
 6. **Session rendering needs its own approval flag** (`approveRenders`,
@@ -221,9 +244,10 @@ backup, undo).
 
 ## Known gaps and requests
 
-- Windows and Linux process launching (`MBRenderProcess.commandLine`) and
-  default tool paths are implemented but unverified; Windows uses `set` + `cmd`
-  quoting and does not clear the inherited environment.
+- Windows process launching is verified on the hosted Windows runner (render,
+  variation, and GUI-integration suites, plus the installed-package smoke
+  test); a physical PC is the user's manual check. Linux launching and default
+  tool paths are implemented but not exercised in CI.
 - Packaging (worker-03) must ship `agent/*.md` with the Quark (`<quark>/agent`)
   for installed use; the repository layout is found automatically.
 - Other workers' sclang code should avoid plain `try` for the reason above.

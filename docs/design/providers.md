@@ -25,16 +25,37 @@ This supersedes the "defer" proposal in
 | Cancellation | `handle.cancel` → `pkill -P <sh>` + `kill <sh>`, `\cancelled` delivered once, no late success, curl gone | `test_cancel_stops_the_request_promptly` |
 | Keys absent from argv/env | `ps -axww` and `ps -axwwE` snapshots taken while the server holds the request contain no key | `test_openai_request_and_response_mapping` |
 | macOS Keychain round trip | store/has/validate/use/remove via `security`, temporary keychain file only | `test_store_use_validate_and_remove_key_in_temporary_keychain` (verifies the user keychain search list is unchanged) |
+| Windows Credential Manager round trip | store/replace/has/validate/use (both auth headers)/remove via the PowerShell helper, unique test-only targets `MaxxedBeatsTest-<random>:<id>`, always deleted afterwards (`cmdkey /delete`) | `test_mb_providers_wincred.py` (Windows runner) |
 
-**Windows feasibility (designed, not runtime-verified — no Windows host).**
-`curl.exe` ships with Windows 10 1803+ (Schannel, validates against the
-Windows certificate store); the same curl arguments are used. sclang's
-`unixCmd` is expected to run the line through `cmd.exe`; the request line is
-`powershell … MaxxedBeatsCredential.ps1 curlconfig <id> <prefix> | curl.exe -K - …`
-so the key goes from Credential Manager to curl's stdin only. Key writes use
-`Pipe(…, "w")`, whose `close` waits for the short-lived PowerShell process (a
-brief synchronous step, Windows only). Cancellation uses `taskkill /T /F`.
-Must be verified on Windows 10 x64 before release (see Gaps).
+**Windows (Windows 10 1803+ / 11 x64; verified on the hosted `windows-latest`
+runner by the Assistant Tests workflow).** `%SystemRoot%\System32\curl.exe`
+(Schannel, validates against the Windows certificate store; never `-k`) gets
+the same non-secret arguments as on POSIX. No shell parses anything:
+
+1. `MBHttp` writes `<run dir>/curl-spec.json` (`curl`, `args`, `headerPrefix`;
+   no key) and `MBProcess` starts the bundled helper
+   `Data/windows/MaxxedBeatsCredential.ps1` with `Pipe.argv` (Windows
+   PowerShell 5.1, `-NoProfile -NonInteractive -ExecutionPolicy Bypass`), so
+   the helper's stdin is a pipe from sclang. Its argv names only the action,
+   the run directory, and the credential target (`MaxxedBeats:<id>`).
+2. The helper reads the key from Credential Manager (`CredReadW`; or, for
+   `MBCredentialStore.fake`, the single line sclang wrote to its stdin),
+   validates it, starts curl.exe with `RedirectStandardInput`, and writes
+   only `header = "<prefix><key>"` to curl's stdin (`-K -`). The key never
+   enters argv, environment variables, files, or output.
+3. The helper prints nothing; it writes `stderr.txt` (a message without
+   secrets) and, last, `exit-code.txt`. sclang polls for that file every
+   50 ms on AppClock, so requests stay asynchronous. The `Pipe` is closed a
+   few seconds later (its close waits for the process).
+4. Cancel and timeout: `taskkill /F /T /PID <helper>` stops the helper and
+   curl; curl `--max-time` plus the AppClock watchdog bound every request.
+
+Evidence on the Windows runner: the whole `test_mb_providers_http.py` suite
+(request mapping, model lists, error mapping, timeout, cancellation, TLS
+rejection of a self-signed loopback server, non-blocking) and the
+Credential Manager round trip below. During requests the tests read every
+visible process's command line and environment block (PEB on Windows,
+`ps -E`/`/proc` elsewhere) and assert the key is absent.
 
 **Alternatives rejected.** A bundled helper (extra binary to sign/ship per
 platform, IPC surface) is unjustified since the direct path meets every
@@ -53,7 +74,12 @@ raw TCP/UDP only). `Pipe`-based reads block the interpreter; not used for HTTP.
   ignores `~/.curlrc` so user config cannot enable tracing.
 - Store reads: macOS `security find-generic-password -s MaxxedBeats -a <id> -w`;
   Linux `secret-tool lookup service MaxxedBeats account <id>`; Windows
-  `MaxxedBeatsCredential.ps1` (`MaxxedBeats:<id>` generic credential).
+  `MaxxedBeatsCredential.ps1` (`MaxxedBeats:<id>` generic credential, UTF-8
+  blob, `CRED_PERSIST_LOCAL_MACHINE`; `MBWindowsCredentialStore.new(prefix)`
+  changes the target prefix, used only by tests).
+- Windows writes: `storeKey` starts the helper with `Pipe.argv` and writes the
+  key line to its stdin (`CredWriteW`); `has`/`remove` use `CredReadW`/
+  `CredDeleteW` (an absent key is not a removal error).
 - Writes from sclang (`storeKey`) and the in-memory `MBCredentialStore.fake`
   pass the key through a private **FIFO** (mode 600 in a 700 directory; the
   node is unlinked as soon as both ends are open; data never rests on disk):
@@ -68,9 +94,12 @@ raw TCP/UDP only). `Pipe`-based reads block the interpreter; not used for HTTP.
   included. curl's stderr never contains request headers (no `-v`).
 - Only `https://` base URLs are accepted; plain `http://` only for loopback
   test servers. curl runs with `--proto =https`, no redirects followed.
-- Per-request scratch directories (`<settings>/run/req-*`, mode 700) hold the
-  request body, response headers/body, and curl stderr — never a key — and are
-  removed when the request finishes; leftovers older than 2 h are purged.
+- Per-request scratch directories (`<settings>/run/req-*`, mode 700; on
+  Windows inside the per-user `%LOCALAPPDATA%`) hold the request body, response
+  headers/body, curl stderr, and on Windows `curl-spec.json` and
+  `exit-code.txt` — never a key — and are removed when the request finishes
+  (Windows retries while a killed child still holds the folder); leftovers
+  older than 2 h are purged.
 
 ## Providers
 
@@ -146,7 +175,10 @@ secrets), `.history`, `.clearHistory`, `.resetSession`.
   optional provider; success passes the model list.
 - Constructors for tests: `MBOpenAIProvider/MBAnthropicProvider.new(store,
   baseUrl, timeout)`, `MBProviderRegistry.new(store, providers)`,
-  `MBKeychainCredentialStore.new(keychainPath)`.
+  `MBKeychainCredentialStore.new(keychainPath)`,
+  `MBWindowsCredentialStore.new(targetPrefix)`.
+- On Windows the backend hooks (`keyPrelude`, `hasCommand`, `storeCommand`,
+  `removeCommand`) answer argv Arrays for the helper instead of shell text.
 - All handles are `MBRequestHandle` (`.cancel`, `.isDone`, `.isCancelled`).
 
 ## Implementation notes
@@ -161,7 +193,7 @@ secrets), `.history`, `.clearHistory`, `.resetSession`.
 ## Proposed decision-log entries
 
 1. 2026-10-06 — Provider transport: direct sclang + OS curl, no helper
-   (context/evidence above; consequence: Windows path must be verified).
+   (context/evidence above). Windows verified 2026-10-07 (DEC-041).
 2. 2026-10-06 — Secrets flow store → shell variable → curl stdin; FIFO for
    writes; keys never returned to sclang.
 3. 2026-10-06 — OpenAI uses the Responses API with `store: false`.
@@ -169,7 +201,12 @@ secrets), `.history`, `.clearHistory`, `.resetSession`.
 
 ## Gaps
 
-- Windows backend and transport are not runtime-verified; Linux
-  `secret-tool` backend is tested only for command generation.
+- Windows backend and transport are verified on the hosted Windows runner
+  (Windows Server, Windows PowerShell 5.1); a physical Windows 10/11 PC is
+  the friend's manual check. Linux `secret-tool` backend is tested only for
+  command generation.
+- Windows: each helper start costs a PowerShell launch (about 0.5–1 s, plus
+  about 1 s to compile the Credential Manager P/Invoke types); acceptable
+  next to provider latency.
 - No streaming; no automatic re-pricing for regional endpoints or priority tiers.
 - The mock's response format is a placeholder pending worker-02's format.

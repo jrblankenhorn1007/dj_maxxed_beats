@@ -31,7 +31,7 @@ MBProviderPaths {
 	// argv for Data/windows/MaxxedBeatsCredential.ps1; "@RUNDIR@" is replaced
 	// by MBProcess with the private run directory.
 	*windowsHelperArgv { |action, extra|
-		^[this.powershellPath, "-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
+		^[this.powershellPath, "-NoLogo", "-NoProfile", "-NonInteractive", "-InputFormat", "None", "-ExecutionPolicy", "Bypass",
 			"-File", this.windowsHelperPath, "-Action", action, "-RunDir", "@RUNDIR@"] ++ (extra ? [])
 	}
 

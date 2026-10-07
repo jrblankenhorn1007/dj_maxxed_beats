@@ -22,6 +22,7 @@ import re
 import shutil
 import subprocess
 import sys
+import threading
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -65,6 +66,34 @@ def parse_args(argv):
     return parser.parse_args(argv)
 
 
+def run_like_scide(command, cwd, env, timeout):
+    """Run sclang with stdin as an open, silent pipe, as SCIDE does, so a
+    helper that waits for sclang's stdin makes the smoke test fail."""
+    process = subprocess.Popen(command, cwd=str(cwd), env=env, stdin=subprocess.PIPE,
+                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    chunks = []
+
+    def drain():
+        for raw in iter(process.stdout.readline, b""):
+            chunks.append(raw.decode("utf-8", "replace"))
+        process.stdout.close()
+
+    reader = threading.Thread(target=drain)
+    reader.daemon = True
+    reader.start()
+    suffix = ""
+    try:
+        process.wait(timeout)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait(30)
+        suffix = "\nPYTHON TIMEOUT"
+    reader.join(30)
+    process.stdin.close()
+    output = "".join(chunks).replace("\r\n", "\n") + suffix
+    return output, (-1 if suffix else process.returncode)
+
+
 def main(argv=None):
     args = parse_args(argv)
     work = Path(args.work_dir).resolve()
@@ -84,16 +113,7 @@ def main(argv=None):
     sclang = str(Path(args.sclang).resolve()) if Path(args.sclang).is_file() else args.sclang
     command = [sclang, str(bootstrap), str(work), expected,
                "1" if args.query_credential_store else "0"]
-    try:
-        completed = subprocess.run(command, cwd=str(work), env=env, capture_output=True,
-                                   text=True, encoding="utf-8", errors="replace",
-                                   timeout=args.timeout)
-        output, code = completed.stdout + completed.stderr, completed.returncode
-    except subprocess.TimeoutExpired as error:
-        output = error.stdout or ""
-        if isinstance(output, bytes):
-            output = output.decode("utf-8", "replace")
-        output, code = output + "\nPYTHON TIMEOUT", -1
+    output, code = run_like_scide(command, work, env, args.timeout)
     results = {}
     for line in output.splitlines():
         match = RESULT.match(line.strip())

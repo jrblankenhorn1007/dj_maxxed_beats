@@ -772,3 +772,30 @@ credentials and private user data out of this file.
   other 4xx are unchanged. Files are written atomically. All plugin-building
   workflows cache `plugin/.sc-plugin-api-cache` keyed on the OS and the
   pinned SuperCollider commit.
+
+### DEC-041 — Windows transport, Credential Manager, and render launching verified; no-tools Windows package
+
+- **Date:** 2026-10-07
+- **Context:** DEC-030/031/035 left the Windows paths designed but unverified,
+  and 13 assistant tests were skipped on the Windows CI runner. A Windows
+  user without developer tools must be able to install the assistant.
+- **Decision:** On Windows every helper process is started with an argv
+  Array (no `cmd.exe` parsing). Provider requests and credential operations
+  run `Data/windows/MaxxedBeatsCredential.ps1` (Windows PowerShell 5.1,
+  `-InputFormat None`) via `Pipe.argv`: the key comes from Credential Manager
+  (`CredReadW`) or one stdin line and reaches `curl.exe` only on its stdin
+  (`-K -`); completion is signalled by an exit-code file polled on AppClock;
+  cancellation is `taskkill /F /T`. Render children run through
+  `Data/windows/MaxxedBeatsLaunch.ps1` (cleared environment, JSON spec) with
+  `sclang -l <conf.yaml>` (`excludeDefaultPaths: true`, explicit include
+  paths, generated isolation extension for the user folders and startup
+  files). The default plugin paths include the installed ChaosOsc folder.
+  `MaxxedBeats-Windows-x64.zip` (MSVC-built ChaosOsc, Quark with
+  `agent/*.md`, marker-protected `install.ps1`/`uninstall.ps1`, README) is
+  built, installed, smoke-tested, and uninstalled by the Assistant Tests
+  workflow; it is uploaded only from non-PR runs.
+- **Consequences:** All assistant suites run on the Windows runner with no
+  Windows skips; the Credential Manager backend has a real round-trip test
+  with unique test-only targets. Each Windows helper start costs a
+  PowerShell launch. Verification is on the hosted runner; a physical
+  Windows 10/11 PC (sound, window appearance) remains the user's manual check.

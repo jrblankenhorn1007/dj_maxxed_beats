@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import unittest
 
 
@@ -193,21 +194,51 @@ def run_scenario_file(script, work_dir, extra_args=(), timeout=600):
         str(work_dir),
         str(ROOT),
     ] + [str(argument) for argument in extra_args]
+    output, returncode = run_like_scide(command, isolated_environment(home), timeout)
+    run = ScenarioRun(work_dir, output, returncode)
+    # Echo failures at once: a CI job that is cancelled later still shows them.
+    failures = [line for line in output.splitlines() if line.startswith("MBTEST FAIL")]
+    if failures or not run.done:
+        sys.stderr.write("\n[{}] {}\n{}\n".format(
+            Path(script).name, "\n".join(failures),
+            "" if run.done else "did not finish; output tail:\n" + output[-4000:]))
+        sys.stderr.flush()
+    return run
+
+
+def run_like_scide(command, environment, timeout):
+    """Run sclang with stdin as an open, silent pipe (as SCIDE does), so a
+    child process that waits for or reads sclang's stdin hangs the test."""
+    process = subprocess.Popen(
+        command, cwd=str(ROOT), env=environment, stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+    )
+    chunks = {"out": [], "err": []}
+
+    def drain(stream, key):
+        for raw in iter(stream.readline, b""):
+            chunks[key].append(raw.decode("utf-8", "replace"))
+        stream.close()
+
+    readers = [threading.Thread(target=drain, args=(process.stdout, "out")),
+               threading.Thread(target=drain, args=(process.stderr, "err"))]
+    for reader in readers:
+        reader.daemon = True
+        reader.start()
+    timed_out = False
     try:
-        result = subprocess.run(
-            command,
-            cwd=str(ROOT),
-            env=isolated_environment(home),
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-        )
-    except subprocess.TimeoutExpired as error:
-        output = error.stdout or ""
-        if isinstance(output, bytes):
-            output = output.decode("utf-8", "replace")
-        return ScenarioRun(work_dir, output + "\nPYTHON TIMEOUT", -1)
-    return ScenarioRun(work_dir, result.stdout + result.stderr, result.returncode)
+        process.wait(timeout)
+    except subprocess.TimeoutExpired:
+        timed_out = True
+        process.kill()
+        process.wait(30)
+    for reader in readers:
+        reader.join(30)
+    process.stdin.close()
+    output = ("".join(chunks["out"]) + "".join(chunks["err"])).replace("\r\n", "\n")
+    if timed_out:
+        return output + "\nPYTHON TIMEOUT", -1
+    return output, process.returncode
 
 
 class ScenarioTestCase(unittest.TestCase):
