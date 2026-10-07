@@ -303,14 +303,36 @@ MBRenderer {
 		};
 	}
 
+	prWorkPaths { |names|
+		var paths = MBWorkflowTry.mbError({
+			var relative = ".maxxedbeats/renders/" ++ workDir.basename;
+			var folder = project.directory(relative, false);
+			if(File.type(folder) != \directory) {
+				MBRenderer.fail(\validation, "the render work folder is no longer a directory")
+			};
+			names.collect { |name|
+				var path = project.resolve(relative ++ "/" ++ name);
+				if(#[\regular, \not_found].includes(File.type(path)).not) {
+					MBRenderer.fail(\validation, "a render work file is not a regular file: " ++ name)
+				};
+				path
+			}
+		}, \validation);
+		if(paths.isKindOf(MBError)) { this.prFailAndClean(paths); ^nil };
+		^paths
+	}
+
 	prBuildScore {
-		var argv = if(MBRenderProcess.isWindows) {
-			[sclang, "-l", workDir +/+ "sclang_conf.yaml", workDir +/+ "runner.scd"]
+		var paths = this.prWorkPaths(["runner.scd", "sclang.log"]
+			++ if(MBRenderProcess.isWindows) { ["sclang_conf.yaml"] } { [] }), argv;
+		if(paths.isNil) { ^this };
+		argv = if(MBRenderProcess.isWindows) {
+			[sclang, "-l", paths[2].basename, paths[0].basename]
 		} {
-			[sclang] ++ includePaths.collect { |dir| ["--include-path", dir] }.flatten ++ [workDir +/+ "runner.scd"]
+			[sclang] ++ includePaths.collect { |dir| ["--include-path", dir] }.flatten ++ [paths[0]]
 		};
 		this.prProgress(\building, 0.05, "Building the Score from " ++ entryPath.asString ++ " in a separate sclang process");
-		process = MBRenderProcess.run(argv, this.prEnvironment, workDir +/+ "sclang.log", timeout, { |finished|
+		process = MBRenderProcess.run(argv, this.prEnvironment, paths[1], timeout, { |finished|
 			// After a cancel, clean again once the child has really exited:
 			// a dying child can recreate files in its isolated HOME.
 			if(handle.active) { this.prScoreBuilt(finished) } { this.prCleanHome };
@@ -360,11 +382,17 @@ MBRenderer {
 
 	prRenderAudio {
 		var separator = if(thisProcess.platform.name == \windows) { ";" } { ":" };
-		var argv = [scsynth, "-U", pluginPaths.join(separator), "-o", settings[\numChannels].asString,
-			"-m", "65536", "-D", "0", "-N", scorePath, "_", outputPath, settings[\sampleRate].asString,
+		var paths = this.prWorkPaths(["scsynth.log", "score.osc"]), output, argv;
+		if(paths.isNil) { ^this };
+		output = MBWorkflowTry.mbError({ project.resolve("renders/" ++ outputPath.basename) }, \validation);
+		if(output.isKindOf(MBError) or: { File.type(outputPath) != \not_found }) {
+			^this.prFailAndClean(MBError(\validation, "the reserved render output was changed while building the Score"))
+		};
+		argv = [scsynth, "-U", pluginPaths.join(separator), "-o", settings[\numChannels].asString,
+			"-m", "65536", "-D", "0", "-N", paths[1], "_", output, settings[\sampleRate].asString,
 			"WAV", settings[\sampleFormat]];
 		this.prProgress(\rendering, 0.4, "Rendering " ++ settings[\duration] ++ " s offline with scsynth (NRT)");
-		process = MBRenderProcess.run(argv, this.prEnvironment, workDir +/+ "scsynth.log",
+		process = MBRenderProcess.run(argv, this.prEnvironment, paths[0],
 			max(timeout, settings[\duration] * 4), { |finished|
 				if(handle.active) { this.prAudioRendered(finished) } { this.prCleanHome };
 			});
@@ -457,11 +485,15 @@ MBRenderer {
 	}
 
 	prRemoveOutputs {
-		[outputPath, metadataPath].do { |path|
-			if(path.notNil and: { File.exists(path) }) {
-				File.delete(project.resolve("renders/" ++ path.basename))
+		var outcome = MBWorkflowTry.mbError({
+			[outputPath, metadataPath].do { |path|
+				if(path.notNil) {
+					project.directory("renders", false);
+					if(#[\not_found, \directory].includes(File.type(path)).not) { File.delete(path) };
+				};
 			};
-		};
+		}, \io);
+		if(outcome.isKindOf(MBError)) { outcome.errorString.warn };
 		this.prCleanHome;
 	}
 

@@ -158,6 +158,10 @@ Routine {
 				0.1.wait;
 			};
 		};
+		outcome = ~render.(project, "plantlog.scd", nil, true);
+		~check.("child_planted_log_rejected", ~failedWith.(outcome, \validation), ~describe.(outcome));
+		~check.("child_planted_log_target_intact",
+			~readText.(~work +/+ "outside-render-dir/protected.log") == "must remain intact");
 	} { |error|
 		~check.("uncaught_error", false, error.errorString);
 	};

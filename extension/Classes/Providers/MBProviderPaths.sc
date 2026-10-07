@@ -37,12 +37,15 @@ MBProviderPaths {
 
 	// Stops a Windows process and everything it started (taskkill /T).
 	*killTree { |pid|
+		var script;
 		if(pid.notNil and: { pid > 0 }) {
-			// Exiting concurrently with cancellation is harmless. taskkill's
-			// "ERROR: ... not found" must not enter sclang's error stream.
-			[this.windowsTool("cmd.exe"), "/d", "/s", "/c",
-				"\"" ++ this.windowsTool("taskkill.exe") ++ "\" /F /T /PID "
-					++ pid.asInteger ++ " >NUL 2>&1"].unixCmd(nil, false)
+			script = "& '" ++ this.windowsTool("taskkill.exe").replace("'", "''")
+				++ "' /F /T /PID " ++ pid.asInteger ++ " *> $null; "
+				++ "$code = $LASTEXITCODE; if ($code -ne 0) { "
+				++ "$remaining = Get-Process -Id " ++ pid.asInteger ++ " -ErrorAction SilentlyContinue; "
+				++ "if ($null -ne $remaining) { [Console]::Error.WriteLine('MaxxedBeats could not stop child process'); exit $code } }";
+			[this.powershellPath, "-NoLogo", "-NoProfile", "-NonInteractive", "-InputFormat", "None",
+				"-Command", script].unixCmd(nil, false)
 		}
 	}
 

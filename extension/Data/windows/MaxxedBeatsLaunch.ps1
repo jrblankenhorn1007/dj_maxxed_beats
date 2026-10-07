@@ -44,7 +44,8 @@ try {
     $logPath = [string]$settings.log
     $share = [IO.FileShare]::ReadWrite -bor [IO.FileShare]::Delete
     $log = New-Object IO.FileStream($logPath, [IO.FileMode]::Create, [IO.FileAccess]::Write, $share, 1)
-    $errorLog = New-Object IO.MemoryStream
+    $errorPath = [IO.Path]::ChangeExtension($logPath, $null) + '-stderr.log'
+    $errorLog = New-Object IO.FileStream($errorPath, [IO.FileMode]::Create, [IO.FileAccess]::ReadWrite, $share, 1)
     $info = New-Object System.Diagnostics.ProcessStartInfo
     $info.FileName = [string]$settings.program
     $info.Arguments = (@($settings.args) | ForEach-Object { ConvertTo-CommandLineArgument ([string]$_) }) -join ' '
@@ -58,6 +59,9 @@ try {
     foreach ($entry in $settings.environment.PSObject.Properties) {
         $info.EnvironmentVariables[$entry.Name] = [string]$entry.Value
     }
+    $description = [Text.Encoding]::UTF8.GetBytes(
+        "MB_LAUNCH " + $info.FileName + " " + $info.Arguments + "`nMB_LAUNCH_CWD " + $info.WorkingDirectory + "`n")
+    $log.Write($description, 0, $description.Length)
     $process = [System.Diagnostics.Process]::Start($info)
     $copyOut = $process.StandardOutput.BaseStream.CopyToAsync($log)
     $copyErr = $process.StandardError.BaseStream.CopyToAsync($errorLog)
@@ -65,13 +69,15 @@ try {
     $process.StandardInput.Close()
     $copyOut.Wait()
     $copyErr.Wait()
-    $errorLog.WriteTo($log)
+    $errorLog.Position = 0
+    $errorLog.CopyTo($log)
     $code = $process.ExitCode
 } catch {
     $message = [Text.Encoding]::UTF8.GetBytes("MaxxedBeats launcher: " + $_.Exception.Message + "`n")
     try { if ($null -ne $log) { $log.Write($message, 0, $message.Length) } } catch { }
     $code = 126
 } finally {
+    if ($null -ne $errorLog) { $errorLog.Dispose() }
     if ($null -ne $log) { $log.Dispose() }
 }
 exit $code

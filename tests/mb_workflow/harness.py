@@ -205,6 +205,10 @@ def run_scenario_file(script, work_dir, extra_args=(), timeout=600):
         for log in _unfinished_render_logs(work_dir):
             sys.stderr.write("--- {} (tail)\n{}\n".format(log, log.read_text(
                 encoding="utf-8", errors="replace")[-2500:]))
+            error_log = log.with_name(log.stem + "-stderr.log")
+            if error_log.is_file():
+                sys.stderr.write("--- {} (tail)\n{}\n".format(error_log, error_log.read_text(
+                    encoding="utf-8", errors="replace")[-2500:]))
         sys.stderr.flush()
     return run
 

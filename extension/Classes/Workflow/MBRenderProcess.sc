@@ -15,7 +15,7 @@ MBRenderProcess {
 	classvar <>pollInterval = 0.25;
 	var <argv, <environment, <logPath, <timeout, onExit, failPatterns;
 	var <pid, <exitCode, <timedOut = false, <cancelled = false, <finished = false, <failMatch;
-	var startTime, poller;
+	var startTime, poller, killing = false;
 
 	*run { |argv, environment, logPath, timeout = 120, onExit, failPatterns|
 		^super.newCopyArgs(argv, environment, logPath, timeout, onExit, failPatterns ? []).prRun
@@ -127,7 +127,8 @@ MBRenderProcess {
 	elapsed { ^Main.elapsedTime - startTime }
 
 	kill {
-		if(finished.not and: { pid.notNil } and: { pid > 0 }) {
+		if(finished.not and: { killing.not } and: { pid.notNil } and: { pid > 0 }) {
+			killing = true;
 			if(MBRenderProcess.isWindows) {
 				MBProviderPaths.killTree(pid)
 			} {
@@ -149,7 +150,7 @@ MBRenderProcess {
 		if(finished.not) {
 			finished = true;
 			exitCode = code;
-			poller !? { poller.stop };
+			if(poller.notNil and: { poller !== thisThread }) { poller.stop };
 			AppClock.sched(0, { onExit.value(this); nil });
 		};
 	}

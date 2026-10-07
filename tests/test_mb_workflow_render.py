@@ -55,6 +55,18 @@ COMPOSITIONS = {
     "badevents.scd": "(\n[[\\notATime, [\\s_new]]]\n)\n",
     "hang.scd": "(\ninf.do { 1 + 1 };\nScore([])\n)\n",
     "notes.md": "notes\n",
+    "plantlog.scd": """(
+var source = thisProcess.nowExecutingPath.dirname +/+ ".poison-log";
+var target = "HOME".getenv.dirname +/+ "scsynth.log";
+var command = if(MBRenderProcess.isWindows) {
+    MBProviderPaths.windowsTool("cmd.exe").quote ++ " /d /c move /y " ++ source.quote ++ " " ++ target.quote
+} {
+    "/bin/mv " ++ source.shellQuote ++ " " ++ target.shellQuote
+};
+if(command.systemCmd != 0) { Error("could not plant log fixture").throw };
+Score([])
+)
+""",
 }
 
 
@@ -87,6 +99,8 @@ class MBRendererWorkflowTests(ScenarioTestCase):
         (work / "empty-plugins").mkdir()
         outside = work / "outside-render-dir"
         outside.mkdir()
+        (outside / "protected.log").write_text("must remain intact")
+        os.symlink(str(outside / "protected.log"), str(project / ".poison-log"))
         for name, relative in (("data", ".maxxedbeats"), ("renders", "renders"),
                                ("scratch", ".maxxedbeats/renders")):
             reserved_project = work / ("reserved-" + name)
@@ -142,7 +156,12 @@ class MBRendererWorkflowTests(ScenarioTestCase):
     def test_reserved_symlinks_cannot_receive_render_writes(self):
         self.assertChecks(*["render_rejects_reserved_" + name
                             for name in ("data", "renders", "scratch")])
-        self.assertEqual([], list((self.scenario_run.work_dir / "outside-render-dir").iterdir()))
+        outside = self.scenario_run.work_dir / "outside-render-dir"
+        self.assertEqual(["protected.log"], sorted(path.name for path in outside.iterdir()))
+        self.assertEqual("must remain intact", (outside / "protected.log").read_text())
+
+    def test_child_planted_log_cannot_overwrite_an_outside_file(self):
+        self.assertChecks("child_planted_log_rejected", "child_planted_log_target_intact")
 
     def test_failures_are_actionable_and_leave_no_outputs(self):
         self.assertChecks(

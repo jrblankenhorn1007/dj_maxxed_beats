@@ -24,6 +24,23 @@ from mb_providers.harness import (
 def cmdkey(*args):
     return subprocess.run(["cmdkey"] + list(args), capture_output=True, text=True)
 
+def credential_targets(output):
+    return [line.split(":", 1)[1].strip() for line in output.splitlines()
+            if line.strip().startswith("Target:")]
+
+
+class CredentialListingTests(unittest.TestCase):
+    def test_requested_target_in_empty_listing_header_is_not_a_credential(self):
+        self.assertEqual([], credential_targets(
+            "Currently stored credentials for MaxxedBeatsTest:openai:\n\n* NONE *\n"))
+
+    def test_real_credential_records_are_detected(self):
+        self.assertEqual(["LegacyGeneric:target=MaxxedBeatsTest:openai"],
+                         credential_targets(
+                             "Currently stored credentials for MaxxedBeatsTest:openai:\n"
+                             "    Target: LegacyGeneric:target=MaxxedBeatsTest:openai\n"
+                             "    Type: Generic\n"))
+
 
 @unittest.skipUnless(sys.platform == "win32", "Windows Credential Manager backend (Windows only)")
 class WindowsCredentialManagerTests(unittest.TestCase):
@@ -37,7 +54,9 @@ class WindowsCredentialManagerTests(unittest.TestCase):
         for target in self.targets:
             cmdkey("/delete:" + target)
         for target in self.targets:
-            self.assertNotIn(target, cmdkey("/list:" + target).stdout)
+            result = cmdkey("/list:" + target)
+            self.assertEqual(0, result.returncode, result.stderr)
+            self.assertEqual([], credential_targets(result.stdout), result.stdout)
 
     def test_store_use_validate_and_remove_key_in_credential_manager(self):
         server = FakeProviderServer()
@@ -94,8 +113,11 @@ class WindowsCredentialManagerTests(unittest.TestCase):
         self.assertEqual(server.requests[1]["headers"]["x-api-key"], FAKE_ANTHROPIC_KEY)
         self.assertNotIn("authorization", server.requests[1]["headers"])
         # The credential really lived in Credential Manager under the test target.
-        self.assertTrue(listed and self.targets[0] in listed[0], listed)
-        self.assertNotIn(self.targets[0], cmdkey("/list:" + self.targets[0]).stdout)
+        self.assertTrue(listed and any(record.endswith("target=" + self.targets[0])
+                                      for record in credential_targets(listed[0])), listed)
+        result = cmdkey("/list:" + self.targets[0])
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual([], credential_targets(result.stdout), result.stdout)
         self.assertEqual(len(snapshots), 2)
         for snapshot in snapshots:
             self.assertIn("MaxxedBeatsCredential.ps1", snapshot)
