@@ -21,11 +21,11 @@ a complete SuperCollider extension folder:
 - **CMake 3.16 or newer.**
 - **A C++17 compiler:** macOS Xcode Command Line Tools (`xcode-select
   --install`); Linux GCC or Clang (`sudo apt install build-essential cmake`);
-  Windows Visual Studio 2022 or its Build Tools with the *Desktop development
-  with C++* workload (MSVC x64).
+  Windows Visual Studio 2022 or newer (or its Build Tools) with the *Desktop
+  development with C++* workload (MSVC x64).
 - **Python 3** (standard library only) for the installer and for fetching the
-  pinned SuperCollider plugin API headers. The first configure of a build
-  directory downloads those headers from `raw.githubusercontent.com` into
+  pinned SuperCollider plugin API headers. The first configure of each build
+  directory fetches those headers from `raw.githubusercontent.com` into
   `plugin/.sc-plugin-api-cache/`; to build offline, point at a SuperCollider
   source checkout instead (`--sc-path` / `-DSC_PATH=`).
 

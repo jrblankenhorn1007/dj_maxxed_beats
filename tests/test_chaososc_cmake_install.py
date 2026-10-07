@@ -525,6 +525,21 @@ class ChaosOscInstallerTests(unittest.TestCase):
         self.assert_next_steps(result.stdout)
         self.assertIn(str(extensions / "ChaosOsc"), result.stdout)
 
+    def test_install_warns_about_other_chaososc_copies(self):
+        extensions = self.extensions_dir("duplicates")
+        stray = extensions / "OldChaosOsc" / "Classes" / "ChaosOsc.sc"
+        stray.parent.mkdir(parents=True)
+        stray.write_text("// stray older copy\n", encoding="utf-8")
+
+        result = self.run_installer("--extensions-dir", extensions)
+
+        self.assert_succeeded(result)
+        self.assertIn("WARNING: another ChaosOsc copy exists at {}".format(stray), result.stdout)
+        self.assertNotIn(
+            str(extensions / "ChaosOsc" / "Classes" / "ChaosOsc.sc"),
+            "\n".join(line for line in result.stdout.splitlines() if "WARNING" in line),
+        )
+
     def test_reinstall_replaces_a_marked_install_without_force(self):
         extensions = self.extensions_dir("reinstall")
         self.assert_succeeded(self.run_installer("--extensions-dir", extensions))

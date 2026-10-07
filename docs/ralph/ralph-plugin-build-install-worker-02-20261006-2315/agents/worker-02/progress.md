@@ -64,3 +64,19 @@ updating pushed branches).
   Green: the verifier and the build test now use `nm -gU -arch all` and require `_load` in both
   the arm64 and x86_64 slices (verified locally: `Verified nm [arm64]` / `Verified nm [x86_64]`;
   a thinned arm64-only copy fails `--require-universal`).
+
+### Attempt 2 — `ralph/plugin-build-install-worker-02-20261006-2315-ci2` @ `c8838fd`
+- Plugin Builds run `37549721055`: **success** on all three jobs
+  (https://github.com/jrblankenhorn1007/dj_maxxed_beats/actions/runs/37549721055).
+  macOS now logs `Verified nm [arm64]` and `Verified nm [x86_64]` (`_api_version, _load, _server_type`)
+  plus `lipo: arm64 x86_64`, for both the staged build and the installer's install; Linux `nm` and
+  Windows PE/`dumpbin` exports unchanged; Windows SC 3.14.1 NRT smoke render OK again.
+- Headless Tests run `37549721028`: **success**, `Ran 77 tests ... OK`.
+- Extra local check: the CI-built `ChaosOsc-macOS-universal` artifact (AppleClang 15 on macos-14;
+  ad-hoc linker-signed, minos 11.0) dropped into an isolated HOME's Extensions folder compiles in
+  the local official SC 3.14.1 sclang and renders in scsynth (same rms/peak as the local build).
+
+### Attempt 3
+- Adds `test_install_warns_about_other_chaososc_copies` (coverage for the installer's existing
+  duplicate-copy warning, documented in the README; passed on first run since the behavior already
+  existed). Results are recorded in the final report / next update.

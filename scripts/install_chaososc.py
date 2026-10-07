@@ -50,8 +50,8 @@ CMAKE_INSTALL_HINT = (
 COMPILER_HINT = (
     "a C++17 compiler is required: macOS `xcode-select --install`; Linux "
     "`sudo apt install build-essential` (or your distribution's g++/clang); "
-    "Windows: Visual Studio 2022 or its Build Tools with the \"Desktop "
-    "development with C++\" workload"
+    "Windows: Visual Studio 2022 or newer (or its Build Tools) with the "
+    "\"Desktop development with C++\" workload"
 )
 NEXT_STEPS_INSTALL = """\
 Next steps:
