@@ -111,6 +111,36 @@ class CopilotBridgeTests(unittest.TestCase):
         self.addCleanup(self.directory.cleanup)
         self.directory = Path(self.directory.name)
 
+    def test_resolve_cli_finds_per_user_native_install_outside_path(self):
+        home = self.directory / "home"
+        platform_name = (
+            "darwin" if sys.platform == "darwin"
+            else "win32" if sys.platform == "win32"
+            else "linux"
+        )
+        executable_name = "copilot.exe" if platform_name == "win32" else "copilot"
+        cli = (home / ".local" / "copilot-cli" / "lib" / "node_modules" /
+               "@github" / "copilot" / "node_modules" / "@github" /
+               ("copilot-" + platform_name + "-test") / executable_name)
+        cli.parent.mkdir(parents=True)
+        cli.write_bytes(b"native Copilot CLI fixture")
+        with mock.patch.object(self.bridge.Path, "home", return_value=home), \
+                mock.patch.object(self.bridge.shutil, "which", return_value=None):
+            self.assertEqual(self.bridge.resolve_cli({}), str(cli.resolve()))
+
+    def test_resolve_cli_finds_windows_package_install_outside_path(self):
+        home = self.directory / "home"
+        appdata = home / "AppData" / "Roaming"
+        cli = (appdata / "npm" / "node_modules" / "@github" / "copilot" /
+               "node_modules" / "@github" / "copilot-win32-x64" / "copilot.exe")
+        cli.parent.mkdir(parents=True)
+        cli.write_bytes(b"native Copilot CLI fixture")
+        with mock.patch.object(self.bridge.sys, "platform", "win32"), \
+                mock.patch.object(self.bridge.Path, "home", return_value=home), \
+                mock.patch.object(self.bridge.shutil, "which", return_value=None), \
+                mock.patch.dict(self.bridge.os.environ, {"APPDATA": str(appdata)}):
+            self.assertEqual(self.bridge.resolve_cli({}), str(cli.resolve()))
+
     def operation(self, client, action="complete", model="test-model", timeout=1):
         spec = {"action": action, "timeout": timeout, "request": {
             "model": model, "system": "Approved system only",
@@ -271,6 +301,37 @@ class CopilotBridgeTests(unittest.TestCase):
 
 
 class CopilotProviderTests(unittest.TestCase):
+    def test_default_provider_uses_saved_copilot_runtime_paths(self):
+        python_path = str(BUILD_DIR / "copilot-runtime" / "bin" / "python")
+        cli_path = str(BUILD_DIR / "native-copilot")
+        body = r"""
+		var provider;
+		MBProviderPaths.writeJSON(MBProviderPaths.settingsDir +/+ "copilot-runtime.json",
+			(pythonPath: %PYTHON%, cliPath: %CLI%));
+		provider = MBCopilotProvider.new;
+		~emit.(\paths, [provider.pythonPath, provider.cliPath]);
+		""".replace("%PYTHON%", sc_string(python_path)).replace(
+            "%CLI%", sc_string(cli_path))
+        run = run_sclang("copilot_runtime_paths", body)
+        self.assertEqual(run.get("paths"), [python_path, cli_path])
+
+    def test_provider_picks_up_runtime_setup_without_restarting_scide(self):
+        python_path = str(Path(sys.executable))
+        cli_path = str(BUILD_DIR / "native-copilot")
+        helper = ROOT / "tests" / "mb_providers" / "fake_copilot_bridge.py"
+        body = r"""
+		var provider;
+		provider = MBCopilotProvider.new(nil, nil, 10, %HELPER%);
+		MBProviderPaths.writeJSON(MBProviderPaths.settingsDir +/+ "copilot-runtime.json",
+			(pythonPath: %PYTHON%, cliPath: %CLI%));
+		~emit.(\auth, ~await.({ |done| provider.authStatus(done, done) }));
+		~emit.(\paths, [provider.pythonPath, provider.cliPath]);
+		""".replace("%HELPER%", sc_string(str(helper))).replace(
+            "%PYTHON%", sc_string(python_path)).replace("%CLI%", sc_string(cli_path))
+        run = run_sclang("copilot_runtime_refresh", body)
+        self.assertEqual(run.get("auth"), [{"authenticated": True}])
+        self.assertEqual(run.get("paths"), [python_path, cli_path])
+
     def test_missing_optional_runtime_is_an_actionable_error_without_generation(self):
         body = r"""
 		var provider = MBCopilotProvider.new(%PYTHON%, %MISSING%, 5);

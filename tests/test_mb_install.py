@@ -90,6 +90,10 @@ class InstallTests(InstallerTestCase):
             "Classes/GUI/MBGuiWindow.sc",
             "Classes/Core/MBError.sc",
             "HelpSource/Classes/MaxxedBeats.schelp",
+            "LaunchMaxxedBeats.scd",
+            "Data/copilot/setup_copilot.py",
+            "Data/copilot/setup-copilot.command",
+            "Data/copilot/setup-copilot.sh",
             "agent/WORKFLOW.md",
             installer.MARKER_NAME,
         ):
@@ -102,8 +106,8 @@ class InstallTests(InstallerTestCase):
         self.assertFalse(plugin_args.dry_run)
         self.assertEqual(out.count("Next steps:"), 1, out)
         self.assertIn("Recompile", out)
-        self.assertIn("s.reboot", out)
-        self.assertIn("MaxxedBeats.gui", out)
+        self.assertIn("LaunchMaxxedBeats.scd", out)
+        self.assertIn("Ctrl+Enter", out)
         self.assertFalse(list(self.extensions.glob(".MaxxedBeats*")), "staging folder left behind")
 
     def test_reinstall_replaces_only_a_marked_install(self):

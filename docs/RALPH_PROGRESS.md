@@ -1313,3 +1313,164 @@ Ralph-Status: IN_PROGRESS
   is open. The task stays in progress until this status update is merged and
   its merge SHA is verified on fetched `origin/main`; no completion marker is
   emitted before that verification.
+
+## Iteration 9 — Copilot runtime onboarding and Windows package — 2026-10-07
+
+- **Run/task:** `copilot-setup-onboarding-20261007-1640` /
+  `copilot-runtime-setup-onboarding`; coordinator branch
+  `ralph/copilot-windows-onboarding-20261007-1640`, based on fetched
+  `origin/main` `dac46c31f6711ad0d90d40b9634ba92aa5a0203b`.
+- **Root cause correction:** the native GitHub Copilot CLI was present at a
+  per-user package path and reported version `1.0.92`, but the `copilot`
+  command was absent from `PATH`; the existing bridge only searched `PATH`,
+  so SCIDE could not launch the installed CLI. The default system Python is
+  3.9.6, below the SDK's Python 3.11 minimum. The prior Iteration 8 note
+  saying there was "no Copilot CLI" was too broad; the corrected fact is that
+  the native CLI was installed but undiscoverable to SCIDE. Copilot uses
+  browser sign-in through its official CLI, not an API-key field.
+- **Split:** no workers were dispatched. The Resource Manager reported no
+  free slots, and CLI discovery, private runtime setup, runtime refresh,
+  package files, and user instructions form one coupled acceptance path.
+- **CLI discovery Red/Green:** the per-user native-install test failed against
+  the prior resolver because no executable was found outside `PATH`.
+  `PYTHONPATH=tests python3 -m unittest
+  test_mb_copilot.CopilotBridgeTests.test_resolve_cli_finds_per_user_native_install_outside_path
+  -v` now passes, as does the simulated Windows `%APPDATA%` native-package
+  path test.
+- **Runtime configuration Red/Green:** the saved-interpreter and already-open
+  SCIDE refresh tests first failed with default `python3`/unset CLI paths.
+  The provider now reloads `copilot-runtime.json` for each request.
+  `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  PYTHONPATH=tests python3 -m unittest
+  test_mb_copilot.CopilotProviderTests.test_default_provider_uses_saved_copilot_runtime_paths
+  test_mb_copilot.CopilotProviderTests.test_provider_picks_up_runtime_setup_without_restarting_scide
+  -v` passes.
+- **Setup/package Red/Green:** the launcher permission test first failed for
+  both macOS/Linux launchers; `chmod +x` made it pass, and
+  `bash -n extension/Data/copilot/setup-copilot.command
+  extension/Data/copilot/setup-copilot.sh` passed. The stable CLI-shim test
+  first showed that resolving a WinGet shim pinned a versioned binary; setup
+  now preserves the shim path, and
+  `PYTHONPATH=tests python3 -m unittest
+  test_mb_copilot_setup.CopilotSetupTests.test_setup_preserves_cli_shim_path_for_package_updates
+  -v` passes. The package-layout test first failed because
+  `Uninstall-MaxxedBeats.cmd` was missing; the installer, later Copilot setup,
+  and uninstall wrappers are now required in the zip. The SCIDE launcher is
+  also included so users evaluate one documented line instead of typing
+  source code into Terminal.
+- **Focused verification:** `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
+  PYTHONPATH=tests python3 -m unittest test_mb_copilot test_mb_copilot_setup
+  test_mb_install test_mb_package_windows -q` → **49 tests passed, 3 skipped**
+  before the stable-shim regression test was added.
+- **Final local gate:** `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
+  bash scripts/run_headless_tests.sh` → **228 tests passed, 5 skipped** in
+  247.111 seconds. The skips were the three Windows PowerShell package-script
+  tests (PowerShell unavailable locally), the Windows Credential Manager
+  test, and opt-in real-time audio.
+- **Environment coverage:** direct native CLI version check passed; live
+  sign-in/generation was not attempted because Python 3.11+ is not installed
+  here. The Windows package script tests must pass in hosted Windows CI;
+  physical Windows 10/11 GUI verification remains manual.
+- **Initial implementation commit:** `6b9e5dd4ec7f79ebb71642d21960e45d9bbecca4`.
+- **Status evidence:** the coordinator self-attested that exact implementation
+  commit. Staged whitespace checks, schema-v2 dashboard/leaf/resource and
+  memory-handoff synchronization, and local branch Markdown-link checks pass.
+- **Integration:** PR [#41](https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/41)
+  is open from `ralph/copilot-windows-onboarding-20261007-1640`, with base
+  `dac46c31f6711ad0d90d40b9634ba92aa5a0203b`; its original exact head was
+  `b7b19a596837b5fd667680385224a162b3e91ee6`. All initial hosted checks passed
+  on that head. PR #43's review fixes merged into PR #41 at
+  `f8f400a45297e39b02434d4fc3d665a49889c964`; all hosted checks passed on that
+  head. The current Ubuntu APT fallback implementation is committed locally as
+  `cab1f464346953e6a39b4477125de0c8bcc6a078`. No merge to `main` or
+  `origin/main` integration is claimed.
+- **Round-1 independent review:** PR #41 at base
+  `dac46c31f6711ad0d90d40b9634ba92aa5a0203b` / head
+  `b7b19a596837b5fd667680385224a162b3e91ee6` received one high-confidence
+  security finding and two actionable setup findings. The security review
+  identified execution of the mutable `gh.io/copilot-install` script; the
+  code review identified macOS Python discovery excluding Python 3.14 and
+  generic `python3`, plus Linux's "Run as Program" path reading prompts without
+  a terminal. The local fixes pin Copilot CLI 1.0.93 and verify its official
+  per-platform SHA-256 before extracting only the `copilot` regular file,
+  probe Python 3.11+ by version including Python 3.14 and `python3`, and
+  require Linux's documented "Run in Terminal" flow with a clear non-TTY
+  message.
+- **Review-fix Red:** The new
+  `PYTHONPATH=tests python3 -m unittest -v
+  test_mb_copilot_setup.CopilotSetupTests.test_cli_setup_installs_only_a_checksum_verified_release_when_missing
+  test_mb_copilot_setup.CopilotSetupTests.test_macos_launcher_accepts_python_314_and_generic_python3
+  test_mb_copilot_setup.CopilotSetupTests.test_linux_launcher_explains_that_interactive_terminal_is_required`
+  initially failed: setup returned the old CLI path instead of installing a
+  verified release, neither Python 3.14 nor generic `python3` was selected,
+  and the non-terminal Linux launch had no "Run in Terminal" guidance.
+- **Review-fix Green:** The three Red cases passed after the changes. An
+  additional checksum-mismatch case and private-runtime-path case were added;
+  the setup test module passes:
+  `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
+  PYTHONPATH=tests python3 -m unittest test_mb_copilot_setup -q`
+  (**14 tests; the Windows-only delegation test is skipped on macOS**). A real
+  download into a temporary directory verified
+  the pinned release checksum and ran `copilot --version` → **GitHub Copilot
+  CLI 1.0.93**.
+- **Full local product gate before the Windows test-matrix and Ubuntu fallback additions:**
+  `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
+  bash scripts/run_headless_tests.sh` → **232 tests passed, 5 skipped** in
+  205.315 seconds. Skips remain the three Windows PowerShell package tests,
+  Windows Credential Manager, and opt-in real-time audio.
+- **Initial hosted gate:** all Assistant (Windows x64/macOS), Windows package,
+  headless-tests, and ChaosOsc plugin-build checks passed on PR #41's original
+  head `b7b19a596837b5fd667680385224a162b3e91ee6`. After the review fixes
+  merged through PR #43, all exact-head PR #41 checks also passed on
+  `f8f400a45297e39b02434d4fc3d665a49889c964`.
+- **Windows CI Red on the first review-fix PR:** PR #42 head
+  `494310d5ed47b1b935ddcd84c9434e228ccae326` passed all hosted jobs except its
+  two Windows Assistant runs. They exposed test-only assumptions: Windows
+  does not preserve POSIX `0o755` mode bits, and a Unix runtime-install test
+  called `setup_runtime(install_cli=True)` on Windows instead of exercising
+  the intended `Setup-Copilot.cmd` delegation. The local correction makes the
+  mode assertion POSIX-only, skips that Unix-only runtime case on Windows,
+  and adds a Windows-specific delegation test.
+- **Windows CI Green locally:** `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
+  PYTHONPATH=tests python3 -m unittest test_mb_copilot_setup -q` → **14 tests,
+  one Windows-only test skipped on macOS**. The test-only correction is commit
+  `1dc19c9f13c96732f399858f6277527026b8f02e`. It was merged via PR #43 at
+  `f8f400a45297e39b02434d4fc3d665a49889c964`; all hosted checks on updated
+  PR #41 head `f8f400a` pass.
+- **Repository rule:** after PR #41 opened, a plain `git push` of the PR-status
+  commit was rejected with GH013: "Code coverage checks require merging via
+  API or UI." The local status commit `7440702` is preserved; use a review-fix
+  PR stacked on #41 and merge it through GitHub's normal PR/API path rather than
+  bypassing the rule.
+- **API update restriction:** a direct GitHub Contents API update to the open
+  review-fix branch was also rejected: "Code coverage checks require a pull
+  request." This is why test-only corrections were integrated through the
+  replacement stacked PR #43 instead of writing directly to an open PR branch.
+- **Round-2 review:** on exact PR #41 base
+  `dac46c31f6711ad0d90d40b9634ba92aa5a0203b` / head
+  `f8f400a45297e39b02434d4fc3d665a49889c964`, the security review found no
+  vulnerabilities. The code review found one MEDIUM: Ubuntu 22.04's standard
+  APT sources lack Python 3.11, and the helper exited without a fallback.
+- **Ubuntu fallback Red/Green:** the new PTY-driven regression
+  `PYTHONPATH=tests python3 -m unittest -v
+  test_mb_copilot_setup.CopilotSetupTests.test_linux_apt_fallback_explains_when_python311_is_unavailable`
+  failed before the fix because APT failure printed no next step. Setup now
+  distinguishes APT refresh/install failures and explains that Ubuntu 22.04
+  may need a distribution-supported Python 3.11+ source or OS upgrade. The
+  targeted command
+  `PYTHONPATH=tests python3 -m unittest -v
+  test_mb_copilot_setup.CopilotSetupTests.test_linux_apt_fallback_explains_when_python311_is_unavailable
+  test_mb_copilot_setup.CopilotSetupTests.test_linux_launcher_explains_that_interactive_terminal_is_required`
+  passes both cases; `bash -n extension/Data/copilot/setup-copilot.sh` and
+  `git diff --check` also pass. The full setup module passes 14 tests (one
+  Windows-only skip). Implementation commit:
+  `cab1f464346953e6a39b4477125de0c8bcc6a078`.
+- **Current review disposition:** the round-2 finding is fixed locally;
+  publish the fallback as a stacked PR against PR #41's current head, rerun
+  exact-head CI, and obtain targeted remediation confirmation. No live GitHub
+  authentication or generation was attempted.

@@ -10,6 +10,8 @@ MBProviderPaths {
 		^settingsDirOverride ?? { Platform.userConfigDir +/+ "MaxxedBeats" }
 	}
 
+	*copilotRuntimePath { ^this.settingsDir +/+ "copilot-runtime.json" }
+
 	*dataDir {
 		^PathName(this.filenameSymbol.asString).pathOnly.withoutTrailingSlash
 			.dirname.dirname +/+ "Data"

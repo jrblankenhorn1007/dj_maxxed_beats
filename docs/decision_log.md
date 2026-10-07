@@ -816,3 +816,30 @@ credentials and private user data out of this file.
   and the optional SDK dependency; other providers remain usable without
   those Copilot prerequisites. Tests use fakes and do not claim live sign-in
   or generation verification.
+
+### DEC-043 — Bootstrap Copilot's per-user runtime for SCIDE
+
+- **Date:** 2026-10-07
+- **Context:** Copilot's native CLI was installed in a per-user directory on
+  the target Mac but was not on `PATH` inherited by SCIDE. The system Python
+  was 3.9, below the SDK's 3.11 minimum. The existing subscription workflow
+  correctly has no API-key field, but users had no novice-friendly way to
+  install/configure those prerequisites or discover the browser sign-in row.
+- **Decision:** Search supported per-user native CLI locations, set up the
+  pinned SDK in a private per-user virtual environment, save only executable
+  paths in SuperCollider's user configuration directory, and reread those
+  paths for each provider request. Add double-click setup/launch/uninstall
+  helpers, package them in the Windows zip, and explain GitHub browser
+  sign-in rather than asking for an API key.
+- **Alternatives:** Ask users to modify shell `PATH` or runtime JSON, install
+  the CLI/SDK manually, or add an API-key field that Copilot subscriptions do
+  not use.
+- **Rationale:** GUI-launched SuperCollider processes do not reliably inherit
+  an interactive shell's environment. Persisting the selected executable
+  paths removes that hidden dependency while leaving OAuth and credentials
+  under the official CLI's control.
+- **Consequences:** Copilot still requires Python 3.11+ and the official CLI;
+  platform helpers install or guide users through those prerequisites.
+  Offline tests verify discovery, persistence, refresh, and package layout.
+  Live Copilot sign-in/generation and physical Windows behavior remain
+  unverified.

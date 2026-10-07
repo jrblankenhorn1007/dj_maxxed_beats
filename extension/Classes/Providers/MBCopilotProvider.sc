@@ -1,7 +1,7 @@
 // Optional official Copilot SDK/runtime backend, using the CLI's own login.
 // The helper runs in an empty directory with tools and discovery disabled.
 MBCopilotProvider : MBProvider {
-	var <pythonPath, <cliPath, <bridgePath;
+	var <pythonPath, <cliPath, <bridgePath, pythonOverride, cliOverride;
 
 	*new { |pythonPath, cliPath, timeout = 120, bridgePath|
 		^super.new.prInitCopilot(pythonPath, cliPath, timeout, bridgePath)
@@ -11,9 +11,20 @@ MBCopilotProvider : MBProvider {
 		id = \copilot;
 		displayName = "GitHub Copilot";
 		timeout = argTimeout;
-		pythonPath = argPython ? if(MBProviderPaths.isWindows) { "python" } { "python3" };
-		cliPath = argCli;
+		pythonOverride = argPython;
+		cliOverride = argCli;
 		bridgePath = argBridge ? (MBProviderPaths.dataDir +/+ "copilot" +/+ "bridge.py");
+		this.prLoadRuntime;
+	}
+
+	prLoadRuntime {
+		var runtime = MBProviderPaths.readJSON(MBProviderPaths.copilotRuntimePath),
+			configuredPython, configuredCli;
+		configuredPython = if(runtime.isKindOf(Dictionary)) { runtime["pythonPath"] };
+		configuredCli = if(runtime.isKindOf(Dictionary)) { runtime["cliPath"] };
+		pythonPath = pythonOverride ? configuredPython
+			? if(MBProviderPaths.isWindows) { "python" } { "python3" };
+		cliPath = cliOverride ? configuredCli;
 	}
 
 	requiresApiKey { ^false }
@@ -44,6 +55,7 @@ MBCopilotProvider : MBProvider {
 	prRunCopilot { |action, request, onSuccess, onFailure|
 		var dir = MBProviderPaths.newRunDir, handle = this.prNewHandle(onFailure),
 			error, argv, script;
+		this.prLoadRuntime;
 		error = MBProviderPaths.writeJSON(dir +/+ "copilot-request.json",
 			(action: action, request: request, timeout: timeout, cli: cliPath));
 		if(error.notNil) {
@@ -60,8 +72,8 @@ MBCopilotProvider : MBProvider {
 			{ why == \timeout } { MBError(\network, "Copilot request timed out") }
 			{ why == \cancelled } { MBError(\cancelled, "Request cancelled") }
 			{ code != 0 or: { envelope.isKindOf(Dictionary).not } } {
-				MBError(\config, "Could not run Copilot; install Python 3.11+, the optional "
-					++ "Copilot SDK dependencies and the official GitHub Copilot CLI")
+				MBError(\config, "GitHub Copilot is not set up yet. Run the included "
+					++ "Copilot setup helper, then try again.")
 			}
 			{ envelope["error"].notNil } {
 				MBError(envelope["error"]["kind"].asSymbol,

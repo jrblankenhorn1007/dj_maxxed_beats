@@ -49,8 +49,10 @@ NEXT_STEPS_INSTALL = """\
 Next steps:
   1. Recompile the SuperCollider class library: in SCIDE choose
      Language > Recompile Class Library, or evaluate `thisProcess.recompile`.
-  2. Reboot the audio server so it loads ChaosOsc: `s.reboot`
-  3. Open the assistant: `MaxxedBeats.gui`
+  2. If the audio server is already running, reboot it so it loads ChaosOsc.
+  3. In SCIDE choose File > Open and open
+     <Extensions>/MaxxedBeats/LaunchMaxxedBeats.scd. Select its single line
+     and press Ctrl+Enter (Windows/Linux) or Cmd+Return (macOS).
      (help: search the SCIDE help browser for "MaxxedBeats")."""
 NEXT_STEPS_UNINSTALL = """\
 Next steps:

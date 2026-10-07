@@ -137,14 +137,22 @@ or store a Copilot API key or reuse VS Code credentials. Its GUI sign-in
 control appears as a provider row alongside the OpenAI and Anthropic key rows.
 
 The optional bridge is `extension/Data/copilot/bridge.py`, with its pinned
-`github-copilot-sdk` dependency in `requirements.txt`. It requires Python 3.11+
-and the official Copilot CLI at runtime; the Windows package includes both
-bridge files but does not install Python or the CLI. The bridge runs from an
-isolated temporary directory with tools and discovery disabled, exposes only
-sign-in, auth-status, model-list, and completion actions, and returns
+`github-copilot-sdk` dependency in `requirements.txt`. The official Copilot
+CLI is located from the provider's saved runtime configuration, the native
+per-user CLI install locations, or `PATH`; this avoids depending on the
+environment inherited by SCIDE. The setup helper
+`extension/Data/copilot/setup_copilot.py` creates a private Python 3.11+
+virtual environment, installs the pinned SDK, and saves its Python and CLI
+paths to `<settings>/copilot-runtime.json`. The settings contain no tokens.
+macOS/Linux launch scripts install the official CLI per user and guide the
+user through obtaining Python 3.11+; the Windows package has a one-click
+launcher which optionally installs Python and the official CLI using WinGet.
+The bridge refreshes saved paths for an already-open SCIDE session, runs from
+an isolated temporary directory with tools and discovery disabled, exposes
+only sign-in, auth-status, model-list, and completion actions, and returns
 structured results to sclang. Model availability comes from the runtime, not
-a hard-coded catalog. Tests use a fake bridge; live login and completion are
-not claimed as verified.
+a hard-coded catalog. Unit tests use fakes and do not claim live login or
+completion.
 
 ## Model catalog
 
