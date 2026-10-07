@@ -80,17 +80,39 @@
   "worktree": "/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-copilot-windows-onboarding-20261007-1640",
   "base_origin_main_sha": "dac46c31f6711ad0d90d40b9634ba92aa5a0203b",
   "rebased_onto_origin_main_sha": null,
-  "implementation_commit_sha": "6b9e5dd4ec7f79ebb71642d21960e45d9bbecca4",
+  "implementation_commit_sha": "5d2745c1f0c5475697e68627741f7ea90fe93d52",
   "checks": [
     {
       "command": "SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth bash scripts/run_headless_tests.sh",
-      "result": "PASS (228 tests, five platform/opt-in skips; 247.111 seconds)"
+      "result": "PASS (232 tests, five platform/opt-in skips; 205.315 seconds)"
+    },
+    {
+      "command": "PYTHONPATH=tests python3 -m unittest test_mb_copilot_setup -q",
+      "result": "PASS (12 tests)"
+    },
+    {
+      "command": "Install pinned GitHub Copilot CLI release into a temporary directory; verify SHA-256 and run --version",
+      "result": "PASS (GitHub Copilot CLI 1.0.93)"
+    },
+    {
+      "command": "gh pr checks 41",
+      "result": "PASS on original PR head b7b19a596837b5fd667680385224a162b3e91ee6; rerun on review-fix head pending"
     }
   ],
   "blockers": [],
-  "attested_at_utc": "2026-10-07T21:19:15Z",
+  "review_round_1": {
+    "reviewed_base_sha": "dac46c31f6711ad0d90d40b9634ba92aa5a0203b",
+    "reviewed_head_sha": "b7b19a596837b5fd667680385224a162b3e91ee6",
+    "findings_resolved": [
+      "Replace mutable remote shell-pipe installer with a pinned SHA-256-verified CLI release.",
+      "Discover supported macOS Python 3.14 and generic python3 executables.",
+      "Require an interactive Linux terminal and document Run in Terminal."
+    ],
+    "round_2": "PENDING_FINAL_PR_HEAD"
+  },
+  "attested_at_utc": "2026-10-07T21:50:39Z",
   "attestation_kind": "SELF_ATTESTATION",
   "cryptographic_signature_status": "NOT_CRYPTOGRAPHICALLY_SIGNED",
-  "statement": "I, coordinator-01, sign off iteration 1 at implementation commit 6b9e5dd4ec7f79ebb71642d21960e45d9bbecca4."
+  "statement": "I, coordinator-01, sign off iteration 1 at implementation commit 5d2745c1f0c5475697e68627741f7ea90fe93d52."
 }
 ```
