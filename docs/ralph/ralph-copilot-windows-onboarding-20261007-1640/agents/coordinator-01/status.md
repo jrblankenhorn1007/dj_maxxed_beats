@@ -9,9 +9,9 @@ branch: "ralph/copilot-windows-onboarding-20261007-1640"
 branch_slug: "ralph-copilot-windows-onboarding-20261007-1640"
 worktree: "/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-copilot-windows-onboarding-20261007-1640"
 iteration: 1
-status: IN_PROGRESS
+status: BLOCKED
 started_at_utc: "2026-10-07T20:39:31Z"
-updated_at_utc: "2026-10-07T22:18:10Z"
+updated_at_utc: "2026-10-07T23:11:40Z"
 resource_usage:
   time_spent_seconds: 5919
   time_basis: WALL_CLOCK_ELAPSED
@@ -26,19 +26,21 @@ base_origin_main_sha: "dac46c31f6711ad0d90d40b9634ba92aa5a0203b"
 rebased_onto_origin_main_sha: null
 implementation_commit_sha: "cab1f464346953e6a39b4477125de0c8bcc6a078"
 pull_request:
-  status: PENDING
+  status: MERGED
   number: 41
   url: "https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/41"
   base_sha: "dac46c31f6711ad0d90d40b9634ba92aa5a0203b"
-  head_sha: "f8f400a45297e39b02434d4fc3d665a49889c964"
+  head_sha: "e9a003cb537c1cca80f0828b8cf8186d5b49e681"
+  merged_at_utc: "2026-10-07T22:26:54Z"
+  merge_sha: "740ccf6cbb7ad875ee1333762dc84b635361cbb1"
 review:
-  status: PENDING
+  status: COMPLETE
   reviewer_agents: ["Ralph Code Reviewer", "Ralph Security Reviewer"]
   reviewed_base_sha: "dac46c31f6711ad0d90d40b9634ba92aa5a0203b"
-  reviewed_head_sha: "f8f400a45297e39b02434d4fc3d665a49889c964"
+  reviewed_head_sha: "e9a003cb537c1cca80f0828b8cf8186d5b49e681"
   rounds_completed: 2
   max_rounds: 2
-  unresolved_finding_count: 1
+  unresolved_finding_count: 0
   author_decision:
     status: NOT_REQUIRED
     choice: null
@@ -46,12 +48,12 @@ review:
     recorded_at_utc: null
 merge_actor_worker_id: null
 merge:
-  status: PENDING
-  sha: null
+  status: VERIFIED
+  sha: "740ccf6cbb7ad875ee1333762dc84b635361cbb1"
   verified_remote_ref: "refs/heads/main"
-  verified_origin_main_sha: null
-  verification_method: null
-  verified_at_utc: null
+  verified_origin_main_sha: "e73b953671ba72e9af388ceaa21ebcdcfe3d63d6"
+  verification_method: "git merge-base --is-ancestor 740ccf6cbb7ad875ee1333762dc84b635361cbb1 origin/main"
+  verified_at_utc: "2026-10-07T22:54:09Z"
 checks:
   - command: "SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth bash scripts/run_headless_tests.sh"
     result: "PASS (232 tests, five platform/opt-in skips; 205.315 seconds)"
@@ -70,21 +72,31 @@ checks:
   - command: "Ruby local-link validation for branch dossier and decision records"
     result: "PASS (10 branch Markdown files)"
   - command: "Windows PowerShell package-script tests"
-    result: "NOT_RUN locally (PowerShell unavailable); PR #41 Windows package/Assistant checks passed on original head b7b19a5; review-fix head still needs hosted CI"
-  - command: "Hosted PR #41 checks"
-    result: "PASS on original head b7b19a596837b5fd667680385224a162b3e91ee6 (macOS, Windows x64, Windows package, headless, and ChaosOsc builds)"
+    result: "NOT_RUN locally (PowerShell unavailable); hosted Windows Assistant and package checks passed on PR #41's final head."
+  - command: "Hosted PR #41 checks on final head e9a003cb537c1cca80f0828b8cf8186d5b49e681"
+    result: "PASS (Assistant macOS/Windows, Windows package, headless-tests, and ChaosOsc builds for macOS/Linux/Windows)"
   - command: "Hosted Windows Assistant checks on PR #42 head 494310d5ed47b1b935ddcd84c9434e228ccae326"
-    result: "FAIL (two platform-specific test assumptions; corrected test commit 1dc19c9f13c96732f399858f6277527026b8f02e awaits replacement stacked PR)"
-  - command: "Hosted PR #43 checks and merge"
-    result: "PASS (all macOS, Windows x64/package, headless, and ChaosOsc checks passed; merged into PR #41 at f8f400a45297e39b02434d4fc3d665a49889c964)"
-  - command: "Hosted PR #41 checks on current head f8f400a45297e39b02434d4fc3d665a49889c964"
-    result: "PASS (macOS, Windows x64/package, headless, and ChaosOsc checks)"
-  - command: "Round-2 independent review of PR #41 head f8f400a45297e39b02434d4fc3d665a49889c964"
-    result: "Security review: no vulnerabilities. Code review: one MEDIUM Ubuntu 22.04 APT/Python fallback issue, fixed locally in implementation commit cab1f464346953e6a39b4477125de0c8bcc6a078; targeted final-head confirmation pending."
+    result: "Initial failure resolved: test-only POSIX assumptions were corrected and merged through PR #43; all hosted checks passed on PR #41's final head."
+  - command: "Hosted PR #43 and PR #44 stacked fixes"
+    result: "PASS; PR #43 merged into PR #41 at f8f400a45297e39b02434d4fc3d665a49889c964, and PR #44 merged into PR #41 at e9a003cb537c1cca80f0828b8cf8186d5b49e681."
+  - command: "Round-2 independent review and final remediation confirmation"
+    result: "Security review found no vulnerabilities. The Ubuntu 22.04 APT/Python fallback finding was fixed in cab1f464346953e6a39b4477125de0c8bcc6a078, published through PR #44, and confirmed on final PR #41 head e9a003cb537c1cca80f0828b8cf8186d5b49e681; unresolved findings: 0."
+  - command: "python3 scripts/install_maxxedbeats.py --dry-run"
+    result: "PASS; confirmed the marker-protected MaxxedBeats and ChaosOsc installations would be replaced; no changes made."
+  - command: "python3 scripts/install_maxxedbeats.py"
+    result: "PASS; built universal macOS ChaosOsc and installed the merged Quark and plugin into the default user Extensions folder."
+  - command: "Installed Copilot helper and launcher comparison"
+    result: "PASS; setup_copilot.py, setup-copilot.command, bridge.py, MBCopilotProvider.sc, and LaunchMaxxedBeats.scd match origin/main; the setup launcher is executable."
+  - command: "SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth PYTHONPATH=tests python3 -m unittest test_mb_copilot test_mb_copilot_setup -q"
+    result: "PASS (32 tests; one Windows-only test skipped). The first invocation omitted SCLANG/SCSYNTH and four sclang-backed cases errored; rerunning with the configured SuperCollider executables passed."
   - command: "Live Copilot sign-in and generation"
-    result: "NOT_RUN (Python 3.11+ is not installed in this environment)"
-blockers: []
-next_action: "Publish the Ubuntu APT fallback fix in a stacked PR against PR #41 head f8f400a, rerun hosted checks and obtain targeted round-2 remediation confirmation, then merge PR #41 through GitHub's protected API/UI path and complete post-merge verification and memory review."
+    result: "NOT_RUN; this host has Python 3.9.6 and no Python 3.11+ or Homebrew. The setup helper directs the user to install Python 3.11+ before retrying; GitHub browser sign-in requires the user's interaction."
+  - command: "Required SCIDE visual acceptance on Windows 10 x64 and MacBook Neo"
+    result: "NOT_RUN; no fresh visual scenario or screenshot inspection was performed in this session."
+blockers:
+  - "Manual Copilot setup and GitHub sign-in remain unverified: install Python 3.11+ using the setup helper's Python.org flow, run the helper again, then complete browser sign-in and refresh models in MaxxedBeats."
+  - "The project-wide visual acceptance gate remains open for Windows 10 x64 and MacBook Neo; do not emit RALPH_COMPLETE."
+next_action: "User: install Python 3.11+ from the page opened by setup-copilot.command, double-click the helper again, recompile the SCIDE class library, open LaunchMaxxedBeats.scd, sign in to GitHub Copilot, and refresh models. Complete the required visual scenario on Windows 10 x64 and MacBook Neo before project-wide completion."
 worker_sign_off:
   status: RECEIVED
   attestation_kind: SELF_ATTESTATION
@@ -107,15 +119,21 @@ memory_handoff:
         - "extension/Classes/Providers/MBCopilotProvider.sc runtime refresh test"
   no_durable_lessons_reason: null
 memory_review:
-  status: PENDING_REMOTE_MERGE
-  outcome: null
-  memory_update: PENDING
+  status: COMPLETE
+  reviewed_at_utc: "2026-10-07T22:54:09Z"
+  outcome: DURABLE_LESSON_CAPTURED
+  memory_update: VERIFIED
   sources:
     - ".github/memory/README.md"
     - ".github/memory/cross-platform.md"
     - ".github/memory/testing.md"
     - ".github/memory/git-workflow.md"
-  next_action: "Run the dedicated memory reviewer only after the implementation merge is verified on fetched origin/main."
-decision_record_path: "docs/decisions/ralph-copilot-windows-onboarding-20261007-1640/agents/coordinator-01/pr-pending.md"
+  memory_followup_branch: "ralph/copilot-memory-20261007-2227"
+  memory_followup_commit_sha: "4ecf27fb094c2486d79e7739de32ddc8b8f9a9fb"
+  memory_followup_pull_request: 45
+  memory_followup_merge_sha: "e73b953671ba72e9af388ceaa21ebcdcfe3d63d6"
+  memory_followup_verified_origin_main_sha: "e73b953671ba72e9af388ceaa21ebcdcfe3d63d6"
+  memory_followup_verification_method: "git merge-base --is-ancestor e73b953671ba72e9af388ceaa21ebcdcfe3d63d6 origin/main"
+decision_record_path: "docs/decisions/ralph-copilot-windows-onboarding-20261007-1640/agents/coordinator-01/pr-41.md"
 decision_index_path: "docs/decisions/ralph-copilot-windows-onboarding-20261007-1640/README.md"
 ---

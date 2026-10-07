@@ -1470,7 +1470,56 @@ Ralph-Status: IN_PROGRESS
   `git diff --check` also pass. The full setup module passes 14 tests (one
   Windows-only skip). Implementation commit:
   `cab1f464346953e6a39b4477125de0c8bcc6a078`.
-- **Current review disposition:** the round-2 finding is fixed locally;
-  publish the fallback as a stacked PR against PR #41's current head, rerun
-  exact-head CI, and obtain targeted remediation confirmation. No live GitHub
-  authentication or generation was attempted.
+- **Review disposition at the pre-merge checkpoint:** the round-2 finding is
+  fixed locally; publish the fallback as a stacked PR against PR #41's current
+  head, rerun exact-head CI, and obtain targeted remediation confirmation. No
+  live GitHub authentication or generation was attempted.
+
+## Iteration 9 post-merge integration, memory review, and local install — 2026-10-07
+
+- **Correction to the pre-merge snapshot above:** PR #44 published the Ubuntu
+  22.04 fallback and merged into PR #41 at final head
+  `e9a003cb537c1cca80f0828b8cf8186d5b49e681`. All final PR #41 hosted checks
+  passed; round-2 remediation was confirmed with zero unresolved findings.
+- **Implementation merge:** PR #41 merged to `origin/main` at
+  `740ccf6cbb7ad875ee1333762dc84b635361cbb1`. The coordinator fetched
+  `origin` and verified the merge SHA is an ancestor of fetched `origin/main`.
+- **Post-merge memory review:** the dedicated Project Memory Update agent
+  reviewed the coordinator handoff and merged sources/tests. It captured
+  durable lessons for GUI runtime-path persistence, checksum-verified
+  downloads, distro-aware dependency setup, and platform-aware setup tests.
+  PR #45 merged at `e73b953671ba72e9af388ceaa21ebcdcfe3d63d6`; the coordinator
+  independently fetched `origin` and verified that exact merge SHA on
+  `origin/main`.
+- **Installed-copy root cause:** before deployment, the user's default
+  `MaxxedBeats/Data/copilot` folder contained only `bridge.py` and
+  `requirements.txt`; it did not contain the new setup helper or launcher.
+  The implementation had merged remotely, but the installed extension had
+  not been refreshed. The CLI was already installed per-user but was outside
+  SCIDE's inherited `PATH`; the default Python was 3.9.6, below the SDK's
+  Python 3.11 minimum.
+- **Install preview:** `python3 scripts/install_maxxedbeats.py --dry-run`
+  confirmed the existing MaxxedBeats and ChaosOsc folders carried this
+  installer's markers and would be replaced safely; no files were changed by
+  the preview.
+- **Local installation:** `python3 scripts/install_maxxedbeats.py` completed
+  successfully, built the universal macOS ChaosOsc plugin, and installed the
+  merged Quark and plugin into the default user Extensions directory. The
+  installed `setup_copilot.py`, executable `setup-copilot.command`,
+  `bridge.py`, `MBCopilotProvider.sc`, and `LaunchMaxxedBeats.scd` were
+  compared with `origin/main` and matched.
+- **Post-install focused tests:**
+  `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
+  PYTHONPATH=tests python3 -m unittest test_mb_copilot test_mb_copilot_setup -q`
+  passed **32 tests with one Windows-only skip**. The initial invocation
+  omitted `SCLANG`/`SCSYNTH` and four sclang-backed tests errored because the
+  test harness could not find sclang; the configured rerun passed.
+- **Remaining manual gates:** the setup helper is installed, but live
+  Copilot setup/sign-in/generation has not been run. This host has Python
+  3.9.6 and no Python 3.11+ or Homebrew, so the helper opens the official
+  Python downloads page; the user must install Python 3.11+, run setup again,
+  and complete GitHub browser sign-in. The required visible SCIDE scenario on
+  Windows 10 x64 and MacBook Neo has not been run. No project-wide
+  `RALPH_COMPLETE` is emitted; the iteration is blocked on these external
+  acceptance steps.
