@@ -1523,3 +1523,42 @@ Ralph-Status: IN_PROGRESS
   Windows 10 x64 and MacBook Neo has not been run. No project-wide
   `RALPH_COMPLETE` is emitted; the iteration is blocked on these external
   acceptance steps.
+
+## Iteration 10 — Copilot setup error guidance — 2026-10-07
+
+- **Run/task:** `copilot-setup-onboarding-20261007-1640` /
+  `copilot-runtime-setup-onboarding`, iteration 2.
+- **Branch/worktree:** `ralph/copilot-guided-setup-20261007-2335` /
+  `/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-copilot-guided-setup-20261007-2335`.
+- **Base and commits:** fetched `origin/main` at
+  `68c7a9b709d7b5f9412e2358015f21af2bce8dcf`; implementation commit
+  `817f9c56c05a67418b2b355347064717713551e8`; status/evidence commit
+  `d184da039241cf7f7fb19736123d15ec364f5649`.
+- **Root cause:** the macOS, Linux, and Windows setup helpers already guide
+  installation of Python, the pinned SDK, the official CLI, and browser
+  sign-in. The Python-version configuration error shown after Git
+  authorization did not say which helper to run or clarify that Git
+  authorization does not install the local runtime.
+- **Red:** `PYTHONPATH=tests python3 -m unittest -v
+  test_mb_copilot.CopilotBridgeTests.test_old_python_error_names_the_platform_setup_launcher`
+  failed on the original bridge error because it did not name
+  `setup-copilot.command`.
+- **Green:** the Python and missing-SDK tests now verify the exact
+  `setup-copilot.command`, `setup-copilot.sh` / Run in Terminal, or
+  `Setup-Copilot.cmd` direction for each platform. The SuperCollider provider
+  callback test confirms the launcher reaches the user's visible error.
+  The focused command
+  `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
+  PYTHONPATH=tests python3 -m unittest test_mb_copilot test_mb_copilot_setup
+  test_mb_install test_mb_package_windows -q` passed **58 tests, 4 skipped**.
+- **Required final gate:**
+  `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
+  bash scripts/run_headless_tests.sh` passed **236 tests, 6 skipped** in
+  248.669 seconds. `git diff --check` and the new branch status YAML check
+  also passed.
+- **Integration state:** the two commits are local and the branch has not yet
+  been published, reviewed, or merged. Keep the overall project blocked until
+  the user completes Python 3.11+ setup and Copilot browser sign-in and the
+  required Windows 10 x64/MacBook Neo visual acceptance passes.

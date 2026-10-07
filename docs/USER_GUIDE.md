@@ -160,6 +160,12 @@ terminal command. If the installed extension is in a custom folder, open its
 `LaunchMaxxedBeats.scd` file with **File > Open** and press **Ctrl+Enter** on
 Windows/Linux or **Cmd+Return** on macOS.
 
+If MaxxedBeats reports that Copilot requires Python 3.11+ or the
+`github-copilot-sdk==1.0.16`, the private Copilot runtime setup has not
+finished. This is separate from authorizing Git or signing in to another
+GitHub app. Run the setup helper for your platform above, then use **Sign in
+to GitHub Copilot...** in **Keys & Privacy** and refresh models.
+
 ## Open the assistant
 
 Open `LaunchMaxxedBeats.scd` from the installed `MaxxedBeats` folder in SCIDE
