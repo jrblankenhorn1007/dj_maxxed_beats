@@ -6,7 +6,7 @@
 - **Runtime/session ID:** `copilotcli:/e4c778d9-98e0-4865-93f2-cd74161f56ff`
 - **Branch:** `ralph/copilot-windows-onboarding-20261007-1640`
 - **Base `origin/main`:** `dac46c31f6711ad0d90d40b9634ba92aa5a0203b`
-- **Implementation commit:** pending.
+- **Implementation commit:** `6b9e5dd4ec7f79ebb71642d21960e45d9bbecca4`.
 - **Pull request:** pending normal publication to `main`.
 - **Review:** pending exact-head independent code and security review.
 - **Merge:** not attempted; no `origin/main` integration is claimed.
@@ -36,7 +36,8 @@
 
 - `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth bash scripts/run_headless_tests.sh`
   — **PASS**, 228 tests, five platform/opt-in skips.
-- `git diff --check` and Windows CI checks remain to be recorded after the
-  final status update and PR creation.
+- The implementation commit passed `git diff --cached --check`; final status
+  records also pass staged whitespace, YAML/status synchronization, and local
+  Markdown-link checks. Hosted Windows CI remains pending.
 - Local Windows PowerShell package-script tests are unavailable; they are
   expected to run in the hosted Windows Assistant Tests workflow.

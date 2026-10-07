@@ -6,7 +6,8 @@
   `copilot-runtime-setup-onboarding`
 - **Coordinator:** `coordinator-01 / Copilot setup onboarding`
 - **Base `origin/main`:** `dac46c31f6711ad0d90d40b9634ba92aa5a0203b`
-- **State:** `IN_PROGRESS`; implementation commit and PR details pending.
+- **Implementation commit:** `6b9e5dd4ec7f79ebb71642d21960e45d9bbecca4`
+- **State:** `IN_PROGRESS`; PR details pending.
 - **User request:** [summary](./prompts/user-request.md)
 - **Coordinator assignment:** [scope and split decision](./prompts/coordinator-assignment.md)
 - **Handoff:** [coordinator-01](./agents/coordinator-01/handoff.md)

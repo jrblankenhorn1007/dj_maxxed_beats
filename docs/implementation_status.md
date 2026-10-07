@@ -15,8 +15,10 @@
 - The branch adds private runtime setup, live config refresh, platform
   launchers, one-click Windows package wrappers, and install/launch/sign-in
   instructions. Its local full gate passes 228 tests with five platform or
-  opt-in skips. Hosted Windows package-script checks and real sign-in remain
-  unverified; the branch has not yet been merged.
+  opt-in skips. Implementation commit
+  `6b9e5dd4ec7f79ebb71642d21960e45d9bbecca4` is committed locally. Hosted
+  Windows package-script checks and real sign-in remain unverified; the
+  branch has not yet been merged.
 
 ## Latest loop report
 

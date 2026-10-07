@@ -1,9 +1,10 @@
 schema_version: 2
 snapshot_path: "docs/ralph-status.md"
-snapshot_revision: 13
-updated_at_utc: "2026-10-07T01:07:00Z"
+snapshot_revision: 17
+updated_at_utc: "2026-10-07T21:21:27Z"
 overall_status: IN_PROGRESS
 current_run_ids:
+  - "copilot-setup-onboarding-20261007-1640"
   - "djmb-plugin-completion-20261006-2310"
   - "branch-evidence-dossiers-20260925-081730"
   - "skills-routing-20260925-0108"
@@ -410,6 +411,39 @@ runs:
         blocker: "The user was unavailable to explicitly authorize pushing the local fast-forward to canonical origin/main; the coordinator preserved it locally."
         next_action: "Await explicit authorization before publishing; then verify remote main and complete the post-merge memory review."
     worker_count_note: "Both scoped workers completed; worker-02's shared-repository integration remains blocked on explicit remote-publish authorization."
+  - run_id: "copilot-setup-onboarding-20261007-1640"
+    task_ids: ["copilot-runtime-setup-onboarding"]
+    aggregate_status: IN_PROGRESS
+    requested_worker_count: 2
+    effective_worker_count: 0
+    active_worker_count: 0
+    base_origin_main_sha: "dac46c31f6711ad0d90d40b9634ba92aa5a0203b"
+    coordinator_branch: "ralph/copilot-windows-onboarding-20261007-1640"
+    coordinator_branch_slug: "ralph-copilot-windows-onboarding-20261007-1640"
+    coordinator_worktree: "/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-copilot-windows-onboarding-20261007-1640"
+    coordinator_base_origin_main_sha: "dac46c31f6711ad0d90d40b9634ba92aa5a0203b"
+    coordinator_rebased_onto_origin_main_sha: null
+    coordinator_implementation_commit_sha: "6b9e5dd4ec7f79ebb71642d21960e45d9bbecca4"
+    created_at_utc: "2026-10-07T20:39:31Z"
+    updated_at_utc: "2026-10-07T21:21:27Z"
+    split_plan:
+      - task_id: "copilot-runtime-setup-onboarding"
+        worker_id: "coordinator-01"
+        scope: "Complete and verify one end-to-end Copilot setup, configuration, package, and novice launch path across platforms."
+        depends_on: []
+    worker_count_note: "The Resource Manager had no free slots, and this cross-layer setup contract was kept with one coordinator to avoid overlapping assumptions; no child workers were launched."
+    memory_handoff:
+      implementation_summary: "Discover the official Copilot CLI outside SCIDE PATH, create a private pinned SDK runtime, persist and refresh its executable paths, and package novice-oriented setup/launch wrappers."
+      lesson_candidates:
+        - rule: "Persist explicit executable paths for GUI-launched runtimes instead of depending on an interactive shell's PATH."
+          why: "SCIDE could not see an already-installed per-user Copilot CLI because it was absent from the environment inherited by the GUI."
+          scope: "External provider runtimes launched by SuperCollider GUI processes."
+          evidence:
+            - "extension/Data/copilot/bridge.py native CLI discovery and test_mb_copilot.CopilotBridgeTests.test_resolve_cli_finds_per_user_native_install_outside_path"
+            - "extension/Classes/Providers/MBCopilotProvider.sc runtime refresh test"
+      no_durable_lessons_reason: null
+    memory_review: PENDING_REMOTE_MERGE
+    next_action: "Publish the PR, run exact-head platform checks and independent code/security review, then use the protected merge path and complete the post-merge memory review."
 
 branch_agent_index:
   - run_id: "djmb-plugin-completion-20261006-2310"
@@ -937,3 +971,67 @@ branch_agent_index:
       - command: "Product behavior test suite"
         result: NOT_RUN
     next_action: "Coordinator: publish the branch and open the parent PR; record its exact SHAs and start the independent round-1 review."
+  - run_id: "copilot-setup-onboarding-20261007-1640"
+    task_ids: ["copilot-runtime-setup-onboarding"]
+    worker_id: "coordinator-01"
+    worker_name: "coordinator-01 / Copilot setup onboarding"
+    branch: "ralph/copilot-windows-onboarding-20261007-1640"
+    branch_slug: "ralph-copilot-windows-onboarding-20261007-1640"
+    base_origin_main_sha: "dac46c31f6711ad0d90d40b9634ba92aa5a0203b"
+    rebased_onto_origin_main_sha: null
+    implementation_commit_sha: "6b9e5dd4ec7f79ebb71642d21960e45d9bbecca4"
+    status: IN_PROGRESS
+    iteration: 1
+    merge_actor_worker_id: null
+    worker_sign_off:
+      status: RECEIVED
+      attestation_kind: SELF_ATTESTATION
+      cryptographic_signature_status: NOT_CRYPTOGRAPHICALLY_SIGNED
+      attested_at_utc: "2026-10-07T21:19:15Z"
+    pull_request:
+      status: PENDING
+      number: null
+      url: null
+      base_sha: null
+      head_sha: null
+    review:
+      status: PENDING
+      reviewer_agents: ["Ralph Code Reviewer", "Ralph Security Reviewer"]
+      reviewed_base_sha: null
+      reviewed_head_sha: null
+      rounds_completed: 0
+      max_rounds: 2
+      unresolved_finding_count: 0
+      author_decision:
+        status: NOT_REQUIRED
+        choice: null
+        rationale: null
+        recorded_at_utc: null
+    resource_usage:
+      time_spent_seconds: 2516
+      time_basis: WALL_CLOCK_ELAPSED
+      token_spend:
+        status: NOT_REPORTED
+        input_tokens: null
+        output_tokens: null
+        total_tokens: null
+        cached_input_tokens: null
+        source: null
+    status_path: "docs/ralph/ralph-copilot-windows-onboarding-20261007-1640/agents/coordinator-01/status.md"
+    progress_path: "docs/ralph/ralph-copilot-windows-onboarding-20261007-1640/agents/coordinator-01/progress.md"
+    decision_record_path: "docs/decisions/ralph-copilot-windows-onboarding-20261007-1640/agents/coordinator-01/pr-pending.md"
+    decision_index_path: "docs/decisions/ralph-copilot-windows-onboarding-20261007-1640/README.md"
+    checks:
+      - command: "SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth bash scripts/run_headless_tests.sh"
+        result: "PASS (228 tests, five platform/opt-in skips; 247.111 seconds)"
+      - command: "git diff --cached --check"
+        result: PASS
+      - command: "Ruby schema-v2 dashboard/leaf/resource and memory-handoff consistency check"
+        result: PASS
+      - command: "Ruby local-link validation for branch dossier and decision records"
+        result: "PASS (9 branch Markdown files)"
+      - command: "Windows PowerShell package-script tests"
+        result: "NOT_RUN locally (PowerShell unavailable); hosted Windows CI pending"
+      - command: "Live Copilot sign-in and generation"
+        result: "NOT_RUN (Python 3.11+ is not installed in this environment)"
+    next_action: "Publish the PR and wait for exact-head CI and independent reviews before the protected merge."
