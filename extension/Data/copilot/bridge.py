@@ -71,6 +71,18 @@ def native_cli_candidates():
             yield from root.glob("copilot-{}-*/{}".format(platform_name, executable))
 
 
+def setup_helper_instruction():
+    if sys.platform == "darwin":
+        return ("Double-click setup-copilot.command in the installed "
+                "MaxxedBeats/Data/copilot folder.")
+    if sys.platform.startswith("linux"):
+        return ("In the installed MaxxedBeats/Data/copilot folder, right-click "
+                "setup-copilot.sh and choose Run in Terminal.")
+    if sys.platform == "win32":
+        return "Double-click Setup-Copilot.cmd in the extracted MaxxedBeats folder."
+    return "Run the included Copilot setup helper."
+
+
 def resolve_cli(spec):
     configured = spec.get("cli")
     if configured:
@@ -79,7 +91,7 @@ def resolve_cli(spec):
             return str(cli.resolve())
         raise BackendError(
             "config", "The saved GitHub Copilot CLI location no longer exists. "
-            "Run the included Copilot setup helper again.")
+            + setup_helper_instruction())
     environment_cli = os.environ.get("MBCOPILOT_CLI_PATH")
     if environment_cli:
         cli = Path(environment_cli).expanduser()
@@ -87,7 +99,7 @@ def resolve_cli(spec):
             return str(cli.resolve())
         raise BackendError(
             "config", "MBCOPILOT_CLI_PATH does not point to a file. "
-            "Run the included Copilot setup helper again.")
+            + setup_helper_instruction())
     for candidate in native_cli_candidates():
         if candidate.is_file():
             return str(candidate.resolve())
@@ -96,7 +108,7 @@ def resolve_cli(spec):
         return str(Path(cli).resolve())
     raise BackendError(
         "config", "The official GitHub Copilot CLI was not found. "
-        "Run the included Copilot setup helper, then try again.")
+        + setup_helper_instruction() + " Then try again.")
 
 
 def runtime_environment():
@@ -125,7 +137,7 @@ async def run_login(spec, directory):
     except OSError:
         raise BackendError(
             "config", "Could not start the GitHub Copilot CLI. "
-            "Run the included Copilot setup helper again.") from None
+            + setup_helper_instruction()) from None
     finally:
         if process is not None and process.returncode is None:
             try:
@@ -144,7 +156,10 @@ async def run_login(spec, directory):
 
 def sdk_client(spec, directory):
     if sys.version_info < (3, 11):
-        raise BackendError("config", "Copilot requires Python 3.11+ and github-copilot-sdk==1.0.16.")
+        raise BackendError(
+            "config", "Copilot requires Python 3.11+ and github-copilot-sdk==1.0.16. "
+            "Git authorization does not install this runtime; Copilot does not use an API key. "
+            + setup_helper_instruction())
     try:
         from importlib.metadata import version
         from copilot import CopilotClient, StdioRuntimeConnection
@@ -152,8 +167,9 @@ def sdk_client(spec, directory):
             raise ImportError()
     except Exception:
         raise BackendError(
-            "config", "Run the included Copilot setup helper to install Python 3.11+ "
-            "and the required SDK.") from None
+            "config", "Copilot's required Python SDK 1.0.16 is missing or incompatible. "
+            "Git authorization does not install this runtime. "
+            + setup_helper_instruction()) from None
     cli = resolve_cli(spec)
     return CopilotClient(
         connection=StdioRuntimeConnection(path=cli, args=[

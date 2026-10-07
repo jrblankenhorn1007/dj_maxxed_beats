@@ -141,6 +141,43 @@ class CopilotBridgeTests(unittest.TestCase):
                 mock.patch.dict(self.bridge.os.environ, {"APPDATA": str(appdata)}):
             self.assertEqual(self.bridge.resolve_cli({}), str(cli.resolve()))
 
+    def test_old_python_error_names_the_platform_setup_launcher(self):
+        cases = (
+            ("darwin", "setup-copilot.command", "Double-click"),
+            ("linux", "setup-copilot.sh", "terminal"),
+            ("win32", "Setup-Copilot.cmd", "Double-click"),
+        )
+        for platform_name, launcher, action in cases:
+            with self.subTest(platform=platform_name), \
+                    mock.patch.object(self.bridge.sys, "version_info", (3, 10)), \
+                    mock.patch.object(self.bridge.sys, "platform", platform_name):
+                with self.assertRaises(self.bridge.BackendError) as caught:
+                    self.bridge.sdk_client({}, self.directory)
+            self.assertEqual(caught.exception.kind, "config")
+            detail = caught.exception.detail.lower()
+            self.assertIn("python 3.11+", detail)
+            self.assertIn("git authorization", detail)
+            self.assertIn("api key", detail)
+            self.assertIn(launcher.lower(), detail)
+            self.assertIn(action.lower(), detail)
+
+    def test_missing_sdk_error_names_the_platform_setup_launcher(self):
+        launchers = {
+            "darwin": "setup-copilot.command",
+            "linux": "setup-copilot.sh",
+            "win32": "Setup-Copilot.cmd",
+        }
+        for platform_name, launcher in launchers.items():
+            with self.subTest(platform=platform_name), \
+                    mock.patch.object(self.bridge.sys, "version_info", (3, 11)), \
+                    mock.patch.object(self.bridge.sys, "platform", platform_name), \
+                    mock.patch("importlib.metadata.version", return_value="1.0.16"), \
+                    mock.patch.dict("sys.modules", {"copilot": None}):
+                with self.assertRaises(self.bridge.BackendError) as caught:
+                    self.bridge.sdk_client({}, self.directory)
+            self.assertEqual(caught.exception.kind, "config")
+            self.assertIn(launcher.lower(), caught.exception.detail.lower())
+
     def operation(self, client, action="complete", model="test-model", timeout=1):
         spec = {"action": action, "timeout": timeout, "request": {
             "model": model, "system": "Approved system only",
@@ -346,6 +383,13 @@ class CopilotProviderTests(unittest.TestCase):
         self.assertEqual(error["kind"], "config")
         self.assertTrue(any(word in error["detail"].lower()
                             for word in ("python", "dependencies", "install")))
+        helper = {
+            "darwin": "setup-copilot.command",
+            "linux": "setup-copilot.sh",
+            "win32": "Setup-Copilot.cmd",
+        }.get(sys.platform)
+        if helper:
+            self.assertIn(helper.lower(), error["detail"].lower())
         self.assertEqual(run.get("loginError")[0]["kind"], "config")
         self.assertIn("GitHub Copilot CLI", run.get("loginError")[0]["detail"])
 

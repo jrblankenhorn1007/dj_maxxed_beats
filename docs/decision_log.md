@@ -843,3 +843,28 @@ credentials and private user data out of this file.
   Offline tests verify discovery, persistence, refresh, and package layout.
   Live Copilot sign-in/generation and physical Windows behavior remain
   unverified.
+
+### DEC-044 — Name the platform setup helper in Copilot runtime errors
+
+- **Date:** 2026-10-07
+- **Context:** Users could see that Copilot required Python 3.11+ and the
+  pinned SDK after authorizing Git, but the error did not identify which setup
+  file to run. The existing platform helpers already walk through Python,
+  SDK, CLI, and browser sign-in prerequisites.
+- **Decision:** Return the exact macOS, Linux, or Windows setup-helper name and
+  launch action in Python/SDK/CLI configuration errors. Keep Copilot
+  subscription authentication in the official browser flow; do not add an API
+  key. Clarify in the user guide that Git authorization is separate from
+  runtime setup.
+- **Alternatives:** Keep the generic "run the included helper" error, ask
+  users to locate the helper from a separate documentation page, or introduce
+  an API-key field.
+- **Rationale:** The error is the first actionable surface users see when
+  model refresh fails. Naming the OS-specific entry point connects the
+  existing guided installers to that failure and distinguishes setup from
+  authentication.
+- **Consequences:** The Python and SDK config errors now name
+  `setup-copilot.command`, `setup-copilot.sh`, or `Setup-Copilot.cmd` and the
+  appropriate next action. Tests cover each platform and the provider error
+  callback. Live setup/sign-in/generation and required physical visual
+  acceptance remain unverified.
