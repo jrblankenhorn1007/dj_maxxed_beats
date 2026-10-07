@@ -1088,3 +1088,18 @@ Ralph-Status: IN_PROGRESS
 - **Unverified:** physical Windows 10 x64, Windows real-time audio, Linux
   `scsynth`, macOS x86_64 execution, GUI/SCIDE visual sign-off, and
   SuperCollider releases other than 3.14.1.
+- **Review round 1 (pre-publication, base `1b9a1ef` → head `f68bcd9`):**
+  Ralph Code Reviewer CHANGES_REQUESTED (R1 installed extension broke
+  `render_composition.py` with a duplicate class; R2 removal chmod followed
+  symlinks; R3 duplicate scan ignored symlinked folders; R4 stale sound-design
+  status). Ralph Security Reviewer CHANGES_REQUESTED, all LOW (S1 PR-run
+  artifacts; S2 = R2; S3 unescaped device name reaching `/bin/sh` in the
+  opt-in real-time test). Each fix was test-first: Red — duplicate-class
+  render failure, victim mode `0o200`, missing artifact guard, missing device
+  validation, symlinked duplicate not found; Green — renderer compiles in an
+  isolated language home, POSIX removal re-raises without chmod, artifacts
+  upload only from non-PR runs, unsafe device names are rejected, duplicate
+  scan follows symlinks with cycle protection.
+- **Gate after fixes:** `DJMB_REALTIME_AUDIO_TESTS=1 SCLANG=… SCSYNTH=… bash
+  scripts/run_headless_tests.sh` → 47 DSP assertions, `Ran 98 tests in
+  143.084s … OK`.

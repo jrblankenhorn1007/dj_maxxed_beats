@@ -63,6 +63,9 @@ jobs:
         run: python scripts/ci_verify_plugin.py --staging-dir "${STAGE_DIR}" --source-dir plugin/ChaosOsc ${{ matrix.verify_args }}
 
       - name: Upload the staged ChaosOsc extension folder
+        # Pull-request runs execute the PR's own workflow, so only trusted
+        # push/manual runs publish installable artifacts.
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}

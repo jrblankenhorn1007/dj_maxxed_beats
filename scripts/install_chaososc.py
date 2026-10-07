@@ -208,7 +208,14 @@ def remove_path(path):
         os.remove(path)
         return
 
-    def make_writable_and_retry(function, failed_path, *_):
+    def make_writable_and_retry(function, failed_path, error):
+        if isinstance(error, tuple):
+            error = error[1]
+        # Only Windows refuses to delete read-only files. On POSIX, deletion
+        # depends on the parent directory, and chmod would follow symlinks
+        # out of the install folder, so report the failure instead.
+        if os.name != "nt" or os.path.islink(failed_path):
+            raise error
         os.chmod(failed_path, stat.S_IWRITE)
         function(failed_path)
 
@@ -246,17 +253,25 @@ def run_step(title, command, failure_message):
 
 def find_duplicate_copies(extensions_dir, target):
     names = {"ChaosOsc.sc", "ChaosOsc.scx", "ChaosOsc.so"}
-    target = os.path.normcase(os.path.abspath(target))
+    target = os.path.normcase(os.path.realpath(target))
     roots = [extensions_dir] + system_extension_dirs()
     duplicates = []
+    visited = set()
     for root in roots:
         if not os.path.isdir(root):
             continue
-        for directory, subdirectories, files in os.walk(root):
-            normalized = os.path.normcase(os.path.abspath(directory))
-            if normalized == target or normalized.startswith(target + os.sep):
+        # sclang and scsynth follow symlinked folders, so follow them too and
+        # track real paths to stop at cycles.
+        for directory, subdirectories, files in os.walk(root, followlinks=True):
+            real = os.path.normcase(os.path.realpath(directory))
+            if (
+                real in visited
+                or real == target
+                or real.startswith(target + os.sep)
+            ):
                 subdirectories[:] = []
                 continue
+            visited.add(real)
             duplicates.extend(
                 os.path.join(directory, name) for name in files if name in names
             )

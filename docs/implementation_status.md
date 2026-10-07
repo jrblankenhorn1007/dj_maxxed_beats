@@ -42,15 +42,16 @@ providers, credentials, usage display, variation loop) is not implemented.
 | Usage, estimated dollars, and informational credits | Specified | 100 app credits per estimated USD planned; no metering or display exists. |
 | Review, approval, undo, and candidate isolation | Specified | Planned but not implemented. |
 | In-app variation loop | Specified | User-started, stoppable, isolated, four candidates by default; not implemented. |
-| Tests and CI | Implemented for the plugin | `bash scripts/run_headless_tests.sh` runs the quality gate and all Python tests (93 with the real-time opt-in enabled). GitHub Actions runs **Headless Tests** (macOS 14) and **Plugin Builds** (macOS 14, Ubuntu, Windows Server; Windows also renders NRT with SuperCollider 3.14.1). |
+| Tests and CI | Implemented for the plugin | `bash scripts/run_headless_tests.sh` runs the quality gate and all Python tests (98 with the real-time opt-in enabled). GitHub Actions runs **Headless Tests** (macOS 14) and **Plugin Builds** (macOS 14, Ubuntu, Windows Server; Windows also renders NRT with SuperCollider 3.14.1). |
 | Visual application verification | Planned | No GUI exists to test yet. |
 
 ## Verification and platform coverage
 
 - **Integrated parent gate (2026-10-06):** `DJMB_REALTIME_AUDIO_TESTS=1
   SCLANG=… SCSYNTH=… bash scripts/run_headless_tests.sh` passed: 47 DSP
-  assertions, warning-free analysis/builds, and `Ran 93 tests … OK`
-  (including NRT, installed-layout end-to-end, and real-time tests).
+  assertions, warning-free analysis/builds, and `Ran 98 tests … OK`
+  (including NRT, installed-layout end-to-end, and real-time tests) after
+  the review round-1 fixes.
 - **MacBook Neo:** the local run used an actual MacBook Neo (`Mac17,5`,
   Apple A18 Pro, 8 GB, macOS 26.5.2) with SuperCollider 3.14.1. Plugin NRT,
   installed-layout loading, and real-time audition passed there. The visual

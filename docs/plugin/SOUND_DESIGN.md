@@ -17,8 +17,9 @@ SuperCollider 3.14.1 plugin API headers and exports the plugin load symbol.
 The sclang class (`ChaosOsc.ar` and `ChaosOsc.kr`) and help file are present
 under `plugin/ChaosOsc/Classes/` and `plugin/ChaosOsc/HelpSource/`. The class
 and plugin load and render deterministic NRT audio through SuperCollider
-3.14.1 on macOS arm64; real-time audition and target-platform coverage remain
-open. See [`RALPH_PROGRESS.md`](../RALPH_PROGRESS.md) for earlier evidence
+3.14.1, load from an installed Extensions layout, and run in a real-time
+CoreAudio server on an actual MacBook Neo; CI builds the plugin on macOS,
+Linux, and Windows and renders NRT on Windows. See [`RALPH_PROGRESS.md`](../RALPH_PROGRESS.md) for earlier evidence
 and [`decision_log.md`](../decision_log.md) for the selection rationale.
 
 **DSP:** a logistic-map chaotic oscillator. The map
@@ -115,6 +116,14 @@ the control rate (default and interpolated); and that `mul`/`add` are applied.
 Rendering the existing ChaosOsc NRT score and the composition example with
 the original plugin and with this version produced byte-identical audio data.
 
-**Not yet verified:** real-time audition without dropouts, Windows 10 x64 or
-MacBook Neo plugin ABI/runtime compatibility, or compatibility with
-SuperCollider releases other than 3.14.1.
+**Real-time and platform evidence (2026-10-06):** on a MacBook Neo
+(`Mac17,5`, macOS 26.5.2, SuperCollider 3.14.1) the opt-in real-time test ran
+67 concurrent synths on CoreAudio at 48 kHz with peak CPU 4.25–4.55% and no
+server failures. The **Plugin Builds** workflow builds and export-checks the
+plugin with MSVC on Windows and renders an NRT smoke test in SuperCollider
+3.14.1's `scsynth.exe`.
+
+**Not yet verified:** a physical Windows 10 x64 machine, real-time audio on
+Windows, a Linux `scsynth` run, or SuperCollider releases other than 3.14.1.
+Real-time health is judged from CPU, failure/late messages, and timing;
+`scsynth` does not report CoreAudio dropouts directly.

@@ -173,7 +173,7 @@ targets, not claims of current platform support.
 
 The latest local verification ran on an actual **MacBook Neo** (`Mac17,5`,
 Apple A18 Pro, macOS 26.5.2) with SuperCollider 3.14.1: the full headless
-suite, the installed-layout end-to-end test, and the real-time server test
+suite (98 tests), the installed-layout end-to-end test, and the real-time server test
 (CoreAudio, 48 kHz, peak CPU about 4.5% with 67 concurrent synths) all
 passed. GitHub Actions runs the headless gate on macOS 14 and a
 **Plugin Builds** workflow on macOS 14, Ubuntu, and Windows Server runners

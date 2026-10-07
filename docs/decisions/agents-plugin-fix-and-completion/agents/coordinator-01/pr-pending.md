@@ -65,3 +65,21 @@
   changes are left untouched.
 - **Consequences:** Fewer PRs and less CI churn; this run's ownership is
   documented here and in the branch Ralph records instead of the ledger.
+
+## D5 — Act on review round 1 before publication
+
+- **Context:** The `Gate` ruleset applies to all branches and rejects updates
+  to a published branch (GH013), so review ran on the unpublished head
+  `f68bcd9` (base `1b9a1ef`). Code review found two blocking issues (an
+  installed extension broke `scripts/render_composition.py` with a duplicate
+  `ChaosOsc` class; installer removal chmod followed symlinks) and two
+  non-blocking ones; security review found three LOW issues (PR-run artifacts,
+  the same chmod defect, and an unescaped device name reaching `/bin/sh` in the
+  opt-in real-time test).
+- **Decision:** `FIX_MANUALLY` — fix all seven test-first: isolate the
+  renderer's sclang user directories, re-raise POSIX removal failures without
+  chmod, upload artifacts only from non-PR runs and document trusted
+  downloads, reject shell-significant device names, follow symlinks with cycle
+  protection in the duplicate scan, and correct the sound-design status.
+- **Evidence:** each new test failed first for the reported reason; the full
+  gate then passed `Ran 98 tests … OK` with the real-time opt-in.

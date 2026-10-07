@@ -11,8 +11,10 @@ flows are exercised by tests/test_chaososc_cmake_install.py.
 
 import importlib.util
 import math
+import os
 from pathlib import Path
 import shutil
+import stat
 import struct
 import unittest
 
@@ -219,6 +221,54 @@ class InstallerPlatformDefaultsTests(unittest.TestCase):
         self.assertFalse(self.installer.is_marked_install(marker_dir))
         self.assertFalse(self.installer.is_marked_install(scratch / "missing"))
 
+
+class InstallerRemovalSafetyTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.installer = load_script("install_chaososc")
+
+    @unittest.skipIf(os.name == "nt", "POSIX permission semantics")
+    def test_failed_removal_never_changes_permissions_outside_the_install(self):
+        scratch = fresh_scratch_dir("removal-safety")
+        victim = scratch / "victim.txt"
+        victim.write_text("outside the install", encoding="utf-8")
+        victim.chmod(0o600)
+        install = scratch / "ChaosOsc"
+        locked = install / "ro"
+        locked.mkdir(parents=True)
+        (locked / "link").symlink_to(victim)
+        locked.chmod(0o555)
+        try:
+            with self.assertRaises(OSError):
+                self.installer.remove_path(str(install))
+            self.assertEqual(stat.S_IMODE(victim.stat().st_mode), 0o600)
+        finally:
+            locked.chmod(0o755)
+            shutil.rmtree(scratch, ignore_errors=True)
+
+
+    @unittest.skipIf(os.name == "nt", "POSIX symlinks")
+    def test_duplicate_scan_follows_symlinked_extension_folders(self):
+        scratch = fresh_scratch_dir("duplicate-symlink")
+        try:
+            extensions = scratch / "Extensions"
+            target = extensions / "ChaosOsc"
+            target.mkdir(parents=True)
+            elsewhere = scratch / "dev-checkout" / "Classes"
+            elsewhere.mkdir(parents=True)
+            (elsewhere / "ChaosOsc.sc").write_text("// copy", encoding="utf-8")
+            (extensions / "chaososc-dev").symlink_to(
+                scratch / "dev-checkout", target_is_directory=True
+            )
+            (extensions / "loop").symlink_to(extensions, target_is_directory=True)
+            duplicates = self.installer.find_duplicate_copies(
+                str(extensions), str(target)
+            )
+            self.assertEqual(
+                [Path(path).name for path in duplicates], ["ChaosOsc.sc"]
+            )
+        finally:
+            shutil.rmtree(scratch, ignore_errors=True)
 
 class PluginVerifierParsingTests(unittest.TestCase):
     @classmethod
@@ -487,6 +537,13 @@ class PluginBuildsWorkflowContractTests(unittest.TestCase):
         ):
             with self.subTest(expected=expected):
                 self.assertIn(expected, source)
+
+    def test_artifacts_are_uploaded_only_from_trusted_non_pr_runs(self):
+        source = self.read_workflow()
+        step = source.split("uses: actions/upload-artifact@", 1)
+        self.assertEqual(len(step), 2, "the workflow must upload artifacts")
+        before = step[0].rsplit("- name:", 1)[1]
+        self.assertIn("if: github.event_name != 'pull_request'", before)
 
 
 class QualityCheckCoverageTests(unittest.TestCase):

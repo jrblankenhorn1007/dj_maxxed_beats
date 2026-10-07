@@ -21,3 +21,10 @@
 - **Host:** MacBook Neo `Mac17,5`, Apple A18 Pro, 8 GB, macOS 26.5.2 (25F84).
 - **Unverified:** physical Windows 10 x64, Windows real-time, Linux scsynth,
   macOS x86_64 execution, GUI/SCIDE sign-off, other SuperCollider releases.
+
+## 2026-10-07 — review round 1 fixes
+
+- Code review R1–R4 and security review S1–S3 (all fixed test-first; see
+  [`RALPH_PROGRESS.md`](../../../../RALPH_PROGRESS.md) iteration 6).
+- **Gate:** `DJMB_REALTIME_AUDIO_TESTS=1 SCLANG=… SCSYNTH=… bash
+  scripts/run_headless_tests.sh` → `Ran 98 tests … OK`, 47 DSP assertions.

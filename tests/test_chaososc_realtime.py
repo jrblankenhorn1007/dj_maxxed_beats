@@ -220,6 +220,30 @@ def discover_builtin_plugin_dirs(scsynth):
     return unique_dirs
 
 
+def validate_device_name(name):
+    """Reject device names that SuperCollider would pass unescaped to a shell.
+
+    Server:boot quotes the -H device name without escaping it before running
+    the command through /bin/sh, so backquotes, $, double quotes, backslashes,
+    or control characters in a device name could run commands.
+    """
+    unsafe = [
+        character
+        for character in name
+        if character in '`$"\\' or ord(character) < 32 or ord(character) == 127
+    ]
+    if unsafe:
+        raise AssertionError(
+            "refusing audio device name {!r}: it contains characters ({}) that "
+            "SuperCollider passes unescaped to a shell; rename the device or set "
+            "{} to another output-only device".format(
+                name, ", ".join(sorted(set(repr(c) for c in unsafe))),
+                DEVICE_VARIABLE,
+            )
+        )
+    return name
+
+
 def select_output_only_device():
     """Name the CoreAudio output device to pin for both scsynth directions."""
     system_profiler = shutil.which("system_profiler")
@@ -263,7 +287,7 @@ def select_output_only_device():
                 device["_name"], DEVICE_VARIABLE
             )
         )
-    return device["_name"]
+    return validate_device_name(device["_name"])
 
 
 def find_free_udp_port():
@@ -727,6 +751,17 @@ class ChaosOscRealtimeOptInContractTests(unittest.TestCase):
             capture_output=True,
             text=True,
             timeout=60,
+        )
+
+
+    def test_device_names_that_could_reach_a_shell_are_rejected(self):
+        for name in ("Speakers `touch x`", "Speakers $(id)", 'Say "hi"',
+                     "Back\\slash", "Ctl\x07"):
+            with self.subTest(name=name):
+                with self.assertRaises(AssertionError):
+                    validate_device_name(name)
+        self.assertEqual(
+            validate_device_name("MacBook Neo Speakers"), "MacBook Neo Speakers"
         )
 
     def test_audition_is_skipped_unless_explicitly_enabled(self):

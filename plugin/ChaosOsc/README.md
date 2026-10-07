@@ -131,8 +131,10 @@ library and reboot the server as above.
 The *Plugin Builds* GitHub Actions workflow builds and tests ChaosOsc on
 macOS (universal), Linux (x86_64), and Windows (MSVC x64), and uploads each
 installed folder as an artifact (`ChaosOsc-macOS-universal`,
-`ChaosOsc-Linux-x86_64`, `ChaosOsc-Windows-x64`). Unzip it and copy the
-`ChaosOsc` folder into your Extensions directory, then recompile and reboot.
+`ChaosOsc-Linux-x86_64`, `ChaosOsc-Windows-x64`). Artifacts are uploaded only
+by push and manual runs, never by pull-request runs. Download them only from a
+**push run on `main`** of this repository, unzip, and copy the `ChaosOsc`
+folder into your Extensions directory, then recompile and reboot.
 On Windows that workflow also renders ChaosOsc in SuperCollider 3.14.1's
 `scsynth.exe` (non-realtime) as a smoke test.
 
@@ -152,7 +154,8 @@ On Windows that workflow also renders ChaosOsc in SuperCollider 3.14.1's
   sclang report a duplicate class and scsynth may load the wrong plugin. Keep
   exactly one; the installer prints a warning for each extra copy it finds.
 - **macOS Gatekeeper blocks a downloaded binary** (for example a CI
-  artifact): remove the quarantine flag, then reboot the server:
+  artifact from a push run on `main`; never unquarantine binaries from other
+  sources): remove the quarantine flag, then reboot the server:
 
   ```sh
   xattr -dr com.apple.quarantine "$HOME/Library/Application Support/SuperCollider/Extensions/ChaosOsc"

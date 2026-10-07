@@ -332,5 +332,62 @@ class CompositionNRTTests(unittest.TestCase):
         )
 
 
+    def test_render_ignores_an_installed_chaososc_extension(self):
+        self.assertTrue(
+            getattr(self, "plugin_available", False),
+            "ChaosOsc plugin is missing or its build did not verify the load symbol",
+        )
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "install_chaososc", ROOT / "scripts" / "install_chaososc.py"
+        )
+        installer = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(installer)
+
+        installed_home = BUILD_DIR / "installed-home"
+        shutil.rmtree(installed_home, ignore_errors=True)
+        environment = dict(self.environment)
+        environment.update(
+            {
+                "HOME": str(installed_home),
+                "XDG_CONFIG_HOME": str(installed_home / ".config"),
+                "XDG_DATA_HOME": str(installed_home / ".local" / "share"),
+                "LOCALAPPDATA": str(installed_home / "AppData" / "Local"),
+            }
+        )
+        installed_classes = (
+            Path(installer.default_extensions_dir(environ=environment))
+            / "ChaosOsc"
+            / "Classes"
+        )
+        installed_classes.mkdir(parents=True)
+        shutil.copy2(
+            ROOT / "plugin" / "ChaosOsc" / "Classes" / "ChaosOsc.sc",
+            installed_classes / "ChaosOsc.sc",
+        )
+
+        output_path = BUILD_DIR / "chaos_garden_with_installed_extension.wav"
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(RENDERER),
+                "--output",
+                str(output_path),
+                "--duration",
+                "4.0",
+                "--seed",
+                "0.37",
+                "--overwrite",
+            ],
+            cwd=ROOT,
+            env=environment,
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue(output_path.is_file())
+
 if __name__ == "__main__":
     unittest.main()
