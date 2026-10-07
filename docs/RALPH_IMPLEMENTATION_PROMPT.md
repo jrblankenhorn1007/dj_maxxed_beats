@@ -110,10 +110,13 @@ Documentation-only changes do not need a fabricated behavior test; run
 `git diff --check` and relevant documentation checks locally. GitHub Actions
 still runs the full workflow on the resulting push and pull request.
 `bash scripts/run_quality_checks.sh` can be used by itself for a local quality
-pass, but it is not a substitute for the full test/NRT gate. CI currently runs
-on macOS only; it does not validate Windows, an actual MacBook Neo, SCIDE or
-GUI behavior, or real-time audio. Keep those requirements in the product and
-visual acceptance plans.
+pass, but it is not a substitute for the full test/NRT gate. The headless
+gate runs on macOS; the **Plugin Builds** workflow also builds the plugin on
+Linux and Windows and renders a Windows NRT smoke test. CI does not validate
+a physical Windows 10 x64 machine, an actual MacBook Neo, SCIDE or GUI
+behavior, or real-time audio; run the opt-in real-time test
+(`DJMB_REALTIME_AUDIO_TESTS=1`) on hardware with an audio device. Keep those
+requirements in the product and visual acceptance plans.
 
 ## Publication, merge, and completion
 

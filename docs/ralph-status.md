@@ -1,9 +1,10 @@
 schema_version: 2
 snapshot_path: "docs/ralph-status.md"
-snapshot_revision: 11
-updated_at_utc: "2026-09-25T15:43:13Z"
+snapshot_revision: 12
+updated_at_utc: "2026-10-07T00:18:37Z"
 overall_status: IN_PROGRESS
 current_run_ids:
+  - "djmb-plugin-completion-20261006-2310"
   - "branch-evidence-dossiers-20260925-081730"
   - "skills-routing-20260925-0108"
   - "headless-integration-tests-20260925-0246"
@@ -11,6 +12,39 @@ current_run_ids:
 legacy_leaf_status_note: "Schema-v1 leaf files remain unchanged; branch-index status/leaf_status and merge/status_sync records distinguish the last worker snapshot from the coordinator's current integration view."
 
 runs:
+  - run_id: "djmb-plugin-completion-20261006-2310"
+    task_ids: ["fix-and-finish-chaososc-plugin"]
+    aggregate_status: IN_PROGRESS
+    requested_worker_count: 3
+    effective_worker_count: 3
+    active_worker_count: 0
+    base_origin_main_sha: "1b9a1ef4d5f66f8e81d5e1af3caece628755e8c1"
+    parent_branch: "agents/plugin-fix-and-completion"
+    parent_worktree: "/Users/jrblankenhorn/dj_maxxed_beats.worktrees/plugin-fix-and-completion"
+    created_at_utc: "2026-10-06T23:10:00Z"
+    updated_at_utc: "2026-10-07T00:18:37Z"
+    next_action: "Publish the integrated parent branch, complete the independent PR review and hosted checks, merge to main, verify on origin/main, then run the post-merge memory review."
+    worker_count_note: "The owner explicitly requested parallel subagents; the Resource Manager reported max_agents 1 (low free memory), so three in-host task subagents ran with disjoint worktrees (see the parent decision record D3)."
+    split_plan:
+      - task_id: "chaososc-dsp-api"
+        worker_id: "worker-01"
+        scope: "freq iteration-rate control, .kr, mul/add, help, DSP/NRT tests, agent guidance, sound-design notes."
+        depends_on: []
+      - task_id: "chaososc-build-install-ci"
+        worker_id: "worker-02"
+        scope: "CMake build, user installer, install guide, installed-layout end-to-end test, three-OS Plugin Builds CI."
+        depends_on: []
+      - task_id: "chaososc-realtime"
+        worker_id: "worker-03"
+        scope: "Opt-in real-time scsynth verification test and local evidence."
+        depends_on: []
+    checks:
+      - command: "DJMB_REALTIME_AUDIO_TESTS=1 SCLANG=… SCSYNTH=… bash scripts/run_headless_tests.sh"
+        result: "PASS — 47 DSP assertions; Ran 93 tests … OK (integrated parent 90cb7ab)"
+    pull_request:
+      status: PENDING
+    memory_review:
+      status: PENDING
   - run_id: "ralph-shared-workflow-move-20260925-0105"
     task_ids: ["replace-beats-local-ralph-runner"]
     aggregate_status: COMPLETE
@@ -365,6 +399,58 @@ runs:
     worker_count_note: "Both scoped workers completed; worker-02's shared-repository integration remains blocked on explicit remote-publish authorization."
 
 branch_agent_index:
+  - run_id: "djmb-plugin-completion-20261006-2310"
+    task_ids: ["fix-and-finish-chaososc-plugin"]
+    worker_id: "coordinator-01"
+    worker_name: "coordinator-01 / ChaosOsc plugin completion"
+    branch: "agents/plugin-fix-and-completion"
+    branch_slug: "agents-plugin-fix-and-completion"
+    status: AWAITING_MERGE
+    iteration: 6
+    status_path: "docs/ralph/agents-plugin-fix-and-completion/agents/coordinator-01/status.md"
+    progress_path: "docs/ralph/agents-plugin-fix-and-completion/agents/coordinator-01/progress.md"
+    decision_record_path: "docs/decisions/agents-plugin-fix-and-completion/agents/coordinator-01/pr-pending.md"
+    decision_index_path: "docs/decisions/agents-plugin-fix-and-completion/README.md"
+    next_action: "Open and review the parent PR, merge after green hosted checks, verify on origin/main."
+  - run_id: "djmb-plugin-completion-20261006-2310"
+    task_ids: ["fix-and-finish-chaososc-plugin"]
+    worker_id: "worker-01"
+    worker_name: "worker-01 / ChaosOsc DSP and API"
+    branch: "ralph/plugin-dsp-api-worker-01-20261006-2315"
+    branch_slug: "ralph-plugin-dsp-api-worker-01-20261006-2315"
+    status: COMPLETE
+    iteration: 6
+    status_path: null
+    progress_path: "docs/ralph/ralph-plugin-dsp-api-worker-01-20261006-2315/agents/worker-01/progress.md"
+    implementation_commit_sha: "5211cb4cae4b86a80e1cfd2b3cf31edcc8ea2591"
+    integration: "Merged locally into agents/plugin-fix-and-completion (no child PR; review NOT_APPLICABLE)."
+    next_action: "None; integrated into the parent at 1d31dd8."
+  - run_id: "djmb-plugin-completion-20261006-2310"
+    task_ids: ["fix-and-finish-chaososc-plugin"]
+    worker_id: "worker-02"
+    worker_name: "worker-02 / build, installer, CI"
+    branch: "ralph/plugin-build-install-worker-02-20261006-2315"
+    branch_slug: "ralph-plugin-build-install-worker-02-20261006-2315"
+    status: COMPLETE
+    iteration: 6
+    status_path: null
+    progress_path: "docs/ralph/ralph-plugin-build-install-worker-02-20261006-2315/agents/worker-02/progress.md"
+    implementation_commit_sha: "bc192127e6ed9504a095b305c4ea3ed59437dee7"
+    integration: "Merged locally into agents/plugin-fix-and-completion (no child PR; review NOT_APPLICABLE)."
+    next_action: "None; integrated into the parent at 90cb7ab."
+  - run_id: "djmb-plugin-completion-20261006-2310"
+    task_ids: ["fix-and-finish-chaososc-plugin"]
+    worker_id: "worker-03"
+    worker_name: "worker-03 / real-time verification"
+    branch: "ralph/plugin-realtime-worker-03-20261006-2315"
+    branch_slug: "ralph-plugin-realtime-worker-03-20261006-2315"
+    status: COMPLETE
+    iteration: 6
+    status_path: null
+    progress_path: "docs/ralph/ralph-plugin-realtime-worker-03-20261006-2315/agents/worker-03/progress.md"
+    implementation_commit_sha: "bc8868421d91ce51a707d43e00897bb6b42319f9"
+    integration: "Merged locally into agents/plugin-fix-and-completion (no child PR; review NOT_APPLICABLE)."
+    next_action: "None; integrated into the parent at d3f7c61."
   - run_id: "ralph-shared-workflow-move-20260925-0105"
     task_ids: ["replace-beats-local-ralph-runner"]
     worker_id: "worker-01"

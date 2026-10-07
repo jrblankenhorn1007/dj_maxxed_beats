@@ -8,25 +8,54 @@ envisions OpenAI and Anthropic model choices, but that provider workflow is not
 implemented. The planned design keeps synthesis in SuperCollider rather than
 adding a separate user-facing desktop app.
 
-> **Current state: prototype only.** This is not an installable or user-facing
-> AI music application. There is no Quark GUI, provider integration or API-key
-> workflow, end-user composition workflow, packaging, or release support. What
-> exists today is a ChaosOsc DSP/plugin prototype, its SuperCollider language
-> class and help source, and developer tests that include a test-only NRT
-> score. The current checks do not use API keys or call a model provider.
+> **Current state: the ChaosOsc plugin works; the AI music app does not exist
+> yet.** The ChaosOsc server plugin can be built, installed into
+> SuperCollider, and played in real time or rendered offline. There is no
+> Quark GUI, provider integration or API-key workflow, or release packaging
+> for the larger AI assistant. The current checks do not use API keys or call
+> a model provider.
 
 ## What exists today
 
-- **ChaosOsc DSP prototype:** a C++17 logistic-map oscillator core and its
-  SuperCollider server-plugin wrapper.
-- **SuperCollider source:** the `ChaosOsc.ar` language class and help file.
-- **Developer verification:** a pure-DSP test, a source-contract test, a
-  plugin smoke build, and an optional SuperCollider non-realtime (NRT)
-  integration test. The NRT test uses a fixed test score; it is not an
-  end-user composition or rendering workflow.
+- **ChaosOsc server plugin:** a C++17 logistic-map chaotic oscillator UGen
+  with `ChaosOsc.ar`/`ChaosOsc.kr(chaosAmount, seed, freq, mul, add)`. The
+  `freq` control sets the map's iteration rate; below the sample rate the
+  output is linearly interpolated, so it works as an audio-rate noise source
+  and as a smooth chaotic modulator. See the
+  [ChaosOsc build and install guide](./plugin/ChaosOsc/README.md) and the
+  [sound-design notes](./docs/plugin/SOUND_DESIGN.md).
+- **Build and install:** a CMake build (universal arm64/x86_64 on macOS,
+  `.so` on Linux, MSVC `.scx` on Windows) and `scripts/install_chaososc.py`,
+  which installs the plugin, class, and help into SuperCollider's user
+  Extensions folder.
+- **Composition prototype:** `MaxxedBeatsComposition` and
+  `examples/procedural_chaos_garden.scd`, rendered offline by
+  `scripts/render_composition.py`.
+- **Developer verification:** DSP unit tests, source and help (SCDoc)
+  checks, plugin builds, NRT integration tests, an installed-layout
+  end-to-end test, and an opt-in real-time server test.
 
-These components are useful for development and verification only. There is
-no extension to install or assistant window to open.
+There is still no assistant window to open.
+
+## Install the ChaosOsc plugin
+
+Requires CMake 3.16+, a C++17 compiler, Python 3, and SuperCollider 3.14.1
+(the plugin API version it is built against). From the repository root:
+
+```sh
+python3 scripts/install_chaososc.py
+```
+
+Then, in SuperCollider, recompile the class library
+(**Language > Recompile Class Library**), reboot the server, and try:
+
+```supercollider
+{ LeakDC.ar(ChaosOsc.ar(3.9, 0.37)) * 0.1 ! 2 }.play;
+```
+
+Use `python3 scripts/install_chaososc.py --uninstall` to remove it. The
+[plugin guide](./plugin/ChaosOsc/README.md) covers manual CMake builds,
+Windows and Linux paths, and troubleshooting.
 
 ## Run the developer checks
 
@@ -121,20 +150,41 @@ loading, finite and non-silent output, repeat-render determinism,
 construction-time seed behavior, and a control-rate update. This remains a
 developer integration test, not an end-user render workflow.
 
+### Opt-in real-time server test
+
+```sh
+DJMB_REALTIME_AUDIO_TESTS=1 \
+SCLANG=/absolute/path/to/sclang \
+SCSYNTH=/absolute/path/to/scsynth \
+PYTHONDONTWRITEBYTECODE=1 \
+python3 tests/test_chaososc_realtime.py
+```
+
+Boots a real-time `scsynth` on the default CoreAudio output device, runs
+ChaosOsc and a 64-synth live workload on private buses (hardware outputs stay
+silent), and checks the captured audio, server health, and CPU. It is skipped
+unless `DJMB_REALTIME_AUDIO_TESTS=1`, because CI runners have no audio device.
+
 ## Targets and tested coverage
 
 The project targets **Windows 10 x64** and **Apple Silicon macOS**, with
 explicit validation planned on an actual **MacBook Neo**. These are project
 targets, not claims of current platform support.
 
-The latest local runtime verification is **macOS 26.5.2 arm64 with
-SuperCollider 3.14.1**. GitHub Actions runs the quality and headless test
-gates on every push and pull request, and on manual dispatch, using macOS 14
-and the official SuperCollider 3.14.1 runtime. These checks are not a
-Windows build and neither macOS run was on an actual MacBook Neo.
-Windows 10 x64, a real MacBook Neo, real-time audition, the GUI/SCIDE workflow,
-SuperCollider versions other than 3.14.1, and release binaries remain
-unverified. Packaging and release support have not been implemented.
+The latest local verification ran on an actual **MacBook Neo** (`Mac17,5`,
+Apple A18 Pro, macOS 26.5.2) with SuperCollider 3.14.1: the full headless
+suite, the installed-layout end-to-end test, and the real-time server test
+(CoreAudio, 48 kHz, peak CPU about 4.5% with 67 concurrent synths) all
+passed. GitHub Actions runs the headless gate on macOS 14 and a
+**Plugin Builds** workflow on macOS 14, Ubuntu, and Windows Server runners
+for every push and pull request. That workflow builds the plugin (universal
+on macOS, MSVC on Windows), checks its exported `load` symbol, exercises the
+installer, and renders an NRT smoke test with the Windows build of
+SuperCollider 3.14.1.
+
+Still unverified: a physical Windows 10 x64 machine, real-time audio on
+Windows, a Linux `scsynth` run, the GUI/SCIDE workflow, SuperCollider
+versions other than 3.14.1, and release packaging of the AI assistant.
 
 ## Project documentation
 

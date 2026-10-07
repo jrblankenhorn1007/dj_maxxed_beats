@@ -645,3 +645,27 @@ credentials and private user data out of this file.
 - **Consequences:** Agent completion records must distinguish local,
   published, checked, and merged states. Any blocked integration remains
   explicitly in progress and is reported with its blocker.
+
+### DEC-029 — Complete ChaosOsc as an installable, rate-controllable plugin
+
+- **Date:** 2026-10-06
+- **Context:** The owner asked to "fix/finish this plugin". ChaosOsc passed
+  its tests but could only be built by a test-only smoke script, had no
+  install path or real-time evidence, lacked the planned update-rate control,
+  and its help file failed to parse in SCDoc.
+- **Alternatives:** documentation-only status refresh; remove the logistic
+  map's DC offset inside the UGen; ship separate interpolating/non-
+  interpolating UGens; keep macOS-only CI.
+- **Decision:** Fix the help markup (test-first); add a `freq` iteration-rate
+  input whose default `inf` is bit-identical to the old two-input plugin,
+  with linear interpolation below the unit rate, hold at `freq <= 0`, and
+  NaN falling back to the default; add `.kr`, `mul`, and `add`; keep the
+  bounded, non-zero-mean mapping and document `LeakDC`; add a CMake build
+  (universal macOS, Linux `.so`, MSVC Windows), a marker-protected user
+  installer, an installed-layout end-to-end test, an opt-in real-time test,
+  and a three-OS **Plugin Builds** CI workflow with a Windows NRT render.
+- **Consequences:** Existing compositions and renders are unchanged. Users
+  can install and play the UGen from SCIDE. Physical Windows 10 x64, Linux
+  `scsynth`, GUI/SCIDE sign-off, and releases other than SuperCollider 3.14.1
+  remain unverified. Branch decisions:
+  [`decisions/agents-plugin-fix-and-completion/`](./decisions/agents-plugin-fix-and-completion/README.md).

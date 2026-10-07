@@ -1053,3 +1053,38 @@ Ralph-Status: IN_PROGRESS
 - **Status synchronization:** The task dashboard, coordinator leaf, and PR
   decision record are being reconciled on a fresh status-only branch from the
   verified merge, not by pushing to the published implementation branch.
+
+## Iteration 6 — ChaosOsc plugin fix and completion — 2026-10-06
+
+- **Parent branch:** `agents/plugin-fix-and-completion` from `origin/main`
+  `1b9a1ef4d5f66f8e81d5e1af3caece628755e8c1`; coordinator `coordinator-01`
+  with three parallel workers (records under
+  [`ralph/`](./ralph/agents-plugin-fix-and-completion/agents/coordinator-01/progress.md)).
+- **Baseline:** `SCLANG=… SCSYNTH=… bash scripts/run_headless_tests.sh`
+  passed 32 tests on the base before changes.
+- **Help fix (coordinator, TDD):** Red — new
+  `tests/test_chaososc_help_scdoc.py` failed with SCDoc
+  `At line 10: syntax error, unexpected ::` (`SCDOC_PARSE_FAILURES: 1`).
+  Green — `code::...::` markup; `Ran 3 tests … OK`. Commit `fa6decd`.
+- **worker-01 (`ralph/plugin-dsp-api-worker-01-20261006-2315`, `5211cb4`):**
+  `freq` control, `.kr`, `mul`/`add`, help, 47 DSP assertions, new rate NRT
+  test; two-argument renders byte-identical to the previous plugin. Evidence:
+  [`progress.md`](./ralph/ralph-plugin-dsp-api-worker-01-20261006-2315/agents/worker-01/progress.md).
+- **worker-02 (`ralph/plugin-build-install-worker-02-20261006-2315`, `bc19212`):**
+  CMake build, installer, installed-layout end-to-end test, Plugin Builds CI
+  (green on macOS/Linux/Windows in runs 37548968452, 37549721055,
+  37550292315, 37550501940; Windows NRT render). Evidence:
+  [`progress.md`](./ralph/ralph-plugin-build-install-worker-02-20261006-2315/agents/worker-02/progress.md).
+- **worker-03 (`ralph/plugin-realtime-worker-03-20261006-2315`, `bc88684`):**
+  opt-in real-time test; five consecutive passes on CoreAudio 48 kHz with
+  67 concurrent synths and peak CPU 4.25–4.55%. Evidence:
+  [`progress.md`](./ralph/ralph-plugin-realtime-worker-03-20261006-2315/agents/worker-03/progress.md).
+- **Integrated parent gate:** after merging all three workers (`90cb7ab`),
+  `DJMB_REALTIME_AUDIO_TESTS=1 SCLANG=… SCSYNTH=… bash
+  scripts/run_headless_tests.sh` passed: 47 DSP assertions and
+  `Ran 93 tests in 201.099s … OK` (4m08s wall clock).
+- **Host:** actual MacBook Neo (`Mac17,5`, Apple A18 Pro, 8 GB),
+  macOS 26.5.2 (25F84), SuperCollider 3.14.1 (`426edf6`), Apple clang 17.
+- **Unverified:** physical Windows 10 x64, Windows real-time audio, Linux
+  `scsynth`, macOS x86_64 execution, GUI/SCIDE visual sign-off, and
+  SuperCollider releases other than 3.14.1.
