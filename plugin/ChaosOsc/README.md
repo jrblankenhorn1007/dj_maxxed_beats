@@ -131,9 +131,9 @@ library and reboot the server as above.
 The *Plugin Builds* GitHub Actions workflow builds and tests ChaosOsc on
 macOS (universal), Linux (x86_64), and Windows (MSVC x64), and uploads each
 installed folder as an artifact (`ChaosOsc-macOS-universal`,
-`ChaosOsc-Linux-x86_64`, `ChaosOsc-Windows-x64`). Artifacts are uploaded only
-by push and manual runs, never by pull-request runs. Download them only from a
-**push run on `main`** of this repository, unzip, and copy the `ChaosOsc`
+`ChaosOsc-Linux-x86_64`, `ChaosOsc-Windows-x64`). Pull-request runs do not
+upload artifacts by default, but a pull request can change its own workflow,
+so download artifacts only from a **push run on `main`** of this repository, unzip, and copy the `ChaosOsc`
 folder into your Extensions directory, then recompile and reboot.
 On Windows that workflow also renders ChaosOsc in SuperCollider 3.14.1's
 `scsynth.exe` (non-realtime) as a smoke test.

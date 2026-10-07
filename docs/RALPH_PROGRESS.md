@@ -1103,3 +1103,11 @@ Ralph-Status: IN_PROGRESS
 - **Gate after fixes:** `DJMB_REALTIME_AUDIO_TESTS=1 SCLANG=… SCSYNTH=… bash
   scripts/run_headless_tests.sh` → 47 DSP assertions, `Ran 98 tests in
   143.084s … OK`.
+- **Integration:** PR #33 (`374db4e`) failed only Windows MSVC (C2131 in the
+  DSP test, run `37554551784`); replacement PR #34 (`810844d`, one-line
+  `static constexpr` fix) passed all 8 hosted checks and both reviews, merged
+  at `f09c686aeb079cfd3cbefdb4af77309fefd308c0`, and is verified on
+  `origin/main`; post-merge `main` CI passed.
+- **Owner install:** `python3 scripts/install_chaososc.py` installed ChaosOsc
+  into the default Extensions folder; real-HOME `sclang` compiled the class
+  and `scsynth` (default plugin search) rendered finite, non-silent audio.

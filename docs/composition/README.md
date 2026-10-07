@@ -52,3 +52,9 @@ plugin and runtime are available, the render step itself performs no network
 calls and uses only non-realtime synthesis. The automated NRT test verifies
 the resulting WAV independently for format, duration, finite/non-silent
 channels, and deterministic fixed-seed output.
+
+On Windows, SuperCollider resolves the user Extensions folder through the
+Windows known-folder API rather than environment variables, so the renderer's
+isolated language home does not hide an installed ChaosOsc extension there.
+Uninstall it (`python3 scripts/install_chaososc.py --uninstall`) or move it
+aside before rendering on Windows to avoid a duplicate `ChaosOsc` class.

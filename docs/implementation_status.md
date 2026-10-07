@@ -10,9 +10,9 @@
 - **Completed implementation iteration:** `6` — ChaosOsc plugin fix and
   completion (parent branch `agents/plugin-fix-and-completion`, three
   parallel workers).
-- **Loop state:** integrated on the parent branch and verified locally; the
-  parent PR to `main` carries the remote merge evidence (see
-  [`ralph-status.md`](./ralph-status.md)).
+- **Loop state:** merged to `main` through PR #34 at `f09c686` and verified
+  on `origin/main`; post-merge memory review complete. The plugin is
+  installed in the owner's SuperCollider Extensions folder.
 - **Delivered:** SCDoc help fix, iteration-rate `freq` control with linear
   interpolation, `ChaosOsc.kr`, `mul`/`add`, CMake build, user installer,
   installed-layout end-to-end test, opt-in real-time server test, and a
