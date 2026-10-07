@@ -56,3 +56,14 @@
 - **Why:** The 2026-10-06 verification host turned out to be an actual
   MacBook Neo (`Mac17,5`), a target-device acceptance gate that earlier
   records had labeled as unverified without checking the model.
+
+### Keep setup tests aligned with platform behavior
+- **Rule:** Guard host-specific filesystem assertions and test each platform's
+  delegated setup path separately instead of running another OS's installer
+  path.
+- **Why:** Windows does not preserve POSIX executable mode bits, and Copilot
+  CLI setup delegates Windows installation to its packaged helper. The tests
+  gate the mode assertion and cover Windows delegation separately. See the
+  [setup tests](../../tests/test_mb_copilot_setup.py) and
+  [Windows setup helper](../../scripts/windows/setup-copilot.ps1).
+- **Scope:** Tests for OS-specific installers and launchers.
