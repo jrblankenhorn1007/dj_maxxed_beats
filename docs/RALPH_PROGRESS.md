@@ -1373,12 +1373,79 @@ Ralph-Status: IN_PROGRESS
   sign-in/generation was not attempted because Python 3.11+ is not installed
   here. The Windows package script tests must pass in hosted Windows CI;
   physical Windows 10/11 GUI verification remains manual.
-- **Implementation commit:** `6b9e5dd4ec7f79ebb71642d21960e45d9bbecca4`.
+- **Initial implementation commit:** `6b9e5dd4ec7f79ebb71642d21960e45d9bbecca4`.
 - **Status evidence:** the coordinator self-attested that exact implementation
   commit. Staged whitespace checks, schema-v2 dashboard/leaf/resource and
   memory-handoff synchronization, and local branch Markdown-link checks pass.
-- **Integration:** the implementation is committed locally, but the PR is
-  not yet opened and no merge or `origin/main` integration is claimed.
-  Continue with final status/diff validation, publication, exact-head
-  Windows/macOS checks, independent review, protected merge, and post-merge
-  memory review.
+- **Integration:** PR [#41](https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/41)
+  is open from `ralph/copilot-windows-onboarding-20261007-1640`, with base
+  `dac46c31f6711ad0d90d40b9634ba92aa5a0203b`; its original exact head was
+  `b7b19a596837b5fd667680385224a162b3e91ee6`. All initial hosted checks passed
+  on that head. The review-fix implementation is now committed locally as
+  `5d2745c1f0c5475697e68627741f7ea90fe93d52`. No merge or `origin/main`
+  integration is claimed.
+- **Round-1 independent review:** PR #41 at base
+  `dac46c31f6711ad0d90d40b9634ba92aa5a0203b` / head
+  `b7b19a596837b5fd667680385224a162b3e91ee6` received one high-confidence
+  security finding and two actionable setup findings. The security review
+  identified execution of the mutable `gh.io/copilot-install` script; the
+  code review identified macOS Python discovery excluding Python 3.14 and
+  generic `python3`, plus Linux's "Run as Program" path reading prompts without
+  a terminal. The local fixes pin Copilot CLI 1.0.93 and verify its official
+  per-platform SHA-256 before extracting only the `copilot` regular file,
+  probe Python 3.11+ by version including Python 3.14 and `python3`, and
+  require Linux's documented "Run in Terminal" flow with a clear non-TTY
+  message. Round 2 remains pending on the final PR head.
+- **Review-fix Red:** The new
+  `PYTHONPATH=tests python3 -m unittest -v
+  test_mb_copilot_setup.CopilotSetupTests.test_cli_setup_installs_only_a_checksum_verified_release_when_missing
+  test_mb_copilot_setup.CopilotSetupTests.test_macos_launcher_accepts_python_314_and_generic_python3
+  test_mb_copilot_setup.CopilotSetupTests.test_linux_launcher_explains_that_interactive_terminal_is_required`
+  initially failed: setup returned the old CLI path instead of installing a
+  verified release, neither Python 3.14 nor generic `python3` was selected,
+  and the non-terminal Linux launch had no "Run in Terminal" guidance.
+- **Review-fix Green:** The three Red cases passed after the changes. An
+  additional checksum-mismatch case and private-runtime-path case were added;
+  the setup test module passes:
+  `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
+  PYTHONPATH=tests python3 -m unittest test_mb_copilot_setup -q`
+  (**13 tests; the Windows-only delegation test is skipped on macOS**). A real
+  download into a temporary directory verified
+  the pinned release checksum and ran `copilot --version` → **GitHub Copilot
+  CLI 1.0.93**.
+- **Full local product gate before the final Windows-only test-matrix fix:**
+  `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
+  bash scripts/run_headless_tests.sh` → **232 tests passed, 5 skipped** in
+  205.315 seconds. Skips remain the three Windows PowerShell package tests,
+  Windows Credential Manager, and opt-in real-time audio.
+- **Initial hosted gate:** all Assistant (Windows x64/macOS), Windows package,
+  headless-tests, and ChaosOsc plugin-build checks passed on PR #41's original
+  head `b7b19a596837b5fd667680385224a162b3e91ee6`; the review fixes still
+  require exact-head hosted checks.
+- **Windows CI Red on the first review-fix PR:** PR #42 head
+  `494310d5ed47b1b935ddcd84c9434e228ccae326` passed all hosted jobs except its
+  two Windows Assistant runs. They exposed test-only assumptions: Windows
+  does not preserve POSIX `0o755` mode bits, and a Unix runtime-install test
+  called `setup_runtime(install_cli=True)` on Windows instead of exercising
+  the intended `Setup-Copilot.cmd` delegation. The local correction makes the
+  mode assertion POSIX-only, skips that Unix-only runtime case on Windows,
+  and adds a Windows-specific delegation test.
+- **Windows CI Green locally:** `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
+  PYTHONPATH=tests python3 -m unittest test_mb_copilot_setup -q` → **13 tests,
+  one Windows-only test skipped on macOS**. The test-only correction is commit
+  `1dc19c9f13c96732f399858f6277527026b8f02e`; it still needs hosted Windows CI.
+- **Repository rule:** after PR #41 opened, a plain `git push` of the PR-status
+  commit was rejected with GH013: "Code coverage checks require merging via
+  API or UI." The local status commit `7440702` is preserved; use a review-fix
+  PR stacked on #41 and merge it through GitHub's normal PR/API path rather than
+  bypassing the rule.
+- **API update restriction:** a direct GitHub Contents API update to the open
+  review-fix branch was also rejected: "Code coverage checks require a pull
+  request." Publish the test-only correction through a replacement stacked PR
+  rather than writing directly to either open PR branch.
+- **Current review disposition:** round-1 high/medium findings are resolved;
+  independent round-2 review and hosted checks on the final PR head remain
+  pending. No live GitHub authentication or generation was attempted.

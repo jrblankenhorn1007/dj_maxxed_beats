@@ -140,15 +140,17 @@ Mock DJ, OpenAI, and Anthropic do not need this runtime.
   `~/Library/Application Support/SuperCollider/Extensions/MaxxedBeats/Data/copilot`,
   and double-click `setup-copilot.command`. It offers to install Python with
   Homebrew, or opens the official Python download page if Python 3.11+ is
-  missing; the Copilot CLI is installed per-user from GitHub's official
-  installer.
+  missing; the Copilot CLI is installed per-user from a pinned GitHub release
+  after its SHA-256 checksum is verified.
 - **Linux:** in the file manager open
   `~/.local/share/SuperCollider/Extensions/MaxxedBeats/Data/copilot`, then
   show hidden files if `.local` is not visible (usually **Ctrl+H**), then
-  right-click `setup-copilot.sh` and choose **Run as Program**. If Python 3.11+
-  is missing, the helper offers to install it with apt, dnf, or pacman; the
-  package manager may request the computer password. On other distributions,
-  install Python 3.11+ with the Software app and run the helper again.
+  right-click `setup-copilot.sh` and choose **Run in Terminal**. This opens a
+  terminal window for confirmations and any package-manager password prompt.
+  If Python 3.11+ is missing, the helper offers to install it with apt, dnf,
+  or pacman; the package manager may request the computer password. On other
+  distributions, install Python 3.11+ with the Software app and run the helper
+  again.
 
 The helpers finish by telling you what to click next; none asks you to paste a
 terminal command. If the installed extension is in a custom folder, open its

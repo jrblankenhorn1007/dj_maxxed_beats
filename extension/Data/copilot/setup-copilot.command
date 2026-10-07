@@ -2,7 +2,7 @@
 cd "$(dirname "$0")" || exit 1
 
 echo "MaxxedBeats Copilot setup for macOS"
-echo "This installs the official GitHub Copilot CLI and a private SDK runtime."
+echo "This installs the pinned, checksum-verified GitHub Copilot CLI and a private SDK runtime."
 echo "It does not ask for or store an API key."
 printf "Continue? [Y/n] "
 read -r answer
@@ -13,12 +13,23 @@ if [[ "$answer" =~ ^[Nn] ]]; then
 fi
 
 python=""
-for name in python3.13 python3.12 python3.11; do
-    if command -v "$name" >/dev/null 2>&1; then
-        python="$(command -v "$name")"
-        break
-    fi
-done
+find_python() {
+    for name in python3.14 python3.13 python3.12 python3.11 python3 python; do
+        if command -v "$name" >/dev/null 2>&1; then
+            candidate="$(command -v "$name")"
+            version="$("$candidate" -c 'import sys; print("%d.%d" % sys.version_info[:2])' 2>/dev/null)" || continue
+            major="${version%%.*}"
+            minor="${version#*.}"
+            if [ "$major" -gt 3 ] || { [ "$major" -eq 3 ] && [ "$minor" -ge 11 ]; }; then
+                printf '%s\n' "$candidate"
+                return 0
+            fi
+        fi
+    done
+    return 1
+}
+
+python="$(find_python || true)"
 
 if [ -z "$python" ] && command -v brew >/dev/null 2>&1; then
     printf "Python 3.13 is needed. Install it with Homebrew? [Y/n] "

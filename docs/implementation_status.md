@@ -14,11 +14,18 @@
   not an API-key field.
 - The branch adds private runtime setup, live config refresh, platform
   launchers, one-click Windows package wrappers, and install/launch/sign-in
-  instructions. Its local full gate passes 228 tests with five platform or
-  opt-in skips. Implementation commit
-  `6b9e5dd4ec7f79ebb71642d21960e45d9bbecca4` is committed locally. Hosted
-  Windows package-script checks and real sign-in remain unverified; the
-  branch has not yet been merged.
+  instructions. Round-1 review findings were fixed by pinning and verifying
+  the macOS/Linux Copilot CLI release, accepting Python 3.14/generic `python3`,
+  and requiring an interactive Linux terminal. The local full gate passes 232
+  tests with five platform/opt-in skips, and the pinned CLI download/checksum
+  was verified locally. Implementation commit
+  `5d2745c1f0c5475697e68627741f7ea90fe93d52` is committed locally. Hosted
+  Windows/macOS checks passed on PR #41's original head. The first review-fix
+  PR exposed two Windows-only test assumptions (POSIX executable mode bits and
+  Linux/macOS CLI setup behavior); a test-only correction is committed locally
+  and needs a replacement stacked PR and hosted rerun. Independent round-2
+  review remains pending. Live sign-in/generation has not been tested; the
+  branch is not merged.
 
 ## Latest loop report
 

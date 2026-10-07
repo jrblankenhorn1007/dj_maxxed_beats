@@ -1,11 +1,18 @@
 """Offline tests for Copilot setup paths and runtime configuration."""
+import hashlib
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path
+import shutil
+import stat
+import subprocess
 import sys
+import tarfile
 import tempfile
 import unittest
+import urllib.request
 from unittest import mock
 
 from mb_providers.harness import ROOT
@@ -73,17 +80,100 @@ class CopilotSetupTests(unittest.TestCase):
             with self.subTest(filename=filename):
                 self.assertTrue(os.access(SETUP_PATH.with_name(filename), os.X_OK))
 
-    def test_cli_setup_uses_official_installer_only_when_missing(self):
+    def test_cli_setup_installs_only_a_checksum_verified_release_when_missing(self):
+        archive = io.BytesIO()
+        payload = b"official-copilot-test-binary"
+        with tarfile.open(fileobj=archive, mode="w:gz") as package:
+            member = tarfile.TarInfo("copilot")
+            member.mode = 0o755
+            member.size = len(payload)
+            package.addfile(member, io.BytesIO(payload))
+        archive_bytes = archive.getvalue()
+        runtime_directory = self.root / "runtime"
+        expected_path = runtime_directory / "cli" / "copilot"
+        response = io.BytesIO(archive_bytes)
+
         with mock.patch.object(
                 self.setup, "resolve_cli",
-                side_effect=[self.setup.BackendError("config", "missing"), "/native/copilot"]) as resolve, \
+                side_effect=[
+                    self.setup.BackendError("config", "missing"), "/native/copilot"]) as resolve, \
+                mock.patch.object(self.setup, "runtime_directory", return_value=runtime_directory), \
+                mock.patch.object(
+                    self.setup, "CLI_RELEASE_SHA256",
+                    {"darwin-arm64": hashlib.sha256(archive_bytes).hexdigest()},
+                    create=True), \
+                mock.patch.object(urllib.request, "urlopen", return_value=response) as urlopen, \
                 mock.patch.object(self.setup.subprocess, "run") as run:
-            result = self.setup.resolve_cli_for_setup(install_cli=True, platform_name="darwin")
-        self.assertEqual(result, "/native/copilot")
-        resolve.assert_has_calls([mock.call({}), mock.call({})])
-        run.assert_called_once_with(
-            ["bash", "-c", "curl -fsSL https://gh.io/copilot-install | bash"],
-            check=True, timeout=300)
+            result = self.setup.resolve_cli_for_setup(
+                install_cli=True, platform_name="darwin", architecture="arm64")
+        self.assertEqual(result, str(expected_path.absolute()))
+        self.assertEqual(expected_path.read_bytes(), payload)
+        if os.name != "nt":
+            self.assertEqual(stat.S_IMODE(expected_path.stat().st_mode), 0o755)
+        resolve.assert_called_once_with({})
+        urlopen.assert_called_once()
+        self.assertEqual(
+            urlopen.call_args.args[0],
+            "https://github.com/github/copilot-cli/releases/download/v{}/copilot-darwin-arm64.tar.gz".format(
+                self.setup.CLI_VERSION))
+        self.assertEqual(urlopen.call_args.kwargs, {"timeout": 60})
+        run.assert_not_called()
+
+    def test_cli_setup_rejects_a_release_checksum_mismatch(self):
+        runtime_directory = self.root / "runtime"
+        response = io.BytesIO(b"unverified release data")
+        with mock.patch.object(
+                self.setup, "resolve_cli",
+                side_effect=[self.setup.BackendError("config", "missing"), "/native/copilot"]), \
+                mock.patch.object(self.setup, "runtime_directory", return_value=runtime_directory), \
+                mock.patch.object(
+                    self.setup, "CLI_RELEASE_SHA256",
+                    {"darwin-arm64": "0" * 64}, create=True), \
+                mock.patch.object(urllib.request, "urlopen", return_value=response), \
+                mock.patch.object(self.setup.subprocess, "run"):
+            with self.assertRaisesRegex(self.setup.SetupError, "checksum"):
+                self.setup.resolve_cli_for_setup(
+                    install_cli=True, platform_name="darwin", architecture="arm64")
+        self.assertFalse((runtime_directory / "cli" / "copilot").exists())
+
+    @unittest.skipUnless(shutil.which("bash") and os.name != "nt", "Bash is required")
+    def test_macos_launcher_accepts_python_314_and_generic_python3(self):
+        launcher = SETUP_PATH.with_name("setup-copilot.command")
+        bash = shutil.which("bash")
+        for candidate in ("python3.14", "python3"):
+            with self.subTest(candidate=candidate), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                bin_directory = root / "bin"
+                bin_directory.mkdir()
+                selected = bin_directory / candidate
+                selected.write_text(
+                    "#!/bin/sh\n"
+                    "if [ \"$1\" = \"-c\" ]; then printf '3.14\\n'; "
+                    "else printf '%s\\n' \"$0\" >> \"$MB_TEST_PYTHON_LOG\"; fi\n",
+                    encoding="utf-8")
+                selected.chmod(0o755)
+                fake_open = bin_directory / "open"
+                fake_open.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+                fake_open.chmod(0o755)
+                log = root / "selected-python.txt"
+                environment = dict(os.environ)
+                environment.update({
+                    "PATH": os.pathsep.join((str(bin_directory), "/usr/bin", "/bin")),
+                    "MB_TEST_PYTHON_LOG": str(log),
+                })
+                result = subprocess.run(
+                    [bash, str(launcher)], env=environment, input="\n\n",
+                    capture_output=True, text=True, timeout=10)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual(log.read_text(encoding="utf-8").strip(), str(selected))
+
+    @unittest.skipUnless(shutil.which("bash") and os.name != "nt", "Bash is required")
+    def test_linux_launcher_explains_that_interactive_terminal_is_required(self):
+        result = subprocess.run(
+            [shutil.which("bash"), str(SETUP_PATH.with_name("setup-copilot.sh"))],
+            stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=10)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Run in Terminal", result.stdout + result.stderr)
 
     def test_setup_preserves_cli_shim_path_for_package_updates(self):
         target = self.root / "packages" / "copilot-v1" / "copilot.exe"
@@ -133,6 +223,49 @@ class CopilotSetupTests(unittest.TestCase):
             str(SETUP_PATH.with_name("requirements.txt"))], calls)
         self.assertIn([cli_path, "--version"], calls)
         self.assertTrue(all(call.kwargs.get("shell") is not True for call in run.call_args_list))
+
+    @unittest.skipIf(os.name == "nt", "Windows CLI setup is delegated to the packaged WinGet helper")
+    def test_setup_installs_missing_cli_inside_the_private_runtime_directory(self):
+        settings_directory = self.root / "settings"
+        runtime_directory = self.root / "runtime"
+        cli_path = runtime_directory / "cli" / "copilot"
+        python_path = self.setup.python_in_venv(runtime_directory / "venv")
+        builder = mock.Mock()
+
+        def create_environment(directory):
+            python_path.parent.mkdir(parents=True)
+            python_path.touch()
+
+        builder.return_value.create.side_effect = create_environment
+        with mock.patch.object(
+                self.setup, "resolve_cli",
+                side_effect=self.setup.BackendError("config", "missing")) as resolve, \
+                mock.patch.object(
+                    self.setup, "install_official_cli", return_value=str(cli_path)) as install_cli, \
+                mock.patch.object(self.setup.venv, "EnvBuilder", return_value=builder.return_value), \
+                mock.patch.object(self.setup.subprocess, "run"):
+            configured = self.setup.setup_runtime(
+                install_cli=True,
+                python_version=(3, 13),
+                settings_dir=settings_directory,
+                runtime_dir=runtime_directory)
+
+        self.assertEqual(configured["cliPath"], str(cli_path))
+        resolve.assert_called_once_with({})
+        install_cli.assert_called_once_with(
+            runtime_directory / "cli", platform_name=sys.platform, architecture=None)
+
+    @unittest.skipUnless(os.name == "nt", "Windows CLI setup is delegated to the packaged WinGet helper")
+    def test_windows_runtime_setup_directs_users_to_the_packaged_cli_helper(self):
+        with mock.patch.object(
+                self.setup, "resolve_cli",
+                side_effect=self.setup.BackendError("config", "missing")):
+            with self.assertRaisesRegex(self.setup.SetupError, "Setup-Copilot.cmd"):
+                self.setup.setup_runtime(
+                    install_cli=True,
+                    python_version=(3, 13),
+                    settings_dir=self.root / "settings",
+                    runtime_dir=self.root / "runtime")
 
     def test_setup_refuses_python_below_311_before_installing(self):
         with mock.patch.object(self.setup, "resolve_cli",

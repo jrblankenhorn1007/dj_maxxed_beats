@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 cd "$(dirname "$0")" || exit 1
-if [[ -t 0 ]]; then
-    trap 'read -r -p "Press Return to close this window."' EXIT
+if [[ ! -t 0 ]]; then
+    echo "Copilot setup needs an interactive Terminal window for confirmation and password prompts."
+    echo "In your file manager, choose 'Run in Terminal' for setup-copilot.sh, then try again."
+    exit 1
 fi
+trap 'read -r -p "Press Return to close this window."' EXIT
 
 echo "MaxxedBeats Copilot setup for Linux"
-echo "This installs the official GitHub Copilot CLI and a private SDK runtime."
+echo "This installs the pinned, checksum-verified GitHub Copilot CLI and a private SDK runtime."
 echo "It does not ask for or store an API key."
 printf "Continue? [Y/n] "
 read -r answer

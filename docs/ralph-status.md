@@ -1,7 +1,7 @@
 schema_version: 2
 snapshot_path: "docs/ralph-status.md"
-snapshot_revision: 17
-updated_at_utc: "2026-10-07T21:21:27Z"
+snapshot_revision: 23
+updated_at_utc: "2026-10-07T21:59:51Z"
 overall_status: IN_PROGRESS
 current_run_ids:
   - "copilot-setup-onboarding-20261007-1640"
@@ -423,9 +423,9 @@ runs:
     coordinator_worktree: "/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-copilot-windows-onboarding-20261007-1640"
     coordinator_base_origin_main_sha: "dac46c31f6711ad0d90d40b9634ba92aa5a0203b"
     coordinator_rebased_onto_origin_main_sha: null
-    coordinator_implementation_commit_sha: "6b9e5dd4ec7f79ebb71642d21960e45d9bbecca4"
+    coordinator_implementation_commit_sha: "5d2745c1f0c5475697e68627741f7ea90fe93d52"
     created_at_utc: "2026-10-07T20:39:31Z"
-    updated_at_utc: "2026-10-07T21:21:27Z"
+    updated_at_utc: "2026-10-07T21:59:51Z"
     split_plan:
       - task_id: "copilot-runtime-setup-onboarding"
         worker_id: "coordinator-01"
@@ -443,7 +443,7 @@ runs:
             - "extension/Classes/Providers/MBCopilotProvider.sc runtime refresh test"
       no_durable_lessons_reason: null
     memory_review: PENDING_REMOTE_MERGE
-    next_action: "Publish the PR, run exact-head platform checks and independent code/security review, then use the protected merge path and complete the post-merge memory review."
+    next_action: "Publish the Windows test-portability correction in a replacement stacked PR targeting PR #41, complete round-2 exact-head review and hosted checks, then use the protected merge path and complete post-merge verification and memory review."
 
 branch_agent_index:
   - run_id: "djmb-plugin-completion-20261006-2310"
@@ -979,7 +979,7 @@ branch_agent_index:
     branch_slug: "ralph-copilot-windows-onboarding-20261007-1640"
     base_origin_main_sha: "dac46c31f6711ad0d90d40b9634ba92aa5a0203b"
     rebased_onto_origin_main_sha: null
-    implementation_commit_sha: "6b9e5dd4ec7f79ebb71642d21960e45d9bbecca4"
+    implementation_commit_sha: "5d2745c1f0c5475697e68627741f7ea90fe93d52"
     status: IN_PROGRESS
     iteration: 1
     merge_actor_worker_id: null
@@ -987,19 +987,19 @@ branch_agent_index:
       status: RECEIVED
       attestation_kind: SELF_ATTESTATION
       cryptographic_signature_status: NOT_CRYPTOGRAPHICALLY_SIGNED
-      attested_at_utc: "2026-10-07T21:19:15Z"
+      attested_at_utc: "2026-10-07T21:50:39Z"
     pull_request:
       status: PENDING
-      number: null
-      url: null
-      base_sha: null
-      head_sha: null
+      number: 41
+      url: "https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/41"
+      base_sha: "dac46c31f6711ad0d90d40b9634ba92aa5a0203b"
+      head_sha: "b7b19a596837b5fd667680385224a162b3e91ee6"
     review:
       status: PENDING
       reviewer_agents: ["Ralph Code Reviewer", "Ralph Security Reviewer"]
-      reviewed_base_sha: null
-      reviewed_head_sha: null
-      rounds_completed: 0
+      reviewed_base_sha: "dac46c31f6711ad0d90d40b9634ba92aa5a0203b"
+      reviewed_head_sha: "b7b19a596837b5fd667680385224a162b3e91ee6"
+      rounds_completed: 1
       max_rounds: 2
       unresolved_finding_count: 0
       author_decision:
@@ -1008,7 +1008,7 @@ branch_agent_index:
         rationale: null
         recorded_at_utc: null
     resource_usage:
-      time_spent_seconds: 2516
+      time_spent_seconds: 4820
       time_basis: WALL_CLOCK_ELAPSED
       token_spend:
         status: NOT_REPORTED
@@ -1023,15 +1023,23 @@ branch_agent_index:
     decision_index_path: "docs/decisions/ralph-copilot-windows-onboarding-20261007-1640/README.md"
     checks:
       - command: "SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth bash scripts/run_headless_tests.sh"
-        result: "PASS (228 tests, five platform/opt-in skips; 247.111 seconds)"
+        result: "PASS (232 tests, five platform/opt-in skips; 205.315 seconds)"
+      - command: "PYTHONPATH=tests python3 -m unittest test_mb_copilot_setup -q"
+        result: "PASS (13 tests, one Windows-only case skipped on macOS)"
+      - command: "Install pinned GitHub Copilot CLI release into a temporary directory; verify SHA-256 and run --version"
+        result: "PASS (GitHub Copilot CLI 1.0.93)"
       - command: "git diff --cached --check"
         result: PASS
       - command: "Ruby schema-v2 dashboard/leaf/resource and memory-handoff consistency check"
         result: PASS
       - command: "Ruby local-link validation for branch dossier and decision records"
-        result: "PASS (9 branch Markdown files)"
+        result: "PASS (10 branch Markdown files)"
       - command: "Windows PowerShell package-script tests"
-        result: "NOT_RUN locally (PowerShell unavailable); hosted Windows CI pending"
+        result: "NOT_RUN locally (PowerShell unavailable); PR #41 Windows package/Assistant checks passed on original head b7b19a5; review-fix head still needs hosted CI"
+      - command: "Hosted PR #41 checks"
+        result: "PASS on original head b7b19a596837b5fd667680385224a162b3e91ee6 (macOS, Windows x64, Windows package, headless, and ChaosOsc builds)"
+      - command: "Hosted Windows Assistant checks on first review-fix PR #42 head 494310d5ed47b1b935ddcd84c9434e228ccae326"
+        result: "FAIL (one POSIX executable-mode assertion and one macOS/Linux-only runtime test ran on Windows); test-only correction committed locally as 1dc19c9f13c96732f399858f6277527026b8f02e; replacement stacked PR pending"
       - command: "Live Copilot sign-in and generation"
         result: "NOT_RUN (Python 3.11+ is not installed in this environment)"
-    next_action: "Publish the PR and wait for exact-head CI and independent reviews before the protected merge."
+    next_action: "Publish the Windows test-portability correction in a replacement stacked PR targeting PR #41, complete round-2 exact-head review and hosted checks, then use the protected merge path."
