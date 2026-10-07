@@ -175,6 +175,71 @@ class CopilotSetupTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("Run in Terminal", result.stdout + result.stderr)
 
+    @unittest.skipUnless(shutil.which("bash") and os.name != "nt", "Bash and a POSIX terminal are required")
+    def test_linux_apt_fallback_explains_when_python311_is_unavailable(self):
+        import pty
+        import select
+        import time
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            bin_directory = root / "bin"
+            bin_directory.mkdir()
+            for name in ("python3.13", "python3.12", "python3.11", "python3"):
+                candidate = bin_directory / name
+                candidate.write_text(
+                    "#!/bin/sh\n"
+                    "if [ \"$1\" = \"-c\" ]; then printf '3.10\\n'; fi\n",
+                    encoding="utf-8")
+                candidate.chmod(0o755)
+            apt = bin_directory / "apt-get"
+            apt.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+            apt.chmod(0o755)
+            sudo = bin_directory / "sudo"
+            sudo.write_text(
+                "#!/bin/sh\n"
+                "if [ \"$2\" = \"update\" ]; then exit 0; fi\n"
+                "exit 1\n",
+                encoding="utf-8")
+            sudo.chmod(0o755)
+            environment = dict(os.environ)
+            environment["PATH"] = os.pathsep.join((str(bin_directory), "/usr/bin", "/bin"))
+            master, slave = pty.openpty()
+            process = subprocess.Popen(
+                [shutil.which("bash"), str(SETUP_PATH.with_name("setup-copilot.sh"))],
+                stdin=slave, stdout=slave, stderr=slave, env=environment)
+            os.close(slave)
+            output = bytearray()
+            answered = set()
+            prompts = (
+                (b"Continue? [Y/n]", b"\n"),
+                (b"Install Python 3.11 using your system package manager? [y/N]", b"y\n"),
+                (b"Press Return to close this window.", b"\n"),
+            )
+            deadline = time.monotonic() + 15
+            while process.poll() is None and time.monotonic() < deadline:
+                readable, _, _ = select.select([master], [], [], 0.2)
+                if not readable:
+                    continue
+                try:
+                    output.extend(os.read(master, 4096))
+                except OSError:
+                    break
+                for index, (prompt, response) in enumerate(prompts):
+                    if index not in answered and prompt in output:
+                        os.write(master, response)
+                        answered.add(index)
+            if process.poll() is None:
+                process.kill()
+                process.wait()
+                self.fail("Linux setup did not finish its simulated APT fallback")
+            os.close(master)
+
+        self.assertNotEqual(process.returncode, 0)
+        self.assertIn(b"APT could not install Python 3.11", output)
+        self.assertIn(b"Ubuntu 22.04", output)
+        self.assertIn(b"Install Python 3.11+", output)
+
     def test_setup_preserves_cli_shim_path_for_package_updates(self):
         target = self.root / "packages" / "copilot-v1" / "copilot.exe"
         shim = self.root / "WinGet" / "Links" / "copilot.exe"
