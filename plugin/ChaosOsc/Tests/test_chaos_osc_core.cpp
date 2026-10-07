@@ -498,7 +498,7 @@ void test_rate_schedule_is_deterministic_and_bounded() {
     const double schedule[] = {kInfinity, 100.0,    0.0,     3000.0,
                                kNaN,      -1.0,     47999.0, 48000.0,
                                1.0e-3,    24000.0,  1.0,     96000.0};
-    constexpr int kBlock = 64;
+    static constexpr int kBlock = 64;
     auto render = [&](double seed) {
         chaososc::ChaosOscCore core;
         core.reset(seed);
