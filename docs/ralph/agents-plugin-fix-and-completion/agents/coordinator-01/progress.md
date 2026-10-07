@@ -28,3 +28,19 @@
   [`RALPH_PROGRESS.md`](../../../../RALPH_PROGRESS.md) iteration 6).
 - **Gate:** `DJMB_REALTIME_AUDIO_TESTS=1 SCLANG=… SCSYNTH=… bash
   scripts/run_headless_tests.sh` → `Ran 98 tests … OK`, 47 DSP assertions.
+
+## 2026-10-07 — publication, merge, install, memory
+
+- Round 2 on `374db4e`: code and security CLEAN. Published PR #33; Windows
+  MSVC failed (C2131, run `37554551784`). Fixed in `810844d`, published
+  `agents/plugin-fix-and-completion-r2` as PR #34, closed #33.
+- PR #34 review on `1b9a1ef`→`810844d`: CLEAN (code + security); 8/8 hosted
+  checks passed. Merged at `f09c686`; `git merge-base --is-ancestor 810844d
+  origin/main` succeeded; post-merge `main` Plugin Builds and Headless Tests
+  passed on `f09c686`.
+- Installed with `python3 scripts/install_chaososc.py` into the owner's
+  Extensions folder; real-HOME `sclang` compiled ChaosOsc and `scsynth`
+  without `-U` rendered finite, non-silent `.ar`/`.kr` audio.
+- Memory review: six lessons added (SCDoc parsing, sclang isolation,
+  real-time device selection, hardware-model evidence, MSVC array bounds,
+  integrated-head CI before publication).

@@ -35,3 +35,11 @@
   requirement.
 - **Scope:** Repository agents and Ralph coordinators handling user-requested
   GitHub integration.
+
+### Run cross-platform CI on the integrated head before opening the PR
+- **Rule:** The `Gate` ruleset applies to every branch: a published branch
+  cannot be updated or deleted. Push the integrated head to a fresh
+  `-ci<n>` branch and wait for all workflows before publishing the PR branch.
+- **Why:** Child-branch CI passed before integration, but the integrated PR
+  #33 failed only on Windows; the fix required replacement PR #34 because the
+  published branch could not be updated.
