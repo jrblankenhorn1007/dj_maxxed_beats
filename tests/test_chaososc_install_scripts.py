@@ -261,6 +261,32 @@ class PluginVerifierParsingTests(unittest.TestCase):
         with self.assertRaises(self.verifier.VerificationError):
             self.verifier.read_pe_exports(bogus)
 
+    def test_macos_export_check_inspects_every_architecture_slice(self):
+        commands = []
+        listing = (
+            "\nChaosOsc.scx (for architecture x86_64):\n"
+            "0000000000001200 T _api_version\n"
+            "\nChaosOsc.scx (for architecture arm64):\n"
+            "0000000000001000 T _api_version\n"
+            "0000000000001010 T _load\n"
+        )
+
+        def fake_run_tool(command):
+            commands.append(command)
+            return listing
+
+        original = self.verifier.run_tool
+        self.verifier.run_tool = fake_run_tool
+        try:
+            with self.assertRaises(self.verifier.VerificationError) as raised:
+                self.verifier.verify_unix_exports("ChaosOsc.scx", "darwin")
+        finally:
+            self.verifier.run_tool = original
+
+        self.assertEqual(commands, [["nm", "-gU", "-arch", "all", "ChaosOsc.scx"]])
+        self.assertIn("x86_64", str(raised.exception))
+        self.assertIn("_load", str(raised.exception))
+
     def test_parses_dumpbin_exports_listing(self):
         listing = (
             "Dump of file ChaosOsc.scx\n\n"

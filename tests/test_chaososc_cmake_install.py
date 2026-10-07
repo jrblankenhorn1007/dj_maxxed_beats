@@ -197,19 +197,28 @@ def plugin_modules(directory):
     )
 
 
-def global_text_symbols(binary):
+def global_text_symbols_by_arch(binary):
+    """{architecture: exported text symbols}; every slice of a macOS
+    universal binary is listed (Apple's nm shows only the host slice by
+    default), and single-architecture output is keyed by ""."""
     if IS_MACOS:
-        command = ["nm", "-gU", str(binary)]
+        command = ["nm", "-gU", "-arch", "all", str(binary)]
     else:
         command = ["nm", "-g", "--defined-only", str(binary)]
     result = subprocess.run(command, capture_output=True, text=True, timeout=60)
     if result.returncode:
         raise AssertionError("nm failed: {}".format(result.stderr))
-    symbols = set()
+    symbols = {}
+    arch = ""
     for line in result.stdout.splitlines():
+        header = re.search(r"\(for architecture (\S+)\):\s*$", line)
+        if header:
+            arch = header.group(1)
+            symbols.setdefault(arch, set())
+            continue
         fields = line.split()
         if len(fields) >= 3 and fields[-2] == "T":
-            symbols.add(fields[-1])
+            symbols.setdefault(arch, set()).add(fields[-1])
     return symbols
 
 
@@ -350,11 +359,16 @@ class ChaosOscCMakeBuildTests(unittest.TestCase):
             self.assertEqual(machine, 0x8664)
             self.assertTrue(SC_ENTRY_POINTS.issubset(names), names)
             return
-        symbols = global_text_symbols(binary)
+        symbols_by_arch = global_text_symbols_by_arch(binary)
         if IS_MACOS:
-            # Hidden visibility: only PluginLoad's C entry points escape.
-            self.assertEqual(symbols, {"_" + name for name in SC_ENTRY_POINTS})
+            # Every universal slice exports only PluginLoad's C entry points
+            # (hidden visibility for everything else).
+            expected = {"_" + name for name in SC_ENTRY_POINTS}
+            self.assertEqual(
+                symbols_by_arch, {"arm64": expected, "x86_64": expected}
+            )
         else:
+            symbols = symbols_by_arch.get("", set())
             self.assertTrue(SC_ENTRY_POINTS.issubset(symbols), symbols)
             self.assertEqual(
                 [name for name in symbols if name.startswith("_Z")], []

@@ -247,7 +247,9 @@ def verify_windows_exports(binary, require_dumpbin=False):
 
 def verify_unix_exports(binary, system):
     if system == "darwin":
-        listing = run_tool(["nm", "-gU", str(binary)])
+        # Apple's llvm-nm lists only the host slice of a universal binary
+        # unless asked for every architecture.
+        listing = run_tool(["nm", "-gU", "-arch", "all", str(binary)])
         prefix = "_"
     else:
         listing = run_tool(["nm", "-g", "--defined-only", str(binary)])
