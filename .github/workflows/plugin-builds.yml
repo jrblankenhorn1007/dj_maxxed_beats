@@ -1,0 +1,110 @@
+name: Plugin Builds
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  chaososc:
+    name: ChaosOsc (${{ matrix.label }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            label: macOS universal
+            artifact: ChaosOsc-macOS-universal
+            configure_args: ""
+            verify_args: --require-universal
+          - os: ubuntu-latest
+            label: Linux x86_64
+            artifact: ChaosOsc-Linux-x86_64
+            configure_args: ""
+            verify_args: ""
+          - os: windows-latest
+            label: Windows MSVC x64
+            artifact: ChaosOsc-Windows-x64
+            configure_args: -A x64
+            verify_args: --require-dumpbin
+    defaults:
+      run:
+        shell: bash
+    env:
+      BUILD_DIR: build/ChaosOsc
+      STAGE_DIR: build/stage
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Configure (Release, warnings as errors)
+        run: |
+          cmake --version
+          cmake -S plugin/ChaosOsc -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE=Release ${{ matrix.configure_args }}
+
+      - name: Build
+        run: cmake --build "${BUILD_DIR}" --config Release --parallel
+
+      - name: Test the DSP core (CTest)
+        run: ctest --test-dir "${BUILD_DIR}" -C Release --output-on-failure
+
+      - name: Install to a staging prefix
+        run: cmake --install "${BUILD_DIR}" --config Release --prefix "${GITHUB_WORKSPACE}/${STAGE_DIR}"
+
+      - name: Verify layout, exported load symbol, and architectures
+        run: python scripts/ci_verify_plugin.py --staging-dir "${STAGE_DIR}" --source-dir plugin/ChaosOsc ${{ matrix.verify_args }}
+
+      - name: Upload the staged ChaosOsc extension folder
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: build/stage/
+          if-no-files-found: error
+
+      - name: Install with the installer into the default Extensions dir
+        run: |
+          set -euo pipefail
+          python scripts/install_chaososc.py --build-dir build/installer
+          extensions_dir="$(python -c 'import sys; sys.path.insert(0, "scripts"); import install_chaososc; sys.stdout.write(install_chaososc.default_extensions_dir())')"
+          test -f "${extensions_dir}/ChaosOsc/.chaososc-install-marker"
+          python scripts/ci_verify_plugin.py --staging-dir "${extensions_dir}" --source-dir plugin/ChaosOsc ${{ matrix.verify_args }}
+          echo "CHAOSOSC_EXTENSIONS_DIR=${extensions_dir}" >> "${GITHUB_ENV}"
+
+      - name: Provision SuperCollider 3.14.1 (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          set -euo pipefail
+          zip_url="https://github.com/supercollider/supercollider/releases/download/Version-3.14.1/SuperCollider-3.14.1-win64.zip"
+          expected_sha256="a5f95416307d35c039ca53a9f9c6151c26585064d3229521093a60dddb9458cd"
+          zip_path=".runtime/SuperCollider-3.14.1-win64.zip"
+          mkdir -p .runtime
+          curl --fail --location --retry 3 --retry-delay 2 "${zip_url}" --output "${zip_path}"
+          printf '%s  %s\n' "${expected_sha256}" "${zip_path}" | sha256sum --check
+          python -m zipfile -e "${zip_path}" .runtime/
+          test -f .runtime/SuperCollider/sclang.exe
+          test -f .runtime/SuperCollider/scsynth.exe
+
+      - name: NRT smoke render with the installed MSVC plugin (Windows)
+        if: runner.os == 'Windows'
+        run: >-
+          python scripts/ci_nrt_smoke.py
+          --sclang .runtime/SuperCollider/sclang.exe
+          --scsynth .runtime/SuperCollider/scsynth.exe
+          --plugin-dir "${CHAOSOSC_EXTENSIONS_DIR}/ChaosOsc"
+          --expect-user-extension-dir "${CHAOSOSC_EXTENSIONS_DIR}"
+          --work-dir build/nrt-smoke
+          --report build/nrt-smoke/report.json
+
+      - name: Uninstall with the installer
+        run: |
+          set -euo pipefail
+          python scripts/install_chaososc.py --uninstall
+          test ! -e "${CHAOSOSC_EXTENSIONS_DIR}/ChaosOsc"

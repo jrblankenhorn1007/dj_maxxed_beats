@@ -5,3 +5,5 @@
 plugin/**/Tests/.build/
 plugin/**/Tests/*_bin
 /plugin/.sc-plugin-api-cache/
+/plugin/ChaosOsc/build/
+/build/

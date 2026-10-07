@@ -17,7 +17,10 @@ printf '\n==> Python syntax checks\n'
 python_cache_dir="${repo_root}/tests/.build/python-cache"
 mkdir -p "${python_cache_dir}"
 PYTHONPYCACHEPREFIX="${python_cache_dir}" PYTHONWARNINGS=error \
-    python3 -m compileall -q -f plugin/fetch_sc_plugin_api.py tests
+    python3 -m compileall -q -f plugin/fetch_sc_plugin_api.py tests \
+    scripts/install_chaososc.py \
+    scripts/ci_verify_plugin.py \
+    scripts/ci_nrt_smoke.py
 
 if ! command -v nm >/dev/null 2>&1; then
     printf "ERROR: 'nm' is required to verify the plugin load symbol.\n" >&2
