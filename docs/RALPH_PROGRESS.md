@@ -1406,14 +1406,15 @@ Ralph-Status: IN_PROGRESS
   and the non-terminal Linux launch had no "Run in Terminal" guidance.
 - **Review-fix Green:** The three Red cases passed after the changes. An
   additional checksum-mismatch case and private-runtime-path case were added;
-  the complete setup test module passes:
+  the setup test module passes:
   `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
   SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
   PYTHONPATH=tests python3 -m unittest test_mb_copilot_setup -q`
-  (**12 tests passed**). A real download into a temporary directory verified
+  (**13 tests; the Windows-only delegation test is skipped on macOS**). A real
+  download into a temporary directory verified
   the pinned release checksum and ran `copilot --version` → **GitHub Copilot
   CLI 1.0.93**.
-- **Final local gate after review fixes:**
+- **Full local product gate before the final Windows-only test-matrix fix:**
   `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
   SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
   bash scripts/run_headless_tests.sh` → **232 tests passed, 5 skipped** in
@@ -1423,11 +1424,28 @@ Ralph-Status: IN_PROGRESS
   headless-tests, and ChaosOsc plugin-build checks passed on PR #41's original
   head `b7b19a596837b5fd667680385224a162b3e91ee6`; the review fixes still
   require exact-head hosted checks.
+- **Windows CI Red on the first review-fix PR:** PR #42 head
+  `494310d5ed47b1b935ddcd84c9434e228ccae326` passed all hosted jobs except its
+  two Windows Assistant runs. They exposed test-only assumptions: Windows
+  does not preserve POSIX `0o755` mode bits, and a Unix runtime-install test
+  called `setup_runtime(install_cli=True)` on Windows instead of exercising
+  the intended `Setup-Copilot.cmd` delegation. The local correction makes the
+  mode assertion POSIX-only, skips that Unix-only runtime case on Windows,
+  and adds a Windows-specific delegation test.
+- **Windows CI Green locally:** `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
+  PYTHONPATH=tests python3 -m unittest test_mb_copilot_setup -q` → **13 tests,
+  one Windows-only test skipped on macOS**. The test-only correction is commit
+  `1dc19c9f13c96732f399858f6277527026b8f02e`; it still needs hosted Windows CI.
 - **Repository rule:** after PR #41 opened, a plain `git push` of the PR-status
   commit was rejected with GH013: "Code coverage checks require merging via
   API or UI." The local status commit `7440702` is preserved; use a review-fix
   PR stacked on #41 and merge it through GitHub's normal PR/API path rather than
   bypassing the rule.
+- **API update restriction:** a direct GitHub Contents API update to the open
+  review-fix branch was also rejected: "Code coverage checks require a pull
+  request." Publish the test-only correction through a replacement stacked PR
+  rather than writing directly to either open PR branch.
 - **Current review disposition:** round-1 high/medium findings are resolved;
   independent round-2 review and hosted checks on the final PR head remain
   pending. No live GitHub authentication or generation was attempted.

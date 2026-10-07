@@ -8,7 +8,8 @@
 - **Base `origin/main`:** `dac46c31f6711ad0d90d40b9634ba92aa5a0203b`
 - **Implementation commit:** `5d2745c1f0c5475697e68627741f7ea90fe93d52`
 - **State:** `IN_PROGRESS`; PR #41 is open. Round-1 review fixes need a
-  stacked PR to update its head, then exact-head checks and round-2 review.
+  replacement stacked PR after the initial fix PR exposed Windows-only test
+  assumptions; rerun exact-head checks and round-2 review.
 - **User request:** [summary](./prompts/user-request.md)
 - **Coordinator assignment:** [scope and split decision](./prompts/coordinator-assignment.md)
 - **Handoff:** [coordinator-01](./agents/coordinator-01/handoff.md)

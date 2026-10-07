@@ -20,9 +20,12 @@
   tests with five platform/opt-in skips, and the pinned CLI download/checksum
   was verified locally. Implementation commit
   `5d2745c1f0c5475697e68627741f7ea90fe93d52` is committed locally. Hosted
-  Windows/macOS checks passed on PR #41's original head; review-fix checks and
-  independent round-2 review remain pending. Live sign-in/generation has not
-  been tested; the branch is not merged.
+  Windows/macOS checks passed on PR #41's original head. The first review-fix
+  PR exposed two Windows-only test assumptions (POSIX executable mode bits and
+  Linux/macOS CLI setup behavior); a test-only correction is committed locally
+  and needs a replacement stacked PR and hosted rerun. Independent round-2
+  review remains pending. Live sign-in/generation has not been tested; the
+  branch is not merged.
 
 ## Latest loop report
 

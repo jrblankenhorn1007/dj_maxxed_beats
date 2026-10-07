@@ -48,6 +48,9 @@
   reviewers found a mutable shell-pipe installer (HIGH), incomplete macOS
   Python discovery (MEDIUM), and a Linux no-terminal prompt path (MEDIUM).
   Those findings are fixed locally and covered by the passing 232-test gate.
-  New exact-head checks and the independent round-2 review remain pending.
+  The first stacked fix PR exposed two Windows-only test assumptions; the
+  test-only correction passes locally (13 setup tests, one Windows-only skip)
+  and will be published in a replacement stacked PR. Exact-head checks and
+  independent round-2 review remain pending.
 - Local Windows PowerShell package-script tests are unavailable; they are
   expected to run in the hosted Windows Assistant Tests workflow.

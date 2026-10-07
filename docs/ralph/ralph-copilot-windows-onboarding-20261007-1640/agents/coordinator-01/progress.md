@@ -88,7 +88,7 @@
     },
     {
       "command": "PYTHONPATH=tests python3 -m unittest test_mb_copilot_setup -q",
-      "result": "PASS (12 tests)"
+      "result": "PASS (13 tests; one Windows-only case skipped on macOS)"
     },
     {
       "command": "Install pinned GitHub Copilot CLI release into a temporary directory; verify SHA-256 and run --version",
@@ -97,6 +97,10 @@
     {
       "command": "gh pr checks 41",
       "result": "PASS on original PR head b7b19a596837b5fd667680385224a162b3e91ee6; rerun on review-fix head pending"
+    },
+    {
+      "command": "gh pr checks 42",
+      "result": "Windows Assistant failed because POSIX mode bits and Windows CLI setup delegation were assumed incorrectly; corrected tests pass locally and need a replacement stacked PR"
     }
   ],
   "blockers": [],
