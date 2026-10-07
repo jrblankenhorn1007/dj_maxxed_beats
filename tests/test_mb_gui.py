@@ -22,8 +22,8 @@ ENTRY_CLASS = CLASSES / "MaxxedBeats.sc"
 HELP_SOURCE = ROOT / "extension" / "HelpSource"
 SCRIPTS = ROOT / "tests" / "mb_gui"
 BUILD_DIR = ROOT / "tests" / ".build" / "mb-gui"
-LINE = re.compile(r"^MBTEST (PASS|FAIL) (\S+)(?: :: (.*))?$")
-DONE = re.compile(r"^MBTEST DONE passes=(\d+) failures=(\d+)$")
+LINE = re.compile(r"MBTEST (PASS|FAIL) (\S+)(?: :: (.*))?$")
+DONE = re.compile(r"MBTEST DONE passes=(\d+) failures=(\d+)")
 
 
 def resolve_sclang():
@@ -113,13 +113,13 @@ def parse_results(output):
     passes, failures, done = [], [], None
     for raw in output.splitlines():
         line = raw.strip()
-        match = LINE.match(line)
+        match = LINE.search(line)
         if match:
             (passes if match.group(1) == "PASS" else failures).append(
                 (match.group(2), match.group(3) or "")
             )
             continue
-        match = DONE.match(line)
+        match = DONE.search(line)
         if match:
             done = (int(match.group(1)), int(match.group(2)))
     return passes, failures, done
@@ -140,7 +140,8 @@ class SclangScriptCase(unittest.TestCase):
         for name, detail in failures:
             with self.subTest(check=name):
                 self.fail(detail)
-        self.assertEqual(done, (len(passes), len(failures)))
+        self.assertEqual(done, (len(passes), len(failures)),
+                         "\n".join(line for line in output.splitlines() if "FAIL" in line or "ERROR" in line))
         self.assertGreaterEqual(len(passes), self.minimum_passes, tail)
         self.assertNotIn("ERROR:", output.replace("ERROR: Message", ""), tail)
         return passes

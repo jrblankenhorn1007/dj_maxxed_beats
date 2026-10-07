@@ -584,7 +584,9 @@ addCase.(\formatting, { |t|
 	check.(\zeroCostIsExplicit, MBGuiFormat.costText((usd: 0, credits: 0, rateStatus: \ok, rateTable: "v")).contains("no cost"));
 	check.(\nilCostUnavailable, MBGuiFormat.costText((rateStatus: \missing)).contains("unavailable"));
 	check.(\displayPath, MBGuiFormat.displayPath("/p/x/renders/a.wav", "/p/x") == "renders/a.wav"
-		and: { MBGuiFormat.displayPath("/q/a.wav", "/p/x") == "/q/a.wav" });
+		and: { MBGuiFormat.displayPath("/q/a.wav", "/p/x") == "/q/a.wav" }
+		and: { MBGuiFormat.displayPath("C:\\p\\x\\renders\\a.wav", "C:\\p\\x") == "renders/a.wav" });
+	check.(\baseName, MBGuiFormat.baseName("C:\\p\\Demo") == "Demo" and: { MBGuiFormat.baseName("/p/Demo/") == "Demo" });
 	check.(\fileCount, MBGuiFormat.fileCount(1) == "1 file" and: { MBGuiFormat.fileCount(2) == "2 files" });
 });
 

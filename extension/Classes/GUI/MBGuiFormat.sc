@@ -189,10 +189,20 @@ MBGuiFormat {
 	*fileCount { |n| ^n.asString ++ (if(n == 1) { " file" } { " files" }) }
 
 	// A path inside `root` is shown relative to it; others are shown whole.
+	// Separator-agnostic, since Windows paths may mix "\\" and "/".
 	*displayPath { |path, root|
-		path = path.asString;
-		if(root.notNil and: { path.beginsWith(root.asString +/+ "") }) { ^path.copyToEnd(root.asString.size + 1) };
-		^path
+		var p = path.asString.replace("\\", "/"), r;
+		if(root.isNil) { ^path.asString };
+		r = root.asString.replace("\\", "/");
+		while { r.size > 1 and: { r.last == $/ } } { r = r.drop(-1) };
+		if(p.beginsWith(r ++ "/")) { ^p.copyToEnd(r.size + 1) };
+		^path.asString
+	}
+
+	*baseName { |path|
+		var p = path.asString.replace("\\", "/");
+		while { p.size > 1 and: { p.last == $/ } } { p = p.drop(-1) };
+		^p.split($/).last
 	}
 
 	*timeText { |time|

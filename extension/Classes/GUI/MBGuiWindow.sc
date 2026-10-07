@@ -341,7 +341,7 @@ MBGuiWindow {
 		refreshing = true;
 
 		views[\projectLabel].string = if(project.isNil) { "No project open" } {
-			"Open: " ++ project[\root].asString.basename ++ " (" ++ MBGuiFormat.fileCount(files.size) ++ ")"
+			"Open: " ++ MBGuiFormat.baseName(project[\root]) ++ " (" ++ MBGuiFormat.fileCount(files.size) ++ ")"
 		};
 		views[\projectLabel].toolTip = if(project.isNil) { "" } { project[\root].asString };
 		views[\openProject].enabled = working.not;
