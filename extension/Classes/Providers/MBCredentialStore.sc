@@ -4,7 +4,7 @@
 //                                Credential Manager, Linux Secret Service)
 //   MBCredentialStore.fake    -> in-memory store for tests
 //
-// Keys are passed to backends only through stdin/FIFO, never through
+// Keys are passed to backends only through stdin/FIFO/pipe, never through
 // process arguments, environment variables, files, or messages. Keys are
 // never returned to the language: requests read them inside the transport
 // pipeline (see MBHttp). All callbacks run on AppClock.
@@ -111,7 +111,8 @@ MBCredentialStore {
 	backendName { ^"the credential store" }
 	missingToolHint { ^"" }
 
-	// Subclass hooks (shell command text must never contain the key).
+	// Subclass hooks (shell command text must never contain the key). On
+	// Windows the hooks answer argv Arrays for the PowerShell helper.
 	keyPrelude { |id, fifo| ^this.subclassResponsibility(thisMethod) }
 	keyPayload { |id| ^nil }
 	hasCommand { |id| ^this.subclassResponsibility(thisMethod) }
@@ -209,28 +210,31 @@ MBSecretServiceCredentialStore : MBCredentialStore {
 	}
 }
 
-// Windows: Credential Manager through the bundled PowerShell helper
-// Data/windows/MaxxedBeatsCredential.ps1 (CredRead/CredWrite/CredDelete).
-// Designed for Windows 10+, but not runtime-verified on a Windows host yet.
+// Windows: Credential Manager (generic credential "MaxxedBeats:<id>")
+// through the bundled PowerShell helper Data/windows/MaxxedBeatsCredential.ps1
+// (CredRead/CredWrite/CredDelete). The helper gets argv without the key; a
+// stored key is read from its stdin. Verified on Windows (CI). Tests use an
+// explicit, unique targetPrefix so real entries are never touched.
 MBWindowsCredentialStore : MBCredentialStore {
+	var <targetPrefix;
+
+	*new { |targetPrefix| ^super.new.prInitWindows(targetPrefix) }
+
+	prInitWindows { |prefix| targetPrefix = (prefix ? serviceName).asString }
+
 	backendName { ^"Windows Credential Manager" }
 
-	helper {
-		var path = MBProviderPaths.dataDir +/+ "windows" +/+ "MaxxedBeatsCredential.ps1";
-		^"powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \""
-			++ path ++ "\""
-	}
+	target { |id| ^targetPrefix ++ ":" ++ this.account(id) }
 
 	keyPrelude { |id, fifo, header|
-		^this.helper ++ " curlconfig " ++ this.account(id) ++ " \""
-			++ (header ? "Authorization: Bearer ") ++ "\""
+		^MBProviderPaths.windowsHelperArgv("request", ["-Target", this.target(id)])
 	}
 
-	hasCommand { |id| ^this.helper ++ " has " ++ this.account(id) }
+	hasCommand { |id| ^MBProviderPaths.windowsHelperArgv("has", ["-Target", this.target(id)]) }
 
-	storeCommand { |id, fifo| ^this.helper ++ " store " ++ this.account(id) }
+	storeCommand { |id, fifo| ^MBProviderPaths.windowsHelperArgv("store", ["-Target", this.target(id)]) }
 
-	removeCommand { |id| ^this.helper ++ " remove " ++ this.account(id) }
+	removeCommand { |id| ^MBProviderPaths.windowsHelperArgv("remove", ["-Target", this.target(id)]) }
 }
 
 // In-memory store for tests and demos. Keys stay in this object; requests
@@ -264,6 +268,8 @@ MBFakeCredentialStore : MBCredentialStore {
 	}
 
 	keyPrelude { |id, fifo|
+		// Windows: the helper reads the key line (empty when absent) from stdin.
+		if(MBProviderPaths.isWindows) { ^MBProviderPaths.windowsHelperArgv("request", ["-KeyFromStdin"]) };
 		if(keys[id.asSymbol].isNil) { ^"exit 120" };
 		^"key=$(cat " ++ fifo ++ ") || exit 120"
 	}

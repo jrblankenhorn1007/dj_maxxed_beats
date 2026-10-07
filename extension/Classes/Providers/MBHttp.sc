@@ -7,8 +7,14 @@
 // config ("header = ...") to `curl -K -`. `-q` disables ~/.curlrc so user
 // configuration cannot add tracing. TLS verification stays on (no -k);
 // plain http is accepted only for loopback test servers.
+//
+// Windows: the PowerShell helper (Data/windows/MaxxedBeatsCredential.ps1)
+// starts %SystemRoot%\System32\curl.exe (Schannel, Windows certificate
+// store) with the non-secret arguments from <run dir>/curl-spec.json and
+// writes the same one-line header config to curl's stdin; the key comes from
+// Credential Manager (or, for MBCredentialStore.fake, one stdin line).
 MBHttp {
-	classvar <>curlPath = "curl";
+	classvar <>curlPath = "curl", <>windowsCurlPath;
 
 	*isLoopback { |url|
 		^#["http://127.0.0.1:", "http://127.0.0.1/", "http://localhost:", "http://localhost/",
@@ -44,9 +50,16 @@ MBHttp {
 		};
 		if(auth.notNil) { payload = auth[\store].keyPayload(auth[\id]) };
 		script = if(MBProviderPaths.isWindows) {
+			error = MBProviderPaths.writeText(dir +/+ "curl-spec.json",
+				MBJSON.encode(this.windowsSpec(request)));
 			this.windowsScript(request, dir)
 		} {
 			this.posixScript(request, dir)
+		};
+		if(error.notNil) {
+			MBProviderPaths.removeDir(dir);
+			{ if(handle.finish) { onComplete.value((error: error)) } }.defer;
+			^handle
 		};
 		process = MBProcess.run(script, dir, payload,
 			(request[\timeout] ? 120) + 10,
@@ -60,6 +73,10 @@ MBHttp {
 	}
 
 	*curlArgs { |request, quote|
+		^this.curlArgList(request).collect { |item| quote.(item) }.join(" ")
+	}
+
+	*curlArgList { |request|
 		var args = List.new, timeout = request[\timeout] ? 120;
 		args.add("-q").add("-sS").add("-g");
 		args.add("--proto").add(if(this.isLoopback(request[\url])) { "=http,https" } { "=https" });
@@ -73,7 +90,7 @@ MBHttp {
 		args.add("-o").add("response-body.txt");
 		if(request[\auth].notNil) { args.add("-K").add("-") };
 		args.add(request[\url]);
-		^args.collect { |item| quote.(item) }.join(" ")
+		^args.asArray
 	}
 
 	*posixScript { |request, dir|
@@ -94,15 +111,23 @@ MBHttp {
 		^lines.join("\n")
 	}
 
+	*windowsCurl {
+		^windowsCurlPath ?? { MBProviderPaths.windowsTool("curl.exe") }
+	}
+
+	// Non-secret description of the curl run, read by the PowerShell helper.
+	*windowsSpec { |request|
+		var auth = request[\auth];
+		^(curl: this.windowsCurl,
+			args: this.curlArgList(request) ++ ["--stderr", "curl-stderr.txt"],
+			headerPrefix: auth !? { auth[\header] })
+	}
+
+	// argv for MBProcess; "@RUNDIR@" becomes the private run directory.
 	*windowsScript { |request, dir|
-		// Not runtime-verified (no Windows host); see docs/design/providers.md.
-		var auth = request[\auth], quote, curl;
-		quote = { |text| "\"" ++ text.asString.replace("\"", "\\\"") ++ "\"" };
-		curl = "curl.exe " ++ this.curlArgs(request, quote) ++ " 2> curl-stderr.txt";
-		if(auth.notNil) {
-			curl = auth[\store].keyPrelude(auth[\id], nil, auth[\header]) ++ " | " ++ curl;
-		};
-		^"cd /d " ++ quote.(dir) ++ " && " ++ curl
+		var auth = request[\auth];
+		if(auth.isNil) { ^MBProviderPaths.windowsHelperArgv("request") };
+		^auth[\store].keyPrelude(auth[\id], nil, auth[\header])
 	}
 
 	*prResult { |code, why, dir, request|

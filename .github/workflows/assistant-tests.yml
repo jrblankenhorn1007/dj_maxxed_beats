@@ -2,8 +2,10 @@ name: Assistant Tests
 
 # Headless tests of the MaxxedBeats assistant (GUI state machine, installer,
 # and the provider/workflow suites named tests/test_mb_*.py) on macOS and
-# Windows with the pinned SuperCollider 3.14.1 release. No provider keys or
-# live API calls are used.
+# Windows with the pinned SuperCollider 3.14.1 release, and the
+# no-developer-tools Windows package MaxxedBeats-Windows-x64.zip (built with
+# MSVC, installed with its install.ps1, smoke-tested, uninstalled). No provider
+# keys or live API calls are used.
 
 on:
   pull_request:
@@ -98,6 +100,8 @@ jobs:
         env:
           PYTHONWARNINGS: error
           PYTHONDONTWRITEBYTECODE: "1"
+          # Windows renders use the ChaosOsc (MSVC) installed above.
+          MB_CHAOSOSC_PLUGIN_DIR: ${{ runner.os == 'Windows' && '.runtime/mb-extensions/ChaosOsc' || '' }}
         run: python -m unittest discover -s tests -p 'test_mb_*.py' -v
 
       - name: Uninstall with the combined installer
@@ -107,3 +111,95 @@ jobs:
           python scripts/install_maxxedbeats.py --uninstall --extensions-dir "${MB_EXTENSIONS_DIR}"
           test ! -e "${MB_EXTENSIONS_DIR}/MaxxedBeats"
           test ! -e "${MB_EXTENSIONS_DIR}/ChaosOsc"
+
+  windows-package:
+    name: Windows package (MaxxedBeats-Windows-x64.zip)
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache pinned SuperCollider plugin API headers
+        uses: actions/cache@v4
+        with:
+          path: plugin/.sc-plugin-api-cache
+          key: sc-plugin-api-${{ runner.os }}-426edf6d8742e1cc3bd85b51ca0c4e595d37a903
+
+      # Python and CMake/MSVC are build tools of this job only; the package
+      # itself needs neither on the user's PC.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build ChaosOsc with MSVC (x64, Release) and stage it
+        run: |
+          set -euo pipefail
+          cmake -S plugin/ChaosOsc -B build/ChaosOsc -A x64 -DCMAKE_BUILD_TYPE=Release
+          cmake --build build/ChaosOsc --config Release --parallel
+          ctest --test-dir build/ChaosOsc -C Release --output-on-failure
+          cmake --install build/ChaosOsc --config Release --prefix "${GITHUB_WORKSPACE}/build/stage"
+          python scripts/ci_verify_plugin.py --staging-dir build/stage --source-dir plugin/ChaosOsc --require-dumpbin
+
+      - name: Assemble MaxxedBeats-Windows-x64.zip
+        run: python scripts/package_windows.py --chaososc-dir build/stage/ChaosOsc --output-dir build/package
+
+      - name: Upload MaxxedBeats-Windows-x64 (download is MaxxedBeats-Windows-x64.zip)
+        # Pull-request runs execute the PR's own workflow, so only trusted
+        # push/manual runs publish installable artifacts.
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: MaxxedBeats-Windows-x64
+          path: build/package/MaxxedBeats-Windows-x64/
+          if-no-files-found: error
+
+      - name: Provision SuperCollider 3.14.1 (Windows)
+        run: |
+          set -euo pipefail
+          zip_url="https://github.com/supercollider/supercollider/releases/download/Version-3.14.1/SuperCollider-3.14.1-win64.zip"
+          expected_sha256="a5f95416307d35c039ca53a9f9c6151c26585064d3229521093a60dddb9458cd"
+          zip_path=".runtime/SuperCollider-3.14.1-win64.zip"
+          mkdir -p .runtime
+          curl --fail --location --retry 3 --retry-delay 2 "${zip_url}" --output "${zip_path}"
+          printf '%s  %s\n' "${expected_sha256}" "${zip_path}" | sha256sum --check
+          python -m zipfile -e "${zip_path}" .runtime/
+          test -f .runtime/SuperCollider/sclang.exe
+          test -f .runtime/SuperCollider/scsynth.exe
+
+      - name: Install from the unzipped package with install.ps1 (Windows PowerShell)
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $unpacked = Join-Path $env:RUNNER_TEMP 'MaxxedBeats package test'
+          if (Test-Path -LiteralPath $unpacked) { Remove-Item -LiteralPath $unpacked -Recurse -Force }
+          Expand-Archive -LiteralPath build/package/MaxxedBeats-Windows-x64.zip -DestinationPath $unpacked
+          powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $unpacked 'MaxxedBeats-Windows-x64\install.ps1')
+          if ($LASTEXITCODE -ne 0) { throw "install.ps1 failed with exit code $LASTEXITCODE" }
+          $extensions = Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'SuperCollider\Extensions'
+          foreach ($file in @('MaxxedBeats\.maxxedbeats-install-marker', 'MaxxedBeats\agent\ROLE.md', 'ChaosOsc\.chaososc-install-marker', 'ChaosOsc\ChaosOsc.scx')) {
+            if (-not (Test-Path -LiteralPath (Join-Path $extensions $file))) { throw "missing after install: $file" }
+          }
+
+      - name: Assistant smoke test against the installed copy
+        run: >-
+          python scripts/ci_assistant_smoke.py
+          --sclang .runtime/SuperCollider/sclang.exe
+          --work-dir build/assistant-smoke
+          --expect-extensions-dir "${LOCALAPPDATA}/SuperCollider/Extensions"
+          --query-credential-store
+
+      - name: Uninstall with uninstall.ps1 (Windows PowerShell)
+        if: always()
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $unpacked = Join-Path $env:RUNNER_TEMP 'MaxxedBeats package test'
+          powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $unpacked 'MaxxedBeats-Windows-x64\uninstall.ps1')
+          if ($LASTEXITCODE -ne 0) { throw "uninstall.ps1 failed with exit code $LASTEXITCODE" }
+          $extensions = Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'SuperCollider\Extensions'
+          foreach ($name in @('MaxxedBeats', 'ChaosOsc')) {
+            if (Test-Path -LiteralPath (Join-Path $extensions $name)) { throw "still installed: $name" }
+          }

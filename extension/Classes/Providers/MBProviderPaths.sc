@@ -17,6 +17,31 @@ MBProviderPaths {
 
 	*runDir { ^this.settingsDir +/+ "run" }
 
+	// Windows tools are taken from %SystemRoot%\System32 so that a program
+	// of the same name earlier on PATH is never used.
+	*windowsTool { |relativePath|
+		var path = ("SystemRoot".getenv ? "C:\\Windows") +/+ "System32" +/+ relativePath;
+		^if(File.exists(path)) { path } { relativePath.basename }
+	}
+
+	*powershellPath { ^this.windowsTool("WindowsPowerShell\\v1.0\\powershell.exe") }
+
+	*windowsHelperPath { ^this.dataDir +/+ "windows" +/+ "MaxxedBeatsCredential.ps1" }
+
+	// argv for Data/windows/MaxxedBeatsCredential.ps1; "@RUNDIR@" is replaced
+	// by MBProcess with the private run directory.
+	*windowsHelperArgv { |action, extra|
+		^[this.powershellPath, "-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
+			"-File", this.windowsHelperPath, "-Action", action, "-RunDir", "@RUNDIR@"] ++ (extra ? [])
+	}
+
+	// Stops a Windows process and everything it started (taskkill /T).
+	*killTree { |pid|
+		if(pid.notNil and: { pid > 0 }) {
+			[this.windowsTool("taskkill.exe"), "/F", "/T", "/PID", pid.asString].unixCmd(nil, false)
+		}
+	}
+
 	// Create a directory readable only by the current user.
 	*ensurePrivateDir { |path|
 		ensured = ensured ?? { Set.new };
@@ -33,10 +58,14 @@ MBProviderPaths {
 
 	*newRunDir {
 		var base = this.ensurePrivateDir(this.runDir), path;
-		if(purged.not and: { this.isWindows.not }) {
+		if(purged.not) {
 			// Leftovers from a crashed session; never touches in-flight requests.
-			["/usr/bin/find", base, "-mindepth", "1", "-maxdepth", "1", "-name", "req-*",
-				"-mmin", "+120", "-exec", "/bin/rm", "-rf", "{}", "+"].unixCmd(nil, false);
+			if(this.isWindows) {
+				this.prPurgeWindows(base)
+			} {
+				["/usr/bin/find", base, "-mindepth", "1", "-maxdepth", "1", "-name", "req-*",
+					"-mmin", "+120", "-exec", "/bin/rm", "-rf", "{}", "+"].unixCmd(nil, false);
+			};
 			purged = true;
 		};
 		path = base +/+ ("req-" ++ Date.getDate.stamp ++ "-" ++ 1000000.rand
@@ -45,10 +74,27 @@ MBProviderPaths {
 		^path
 	}
 
-	*removeDir { |path|
+	*prPurgeWindows { |base|
+		var cutoff = Date.getDate.rawSeconds - 7200;
+		PathName(base).folders.do { |folder|
+			var path = folder.fullPath.withoutTrailingSlash;
+			if(path.basename.beginsWith("req-") and: { File.mtime(path) < cutoff }) {
+				this.removeDir(path)
+			}
+		}
+	}
+
+	*removeDir { |path, attempts = 4|
 		if(path.isNil or: { path.contains(this.runDir).not }) { ^this };
 		if(this.isWindows) {
-			("rmdir /s /q \"" ++ path ++ "\"").unixCmd(nil, false)
+			// A just-killed child may still hold the folder; retry briefly.
+			[this.windowsTool("cmd.exe"), "/d", "/c", "rmdir", "/s", "/q", path].unixCmd({
+				{
+					if(File.exists(path) and: { attempts > 1 }) {
+						AppClock.sched(1, { this.removeDir(path, attempts - 1); nil })
+					}
+				}.defer
+			}, false)
 		} {
 			["/bin/rm", "-rf", path].unixCmd(nil, false)
 		}

@@ -9,10 +9,10 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
-import sys
 import time
 import unittest
 
+from mb_providers import processes
 from mb_providers.fake_server import FakeProviderServer
 from mb_providers.harness import (
     BUILD_DIR, FAKE_ANTHROPIC_KEY, FAKE_KEY, run_sclang, sc_string, tree_contains,
@@ -48,25 +48,6 @@ def request(model, temperature="nil"):
     return REQUEST.replace("%MODEL%", model).replace("%TEMP%", temperature)
 
 
-def process_snapshot():
-    """Command lines and environments of all visible processes."""
-    if Path("/proc").is_dir():
-        chunks = []
-        for entry in Path("/proc").iterdir():
-            if entry.name.isdigit():
-                for name in ("cmdline", "environ"):
-                    try:
-                        chunks.append((entry / name).read_bytes().decode("utf-8", "replace"))
-                    except OSError:
-                        pass
-        return "\n".join(chunks)
-    out = subprocess.run(["ps", "-axww", "-o", "pid=,command="],
-                         capture_output=True, text=True).stdout
-    env = subprocess.run(["ps", "-axwwE", "-o", "command="],
-                         capture_output=True, text=True).stdout
-    return out + "\n" + env
-
-
 OPENAI_RESPONSE = {
     "id": "resp_123", "object": "response", "status": "completed", "model": "gpt-5-2025-08-07",
     "output": [
@@ -90,9 +71,6 @@ ANTHROPIC_RESPONSE = {
 }
 
 
-@unittest.skipIf(sys.platform == "win32",
-                 "Windows provider transport (curl.exe + PowerShell credential prelude) is designed "
-                 "but not runtime-verified; tracked gap in docs/design/providers.md (DEC-030)")
 class ProviderHttpTests(unittest.TestCase):
     def run_with_server(self, name, server, body, timeout=40):
         with server:
@@ -108,7 +86,7 @@ class ProviderHttpTests(unittest.TestCase):
         server.route("POST", "/v1/responses", {
             "status": 200, "body": OPENAI_RESPONSE, "headers": {"x-request-id": "req_abc"}})
         snapshots = []
-        server.on_request = lambda record: snapshots.append(process_snapshot())
+        server.on_request = lambda record: snapshots.append(processes.snapshot())
         body = prelude(server.base_url) + r"""
 		r = ~complete.(oa, %REQ%);
 		~emit.(\result, r);
@@ -138,6 +116,9 @@ class ProviderHttpTests(unittest.TestCase):
         self.assertTrue(snapshots)
         for snapshot in snapshots:
             self.assertNotIn(FAKE_KEY, snapshot)
+        # The snapshots really cover command lines and environments.
+        self.assertIn("script.scd", snapshots[0])
+        self.assertIn("HOME=" + str(run.home), snapshots[0])
         self.assert_no_key_leak(run)
 
     def test_anthropic_request_and_response_mapping(self):
@@ -310,8 +291,8 @@ class ProviderHttpTests(unittest.TestCase):
         self.assertLess(run.get("elapsed"), 1.5)
         self.assertEqual(run.get("handle"), [True, True])
         self.assertEqual(run.get("calls"), 1)
-        lingering = subprocess.run(["ps", "-axww", "-o", "command="], capture_output=True,
-                                   text=True).stdout
+        lingering = processes.command_lines()
+        self.assertIn("python", lingering.lower())
         self.assertNotIn("127.0.0.1:{}".format(server.port), lingering)
 
     @unittest.skipUnless(shutil.which("openssl"), "openssl CLI required for a self-signed cert")

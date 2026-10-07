@@ -41,7 +41,7 @@ MaxxedBeats {
 		missing = names.select { |name| classes[name].isNil };
 		if(missing.notEmpty) {
 			MBError(\config, "MaxxedBeats is not completely installed; missing classes: "
-				++ missing.join(", ") ++ ". Re-run scripts/install_maxxedbeats.py, then recompile the class library.").throw
+				++ missing.join(", ") ++ ". Re-run the MaxxedBeats installer (install.ps1 from MaxxedBeats-Windows-x64.zip on Windows, or scripts/install_maxxedbeats.py), then recompile the class library.").throw
 		};
 		instance = { |name| var cls = classes[name]; if(cls.respondsTo(\default)) { cls.default } { cls.new } };
 		store = overrides[\store];

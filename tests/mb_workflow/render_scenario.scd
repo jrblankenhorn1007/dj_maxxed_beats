@@ -55,7 +55,7 @@ Routine {
 		result = outcome[1];
 		if(outcome[0] == \ok) {
 			~check.("e2e_output_in_project_renders",
-				result[\path].beginsWith(project.root +/+ "renders/") and: { result[\path].endsWith(".wav") }
+				MBProject.comparablePath(result[\path]).beginsWith(MBProject.comparablePath(project.root) ++ "/renders/") and: { result[\path].endsWith(".wav") }
 				and: { File.exists(result[\path]) }, result[\path]);
 			~check.("e2e_output_matches_settings",
 				(result[\duration] - 3.0).abs < 0.01 and: { result[\sampleRate] == 48000 } and: { result[\numChannels] == 2 },

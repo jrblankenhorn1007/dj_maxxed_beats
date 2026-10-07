@@ -1,9 +1,15 @@
 /*
 Runs one headless child process (sclang or scsynth) without a shell-visible
-secret: the child gets a minimal, explicit environment (env -i on POSIX),
-stdin from the null device, and stdout/stderr in a log file. Enforces a
-timeout, can be cancelled, can stop early when a fatal pattern appears in
-the log, and calls onExit(process) on AppClock exactly once.
+secret: the child gets a minimal, explicit environment, stdin from the null
+device, and stdout/stderr in a log file. Enforces a timeout, can be
+cancelled (the whole process tree), can stop early when a fatal pattern
+appears in the log, and calls onExit(process) on AppClock exactly once.
+
+POSIX: `exec env -i VAR=... argv < /dev/null > log 2>&1` through /bin/sh.
+Windows: Data/windows/MaxxedBeatsLaunch.ps1 (PowerShell 5.1) reads a JSON
+spec written next to the log (program, args, environment, log) and starts
+the child with a cleared environment; no shell parses any path, so spaces,
+backslashes, and cmd metacharacters in paths are safe. Kill = taskkill /T /F.
 */
 MBRenderProcess {
 	classvar <>pollInterval = 0.25;
@@ -17,15 +23,29 @@ MBRenderProcess {
 
 	*quotePosix { |string| ^string.asString.shellQuote }
 
-	*quoteWindows { |string| ^"\"" ++ string.asString.replace("\"", "\\\"") ++ "\"" }
+	*isWindows { ^thisProcess.platform.name == \windows }
 
+	*launcherPath {
+		^this.filenameSymbol.asString.dirname.dirname.dirname +/+ "Data" +/+ "windows" +/+ "MaxxedBeatsLaunch.ps1"
+	}
+
+	*specPath { |logPath| ^logPath.splitext[0] ++ "-launch.json" }
+
+	// Windows: the launcher's JSON spec (no shell quoting involved).
+	*windowsSpec { |argv, environment, logPath|
+		var env = ();
+		environment.keysValuesDo { |key, value| env[key.asSymbol] = value.asString };
+		^(program: argv[0].asString, args: argv.drop(1).collect(_.asString), environment: env,
+			workingDirectory: logPath.dirname, log: logPath)
+	}
+
+	// The command passed to unixCmd: a /bin/sh line on POSIX, an argv Array
+	// (PowerShell launcher + spec path) on Windows.
 	*commandLine { |argv, environment, logPath|
 		var pairs = environment.keys.asArray.sort.collect { |key| [key.asString, environment[key].asString] };
-		^if(thisProcess.platform.name == \windows) {
-			// Unverified on Windows: set the isolated variables, then run the program.
-			pairs.collect { |pair| "set " ++ this.quoteWindows(pair[0] ++ "=" ++ pair[1]) ++ " && " }.join
-			++ argv.collect { |item| this.quoteWindows(item) }.join(" ")
-			++ " < NUL > " ++ this.quoteWindows(logPath) ++ " 2>&1"
+		^if(this.isWindows) {
+			[MBProviderPaths.powershellPath, "-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
+				"-File", this.launcherPath, "-Spec", this.specPath(logPath)]
 		} {
 			"exec env -i " ++ pairs.collect { |pair| this.quotePosix(pair[0] ++ "=" ++ pair[1]) }.join(" ")
 			++ " " ++ argv.collect { |item| this.quotePosix(item) }.join(" ")
@@ -42,14 +62,16 @@ MBRenderProcess {
 			TMPDIR: tmp,
 			LANG: "en_US.UTF-8"
 		);
-		if(thisProcess.platform.name == \windows) {
+		if(this.isWindows) {
 			env.putAll((
 				USERPROFILE: home,
-				APPDATA: home +/+ "AppData/Roaming",
-				LOCALAPPDATA: home +/+ "AppData/Local",
+				APPDATA: home +/+ "AppData" +/+ "Roaming",
+				LOCALAPPDATA: home +/+ "AppData" +/+ "Local",
 				TEMP: tmp,
 				TMP: tmp,
-				SystemRoot: "SystemRoot".getenv ? "C:\\Windows"
+				SystemRoot: "SystemRoot".getenv ? "C:\\Windows",
+				windir: "SystemRoot".getenv ? "C:\\Windows",
+				PATH: [("SystemRoot".getenv ? "C:\\Windows") +/+ "System32", "SystemRoot".getenv ? "C:\\Windows"].join(";")
 			));
 		} {
 			env[\PATH] = "/usr/bin:/bin:/usr/sbin:/sbin";
@@ -60,6 +82,10 @@ MBRenderProcess {
 	prRun {
 		var command = MBRenderProcess.commandLine(argv, environment, logPath), checkCounter = 0;
 		File.mkdir(logPath.dirname);
+		if(MBRenderProcess.isWindows) {
+			MBProject.writeFile(MBRenderProcess.specPath(logPath),
+				MBWorkflowJSON.stringify(MBRenderProcess.windowsSpec(argv, environment, logPath)));
+		};
 		startTime = Main.elapsedTime;
 		pid = command.unixCmd({ |code| this.prExited(code) }, false);
 		if(pid.isNil or: { pid <= 0 }) {
@@ -102,7 +128,11 @@ MBRenderProcess {
 
 	kill {
 		if(finished.not and: { pid.notNil } and: { pid > 0 }) {
-			thisProcess.platform.killProcessByID(pid);
+			if(MBRenderProcess.isWindows) {
+				MBProviderPaths.killTree(pid)
+			} {
+				thisProcess.platform.killProcessByID(pid)
+			};
 		};
 	}
 

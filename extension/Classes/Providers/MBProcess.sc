@@ -3,10 +3,15 @@
 // onExit.(exitCode, reason) with reason \exited, \timeout, or \cancelled.
 //
 // A secret payload is never put in process arguments, the environment, or a
-// file: on POSIX it is written into a private named pipe (FIFO, no data at
-// rest) that the child reads as stdin ("@FIFO@" in the script).
+// file. On POSIX the script is run by /bin/sh and the payload is written into
+// a private named pipe (FIFO, no data at rest) that the child reads as stdin
+// ("@FIFO@" in the script). On Windows the script is an argv Array (the
+// MaxxedBeatsCredential.ps1 helper) started with Pipe.argv, so the payload
+// line goes straight to the helper's stdin; the helper writes its exit code
+// to <dir>/exit-code.txt last, which is polled on AppClock.
 MBProcess {
-	var <pid, <dir, onExit, <finished = false, <reason, watchdog;
+	classvar <>pollInterval = 0.05;
+	var <pid, <dir, onExit, <finished = false, <reason, watchdog, pipe, poller;
 
 	*run { |script, dir, payload, timeout, onExit|
 		^super.new.prInit(dir, onExit).prRun(script, payload, timeout)
@@ -51,20 +56,41 @@ MBProcess {
 		this.prStartWatchdog(timeout);
 	}
 
-	prRunWindows { |script, payload, timeout|
-		var pipe, code;
-		if(payload.notNil) {
-			// Not runtime-verified on Windows (see docs/design/providers.md):
-			// stdin delivery through Pipe; close waits for the short-lived
-			// credential helper to exit.
-			pipe = Pipe(script, "w");
-			pipe.putString(payload);
-			code = pipe.close;
-			{ this.prExited(code) }.defer;
+	prRunWindows { |argv, payload, timeout|
+		var exitFile = dir +/+ "exit-code.txt";
+		argv = argv.collect { |item| if(item == "@RUNDIR@") { dir } { item } };
+		pipe = Pipe.argv(argv, "w");
+		if(pipe.isOpen.not) {
+			pipe = nil;
+			{ this.prFinish(127, \exited) }.defer;
 			^this
 		};
-		pid = script.unixCmd({ |exitCode| this.prExited(exitCode) }, false);
+		pid = pipe.mbPid;
+		// Always one line: the key, or an empty line when the helper does not
+		// read stdin (it then stays unread in the pipe buffer).
+		pipe.putString((payload ? "") ++ "\n");
+		pipe.flush;
+		poller = Routine {
+			while { finished.not } {
+				pollInterval.wait;
+				if(finished.not and: { File.exists(exitFile) }) {
+					this.prFinish(MBProviderPaths.readText(exitFile).stripWhiteSpace.asInteger, \exited);
+				};
+			};
+		}.play(AppClock);
 		this.prStartWatchdog(timeout);
+	}
+
+	// Pipe.close waits for the process; only close once it has surely ended.
+	prReleaseWindowsPipe { |kill|
+		var finishedPipe = pipe, finishedPid = pid;
+		pipe = nil;
+		if(finishedPipe.isNil) { ^this };
+		AppClock.sched(if(kill) { 1 } { 2 }, {
+			MBProviderPaths.killTree(finishedPid);
+			AppClock.sched(1, { finishedPipe.close; nil });
+			nil
+		});
 	}
 
 	prStartWatchdog { |timeout|
@@ -85,13 +111,15 @@ MBProcess {
 		finished = true;
 		reason = why;
 		watchdog !? { watchdog.stop };
+		poller !? { poller.stop };
+		if(MBProviderPaths.isWindows) { this.prReleaseWindowsPipe(why != \exited) };
 		onExit.value(code, why);
 	}
 
 	prKill {
 		if(pid.isNil) { ^this };
 		if(MBProviderPaths.isWindows) {
-			("taskkill /PID " ++ pid ++ " /T /F").unixCmd(nil, false)
+			MBProviderPaths.killTree(pid)
 		} {
 			("pkill -TERM -P " ++ pid ++ " ; kill -TERM " ++ pid ++ " 2>/dev/null")
 				.unixCmd(nil, false)
@@ -128,4 +156,10 @@ MBRequestHandle {
 		isDone = true;
 		^true
 	}
+}
+
+// Pipe keeps the child's process id private; MBProcess needs it to stop the
+// helper's process tree on Windows.
++ Pipe {
+	mbPid { ^pid }
 }

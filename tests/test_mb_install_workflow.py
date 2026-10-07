@@ -70,6 +70,34 @@ class AssistantWorkflowContractTests(unittest.TestCase):
         self.assertIn(".maxxedbeats-install-marker", self.source)
         self.assertIn(".chaososc-install-marker", self.source)
 
+    def test_windows_renders_use_the_installed_chaososc(self):
+        self.assertIn("MB_CHAOSOSC_PLUGIN_DIR: ${{ runner.os == 'Windows' && '.runtime/mb-extensions/ChaosOsc'",
+                      self.source)
+
+    def test_windows_package_is_built_installed_smoke_tested_and_uninstalled(self):
+        try:
+            import yaml
+        except ImportError:
+            yaml = None
+        if yaml is not None:
+            job = yaml.safe_load(self.source)["jobs"]["windows-package"]
+            self.assertTrue(job["runs-on"].startswith("windows-"))
+            names = [step.get("name", "") for step in job["steps"]]
+            order = [next(i for i, n in enumerate(names) if n.startswith(prefix)) for prefix in (
+                "Build ChaosOsc with MSVC", "Assemble MaxxedBeats-Windows-x64.zip",
+                "Install from the unzipped package", "Assistant smoke test", "Uninstall with uninstall.ps1")]
+            self.assertEqual(order, sorted(order))
+            upload = next(step for step in job["steps"] if "upload-artifact" in step.get("uses", ""))
+            self.assertEqual(upload["if"], "github.event_name != 'pull_request'")
+            self.assertEqual(upload["with"]["name"], "MaxxedBeats-Windows-x64")
+        for text in ("-A x64", "--config Release", "--require-dumpbin",
+                     "python scripts/package_windows.py", "Expand-Archive",
+                     "-ExecutionPolicy Bypass -File", "install.ps1", "uninstall.ps1",
+                     "shell: powershell", "python scripts/ci_assistant_smoke.py",
+                     "--expect-extensions-dir", "--query-credential-store"):
+            with self.subTest(text=text):
+                self.assertIn(text, self.source)
+
     def test_uses_no_secrets_or_live_provider_credentials(self):
         self.assertNotIn("secrets.", self.source)
         self.assertNotRegex(self.source, r"(?i)(openai|anthropic)_api_key")

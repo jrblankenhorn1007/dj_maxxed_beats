@@ -351,6 +351,9 @@ class PlatformBackendCommandTests(unittest.TestCase):
         self.assertEqual(len(backends), 4)
         for backend in backends:
             for field in ("prelude", "store", "has", "remove"):
+                # POSIX backends answer shell text, Windows an argv list.
+                if isinstance(backend[field], list):
+                    backend[field] = " ".join(backend[field])
                 self.assertNotIn(FAKE_KEY, backend[field], (backend["name"], field))
             self.assertFalse(backend["payloadHasKey"])
             self.assertTrue(backend["storePayloadHasKey"])
@@ -358,6 +361,8 @@ class PlatformBackendCommandTests(unittest.TestCase):
         self.assertIn("/x/test.keychain-db", backends[1]["prelude"])
         self.assertIn("secret-tool lookup", backends[2]["prelude"])
         self.assertIn("MaxxedBeatsCredential.ps1", backends[3]["prelude"])
+        self.assertIn("-Target MaxxedBeats:openai", backends[3]["prelude"])
+        self.assertIn("-Action store", backends[3]["store"])
 
 
 if __name__ == "__main__":

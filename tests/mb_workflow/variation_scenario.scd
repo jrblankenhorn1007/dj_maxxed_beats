@@ -63,7 +63,7 @@ Routine {
 			candidates.every { |candidate, index|
 				candidate[\status] == \proposed and: { candidate[\seed] == session.seeds[index] }
 				and: { candidate[\index] == index }
-				and: { candidate[\dir].beginsWith(project.sessionsDir +/+ session.id ++ "/") }
+				and: { MBProject.comparablePath(candidate[\dir]).beginsWith(MBProject.comparablePath(project.sessionsDir +/+ session.id) ++ "/") }
 				and: { candidate[\code]["comp.scd"].contains("Variation " ++ (index + 1)) }
 				and: { ~readText.(candidate[\project].root +/+ "comp.scd").contains("Variation " ++ (index + 1)) }
 				and: { candidate[\settings][\duration] == 2.0 } and: { candidate[\entry] == "comp.scd" }

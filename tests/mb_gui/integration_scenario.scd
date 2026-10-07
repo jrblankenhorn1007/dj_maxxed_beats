@@ -19,7 +19,7 @@ MBRenderer.defaultScsynth = args[5];
 AppClock.sched(900, { "MBTEST FAIL watchdog :: scenario timed out".postln; 1.exit; nil });
 
 ~read = { |path| var text; File.use(path, "r", { |f| text = f.readAllString }); text };
-~snapshot = { (~root +/+ "*").pathMatch.select { |p| p.endsWith("/").not }.collect { |p| [p.basename, ~read.(p)] } };
+~snapshot = { (~root +/+ "*").pathMatch.select { |p| p.last.isPathSeparator.not }.collect { |p| [p.basename, ~read.(p)] } };
 ~waitFor = { |condition, timeout = 30|
 	var waited = 0;
 	while { condition.value.not and: { waited < timeout } } { 0.05.wait; waited = waited + 0.05 };
@@ -129,7 +129,7 @@ Routine {
 		result = ~c.renderResult;
 		~check.("render_succeeded", result.notNil and: { ~c.error.isNil }, ~c.error);
 		if(result.notNil) {
-			~check.("render_file", File.exists(result[\path]) and: { result[\path].beginsWith(~c.project[\root] +/+ "renders/") });
+			~check.("render_file", File.exists(result[\path]) and: { MBProject.comparablePath(result[\path]).beginsWith(MBProject.comparablePath(~c.project[\root]) ++ "/renders/") });
 			~check.("render_checks", result[\checks][\ok] == true and: { result[\checks][\silent] == false }
 				and: { result[\checks][\clipped] == false } and: { (result[\duration] - 2).abs < 0.01 }, result[\checks]);
 			~check.("render_shown", ~v[\renderResult].string.contains(result[\path].basename)

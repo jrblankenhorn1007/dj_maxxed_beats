@@ -88,12 +88,25 @@ def builtin_plugin_dir(scsynth):
 
 
 def ensure_plugin_built():
+    """Folder holding a ChaosOsc plugin binary for scsynth -U.
+
+    ``MB_CHAOSOSC_PLUGIN_DIR`` may name an installed ChaosOsc folder (CI uses
+    the copy installed by scripts/install_maxxedbeats.py). Otherwise POSIX
+    hosts run the smoke build script and Windows builds and installs it with
+    CMake/MSVC through scripts/install_chaososc.py into tests/.build.
+    """
+    configured = os.environ.get("MB_CHAOSOSC_PLUGIN_DIR")
+    if configured:
+        folder = Path(configured)
+        if not folder.is_absolute():
+            folder = ROOT / folder
+        if not any((folder / name).is_file() for name in ("ChaosOsc.scx", "ChaosOsc.so")):
+            raise AssertionError(
+                "MB_CHAOSOSC_PLUGIN_DIR has no ChaosOsc plugin binary: {}".format(folder)
+            )
+        return folder.resolve()
     if sys.platform == "win32":
-        raise unittest.SkipTest(
-            "Windows render launching (MBRenderProcess) is designed but not runtime-verified "
-            "and the ChaosOsc smoke build script is POSIX-only; tracked gap in "
-            "docs/design/workflow.md"
-        )
+        return _build_plugin_with_installer()
     if PLUGIN_LIBRARY.is_file():
         return PLUGIN_BUILD_DIR
     WORK_ROOT.mkdir(parents=True, exist_ok=True)
@@ -113,6 +126,30 @@ def ensure_plugin_built():
             )
         )
     return PLUGIN_BUILD_DIR
+
+
+def _build_plugin_with_installer():
+    extensions = WORK_ROOT / "chaososc-extensions"
+    folder = extensions / "ChaosOsc"
+    if (folder / "ChaosOsc.scx").is_file():
+        return folder
+    WORK_ROOT.mkdir(parents=True, exist_ok=True)
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "scripts" / "install_chaososc.py"),
+         "--extensions-dir", str(extensions),
+         "--build-dir", str(WORK_ROOT / "chaososc-build")],
+        cwd=str(ROOT),
+        capture_output=True,
+        text=True,
+        timeout=900,
+    )
+    if result.returncode or not (folder / "ChaosOsc.scx").is_file():
+        raise AssertionError(
+            "ChaosOsc plugin build (CMake/MSVC) failed:\n{}\n{}".format(
+                result.stdout, result.stderr
+            )
+        )
+    return folder
 
 
 class ScenarioRun(object):
