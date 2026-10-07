@@ -76,7 +76,34 @@ updating pushed branches).
   ad-hoc linker-signed, minos 11.0) dropped into an isolated HOME's Extensions folder compiles in
   the local official SC 3.14.1 sclang and renders in scsynth (same rms/peak as the local build).
 
-### Attempt 3
+### Attempt 3 — `ralph/plugin-build-install-worker-02-20261006-2315-ci3` @ `54da71f`
 - Adds `test_install_warns_about_other_chaososc_copies` (coverage for the installer's existing
   duplicate-copy warning, documented in the README; passed on first run since the behavior already
-  existed). Results are recorded in the final report / next update.
+  existed) and README/installer wording for Visual Studio 2022 or newer.
+- Plugin Builds run `37550292315`: **success** (macOS universal, Linux x86_64, Windows MSVC x64)
+  (https://github.com/jrblankenhorn1007/dj_maxxed_beats/actions/runs/37550292315): CTest 100% on all;
+  `nm [arm64]`/`nm [x86_64]` + `lipo: arm64 x86_64` on macOS; `nm: api_version, load, server_type`
+  on Linux; PE export table + `dumpbin /exports` list `load` on Windows; Windows SC 3.14.1 NRT
+  smoke render OK; installer install/verify/uninstall round trip on all three.
+- Headless Tests run `37550292272`: **success**, `Ran 78 tests ... OK`.
+
+### Attempt 4 — `...-ci4`
+- Docs-only (this log); pushed so the final branch head has its own run. Run IDs are in the final report.
+
+## Final local gate
+`SCLANG=.../sclang SCSYNTH=.../scsynth bash scripts/run_headless_tests.sh` on `54da71f`'s tree
+→ `Ran 78 tests in 87.270s` / `OK` (wall 2m13s; 33 pre-existing + 45 new tests, no skips).
+
+## Unverified gaps / risks
+- Linux: the `.so` is built, CTest-tested, and `nm`-checked in CI, but never loaded by a Linux
+  scsynth (no official SC 3.14.1 Linux binaries; distro packages are older).
+- macOS x86_64 slice: built and export-checked in every slice, but never executed (no Intel/Rosetta run).
+- Windows: verified only with the runner's Visual Studio 18 2026 / MSVC 19.51; VS 2022 untested.
+  Quiet SC headers rely on SYSTEM includes plus an explicit `/external:W0`.
+- The first configure of each build directory needs network (the fetch script re-requests its
+  404 candidate paths even when the cache is complete); `--sc-path`/`-DSC_PATH` is the offline route.
+- Only SuperCollider 3.14.1 is verified. Gatekeeper behavior for browser-downloaded artifacts is
+  documented (`xattr -dr com.apple.quarantine`) but not exercised (`gh run download` does not quarantine).
+- worker-01's interface change (`freq` input, mul/add, `.kr`) is not on this branch. Build/install are
+  input-count agnostic (globbed `Source/*.cpp`, whole `Classes/` + `HelpSource/` install, tests compare
+  installed vs. source trees, smoke uses `ChaosOsc.ar(3.9, 0.37)`), but the gate must be re-run after merge.
