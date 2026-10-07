@@ -1,0 +1,258 @@
+"""Optional official Copilot SDK bridge. No tokens, CLI prompts, or shell tools.
+
+Requires Python >=3.11 and requirements.txt. The SDK uses the native CLI's
+headless stdio runtime and its existing login; this is not GitHub Models.
+"""
+import argparse
+import asyncio
+import json
+import logging
+import os
+from pathlib import Path
+import shutil
+import signal
+import subprocess
+import sys
+
+
+class BackendError(Exception):
+    def __init__(self, kind, detail):
+        super().__init__(detail)
+        self.kind = kind
+        self.detail = detail
+
+
+def deny_permission(request, context):
+    from copilot.generated.rpc import PermissionDecisionReject
+    return PermissionDecisionReject()
+
+
+def runtime_error(error):
+    # Runtime exceptions may contain authentication headers or prompt content.
+    # Classify them, but never copy their text to output, files, or logs.
+    text = str(error).lower()
+    if any(term in text for term in ("401", "403", "auth", "login", "token")):
+        return BackendError("auth", "Copilot authentication failed; run copilot login.")
+    if any(term in text for term in ("429", "quota", "rate limit", "credits")):
+        return BackendError("rateLimit", "Copilot quota or subscription limit reached.")
+    if "model" in text and any(term in text for term in ("not found", "unsupported", "unavailable")):
+        return BackendError("unavailableModel", "The selected Copilot model is unavailable.")
+    return BackendError("network", "Copilot runtime failed; check the CLI installation and connection.")
+
+
+def resolve_cli(spec):
+    cli = spec.get("cli") or shutil.which("copilot")
+    if not cli or not Path(cli).is_file():
+        raise BackendError("config", "Install the official GitHub Copilot CLI and run copilot login; "
+                           "set MBCopilotProvider's cliPath if it is not on PATH.")
+    return str(Path(cli).resolve())
+
+
+def runtime_environment():
+    return {key: value for key, value in os.environ.items()
+            if not key.startswith("COPILOT_") and key not in (
+                "GH_TOKEN", "GITHUB_TOKEN", "OPENAI_API_KEY", "ANTHROPIC_API_KEY")}
+
+
+async def run_login(spec, directory):
+    cli = resolve_cli(spec)
+    process = None
+    try:
+        options = {"cwd": str(directory / "workspace"), "env": runtime_environment(),
+                   "stdin": subprocess.DEVNULL, "stdout": subprocess.DEVNULL,
+                   "stderr": subprocess.DEVNULL}
+        if os.name == "nt":
+            options["creationflags"] = subprocess.CREATE_NO_WINDOW
+        process = await asyncio.create_subprocess_exec(cli, "login", "--web-flow", **options)
+        code = await asyncio.wait_for(process.wait(), timeout=float(spec.get("timeout", 120)))
+        if code != 0:
+            raise BackendError("auth", "Copilot browser sign-in did not complete. Retry, or run "
+                               "copilot login in a terminal for the browser/device flow.")
+        return {"authenticated": True}
+    except asyncio.TimeoutError:
+        raise BackendError("network", "Copilot browser sign-in timed out; retry sign-in.") from None
+    except OSError:
+        raise BackendError("config", "Could not launch the official GitHub Copilot CLI; "
+                           "check MBCopilotProvider's cliPath.") from None
+    finally:
+        if process is not None and process.returncode is None:
+            try:
+                process.terminate()
+            except ProcessLookupError:
+                pass
+            try:
+                await asyncio.wait_for(process.wait(), timeout=1)
+            except asyncio.TimeoutError:
+                try:
+                    process.kill()
+                except ProcessLookupError:
+                    pass
+                await process.wait()
+
+
+def sdk_client(spec, directory):
+    if sys.version_info < (3, 11):
+        raise BackendError("config", "Copilot requires Python 3.11+ and github-copilot-sdk==1.0.16.")
+    try:
+        from importlib.metadata import version
+        from copilot import CopilotClient, StdioRuntimeConnection
+        if version("github-copilot-sdk") != "1.0.16":
+            raise ImportError()
+    except Exception:
+        raise BackendError("config", "Install optional Copilot dependencies with Python 3.11+: "
+                           "python -m pip install -r extension/Data/copilot/requirements.txt") from None
+    cli = resolve_cli(spec)
+    return CopilotClient(
+        connection=StdioRuntimeConnection(path=cli, args=[
+            "--no-custom-instructions", "--disable-builtin-mcps",
+            "--deny-tool=*", "--deny-url=*", "--no-auto-update"]),
+        working_directory=str(directory / "workspace"), base_directory=str(directory),
+        env=runtime_environment(), use_logged_in_user=True, log_level="none",
+        telemetry={"enabled": False}, enable_remote_sessions=False)
+
+
+def session_options(request, directory):
+    return {
+        "model": request["model"], "available_tools": [], "tools": [],
+        "on_permission_request": deny_permission,
+        "system_message": {"mode": "replace", "content": request.get("system") or ""},
+        "working_directory": str(directory / "workspace"),
+        "config_directory": str(directory / "config"),
+        "enable_config_discovery": False, "skip_custom_instructions": True,
+        "refresh_custom_instructions": False,
+        "enable_on_demand_instruction_discovery": False,
+        "enable_file_hooks": False, "enable_host_git_operations": False,
+        "enable_session_store": False, "enable_skills": False,
+        "skip_embedding_retrieval": True, "enable_file_change_tracking": False,
+        "skill_directories": [], "instruction_directories": [], "plugin_directories": [],
+        "included_builtin_skills": [], "custom_agents": [], "custom_agents_local_only": True,
+        "mcp_servers": {},
+        "organization_custom_instructions": "", "additional_directories": [],
+        "memory": {"enabled": False}, "infinite_sessions": {"enabled": False},
+        "streaming": False,
+    }
+
+
+async def run_operation(spec, directory, client_factory=None):
+    directory = Path(directory)
+    for name in ("workspace", "config"):
+        (directory / name).mkdir(exist_ok=True)
+    client = session = None
+    timeout = float(spec.get("timeout", 120))
+    if timeout <= 0:
+        raise BackendError("validation", "Copilot timeout must be positive.")
+    if spec["action"] == "login":
+        return await run_login(spec, directory)
+
+    async def operation():
+        nonlocal client, session
+        client = client_factory() if client_factory else sdk_client(spec, directory)
+        await client.start()
+        auth = await client.get_auth_status()
+        if spec["action"] == "auth":
+            return {"authenticated": bool(auth.isAuthenticated)}
+        if not auth.isAuthenticated:
+            raise BackendError("auth", "Copilot is not signed in; run copilot login.")
+        models = [{
+            "id": model.id, "displayName": model.name, "provider": "copilot",
+            "usable": model.id != "auto" and (
+                model.policy is None or model.policy.state == "enabled"),
+            "note": "Copilot subscription; token cost unknown",
+        } for model in await client.list_models()]
+        if spec["action"] == "models":
+            return models
+        if spec["action"] != "complete":
+            raise BackendError("validation", "Unknown Copilot operation.")
+        request = spec["request"]
+        selected = request["model"]
+        if not any(model["id"] == selected and model["usable"] for model in models):
+            raise BackendError("unavailableModel", "The selected Copilot model is unavailable; "
+                               "refresh the model list. Automatic model selection is disabled.")
+        session = await client.create_session(**session_options(request, directory))
+        metadata = await session.rpc.tools.get_current_metadata()
+        if metadata.tools:
+            raise BackendError("config", "Copilot runtime did not disable every tool; "
+                               "generation was refused. Update the official CLI.")
+        current = await session.rpc.model.get_current()
+        if current.model_id != selected:
+            raise BackendError("unavailableModel", "Copilot did not select the requested model; "
+                               "generation was refused.")
+        # A JSON transcript preserves roles and order without inventing prior
+        # runtime turns or letting earlier assistant text execute as instructions.
+        prompt = json.dumps(request["messages"], ensure_ascii=False, separators=(",", ":"))
+        answer = await session.send_and_wait(prompt, timeout=timeout)
+        current = await session.rpc.model.get_current()
+        if current.model_id != selected:
+            raise BackendError("unavailableModel", "Copilot changed models; the response was refused.")
+        if answer is None or not isinstance(answer.data.content, str):
+            raise BackendError("parse", "Copilot returned no assistant text.")
+        return {"provider": "copilot", "model": selected, "text": answer.data.content,
+                "usage": None, "responseId": session.session_id, "stopReason": "completed"}
+
+    try:
+        return await asyncio.wait_for(operation(), timeout=timeout)
+    except asyncio.TimeoutError:
+        raise BackendError("network", "Copilot request timed out.") from None
+    except asyncio.CancelledError:
+        raise
+    except BackendError:
+        raise
+    except Exception as error:
+        raise runtime_error(error) from None
+    finally:
+        if session is not None:
+            # Abort is safe even after idle; it bounds outstanding generations
+            # on errors/timeouts, before releasing the isolated runtime.
+            try:
+                await asyncio.wait_for(session.abort(), timeout=1)
+                await asyncio.wait_for(session.disconnect(), timeout=1)
+            except Exception:
+                pass
+        if client is not None:
+            try:
+                await asyncio.wait_for(client.stop(), timeout=2)
+            except Exception:
+                pass
+
+
+async def execute(spec, directory):
+    task = asyncio.create_task(run_operation(spec, directory))
+    loop = asyncio.get_running_loop()
+    registered = False
+    if os.name != "nt":
+        # MBProcess sends SIGTERM on POSIX. Abort the native SDK child before
+        # leaving, rather than orphaning an in-flight Copilot generation.
+        loop.add_signal_handler(signal.SIGTERM, task.cancel)
+        registered = True
+    try:
+        return await task
+    except asyncio.CancelledError:
+        raise BackendError("cancelled", "Copilot request cancelled.") from None
+    finally:
+        if registered:
+            loop.remove_signal_handler(signal.SIGTERM)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--run-dir", required=True)
+    args = parser.parse_args()
+    directory = Path(args.run_dir).resolve()
+    logging.disable(logging.CRITICAL)
+    try:
+        spec = json.loads((directory / "copilot-request.json").read_text(encoding="utf-8"))
+        envelope = {"result": asyncio.run(execute(spec, directory))}
+    except BackendError as error:
+        envelope = {"error": {"kind": error.kind, "detail": error.detail}}
+    except Exception:
+        envelope = {"error": {"kind": "config", "detail": "Could not start the Copilot bridge."}}
+    partial = directory / "copilot-response.partial"
+    partial.write_text(json.dumps(envelope, ensure_ascii=False), encoding="utf-8")
+    partial.replace(directory / "copilot-response.json")
+    partial = directory / "exit-code.partial"
+    partial.write_text("0", encoding="ascii")
+    partial.replace(directory / "exit-code.txt")
+
+
+if __name__ == "__main__":
+    main()

@@ -20,7 +20,9 @@ Requires network access to raw.githubusercontent.com.
 import os
 import posixpath
 import re
+import socket
 import sys
+import time
 import urllib.error
 import urllib.request
 
@@ -42,20 +44,70 @@ ENTRY_POINTS = [
 
 INCLUDE_RE = re.compile(r'#\s*include\s+"([^"]+)"')
 
+# Transient network failures (timeouts, resets, HTTP 429/5xx) are retried
+# with exponential backoff: 1 s, 2 s, 4 s between MAX_ATTEMPTS attempts.
+MAX_ATTEMPTS = 4
+BASE_DELAY_SECONDS = 1.0
+
 
 def cache_dir():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(script_dir, ".sc-plugin-api-cache", SC_COMMIT)
 
 
-def fetch(rel_path, dest_root):
+def is_retryable(error):
+    """404 means "not at this candidate location" and other 4xx are
+    permanent; only throttling, server errors, and transport failures are
+    worth another attempt. HTTPError is a URLError, so check it first."""
+    if isinstance(error, urllib.error.HTTPError):
+        return error.code == 429 or 500 <= error.code <= 599
+    return isinstance(
+        error, (urllib.error.URLError, TimeoutError, socket.timeout, ConnectionError)
+    )
+
+
+def download(url, sleep=None, attempts=MAX_ATTEMPTS):
+    sleep = sleep or time.sleep
+    for attempt in range(1, attempts + 1):
+        try:
+            with urllib.request.urlopen(url, timeout=20) as resp:
+                return resp.read()
+        except Exception as error:
+            if attempt == attempts or not is_retryable(error):
+                raise
+            delay = BASE_DELAY_SECONDS * (2 ** (attempt - 1))
+            print(
+                "retrying {} in {:g} s after {!r} (attempt {} of {})".format(
+                    url, delay, error, attempt, attempts
+                ),
+                file=sys.stderr,
+            )
+            sleep(delay)
+    raise AssertionError("unreachable")
+
+
+def write_atomically(dest, data):
+    """Write to a process-unique temporary file next to `dest`, then
+    os.replace it, so an interrupted run never leaves a truncated header in
+    the cache."""
+    temp_path = "{}.tmp-{}".format(dest, os.getpid())
+    try:
+        with open(temp_path, "wb") as f:
+            f.write(data)
+        os.replace(temp_path, dest)
+    except BaseException:
+        try:
+            os.remove(temp_path)
+        except OSError:
+            pass
+        raise
+
+
+def fetch(rel_path, dest_root, sleep=None):
     dest = os.path.join(dest_root, rel_path)
     os.makedirs(os.path.dirname(dest), exist_ok=True)
-    url = BASE_URL + rel_path
-    with urllib.request.urlopen(url, timeout=20) as resp:
-        data = resp.read()
-    with open(dest, "wb") as f:
-        f.write(data)
+    data = download(BASE_URL + rel_path, sleep=sleep)
+    write_atomically(dest, data)
     return data.decode("utf-8", errors="replace")
 
 

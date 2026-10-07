@@ -1,22 +1,53 @@
 # dj_maxxed_beats
 
-`dj_maxxed_beats` is a planned AI-assisted music and sound-design extension for
-SuperCollider. The long-term goal is a Quark that runs inside SuperCollider:
-people describe a musical idea, review generated `.scd` composition changes,
-render audio with SuperCollider, and optionally explore variations. The plan
-envisions OpenAI and Anthropic model choices, but that provider workflow is not
-implemented. The planned design keeps synthesis in SuperCollider rather than
-adding a separate user-facing desktop app.
+`dj_maxxed_beats` (MaxxedBeats) is an AI-assisted music and sound-design
+extension for SuperCollider. It is a Quark that runs inside SuperCollider: you
+open the assistant window from SCIDE, describe a musical idea, choose your
+provider and model ("Choose your DJ": OpenAI, Anthropic, or GitHub Copilot), review the
+proposed plan and `.scd` code changes, approve them, and render audio offline
+with SuperCollider and the bundled ChaosOsc UGen. There is no separate
+desktop app.
 
-> **Current state: the ChaosOsc plugin works; the AI music app does not exist
-> yet.** The ChaosOsc server plugin can be built, installed into
-> SuperCollider, and played in real time or rendered offline. There is no
-> Quark GUI, provider integration or API-key workflow, or release packaging
-> for the larger AI assistant. The current checks do not use API keys or call
-> a model provider.
+> **Current state.** The assistant works end to end inside SuperCollider:
+> `MaxxedBeats.gui` opens the window; OpenAI and Anthropic (via the OS
+> `curl`, keys in the OS credential store), GitHub Copilot through its official
+> local runtime, and an offline mock provider are
+> available; proposals are reviewed as diffs, applied only after
+> confirmation (with backups and undo), and rendered offline to WAV in a
+> separate process only after approval. It is verified on macOS (MacBook
+> Neo) and in CI on macOS and Windows. Physical Windows 10 x64 and the
+> SCIDE-launched visual sign-off are still open (see the
+> [visual test plan](./docs/VISUAL_TEST_PLAN.md) and
+> [implementation status](./docs/implementation_status.md)). Tests never use
+> real API keys or call a model provider.
 
 ## What exists today
 
+- **Assistant window:** `MaxxedBeats.gui` opens a Qt window with project
+  selection, a conversation and prompt, the proposed musical plan, a diff
+  review with Approve/Reject, Undo, confirmed offline rendering with progress,
+  Play preview and Reveal, per-provider credentials (OpenAI/Anthropic API keys
+  and a GitHub Copilot sign-in row beside them) with a privacy and API-cost
+  notice, per-request and per-session usage (tokens, estimated USD,
+  informational credits, rate-table version) with a local history, and a
+  bounded variation session (1–4 candidates, reviewed and approved individually
+  before rendering). Nothing is written, evaluated, or rendered
+  without explicit confirmation. See the [user guide](./docs/USER_GUIDE.md)
+  and the [GUI design](./docs/design/gui.md).
+- **Providers and workflow:** OpenAI (Responses API) and Anthropic
+  (Messages API) adapters over the OS `curl`, macOS Keychain / Windows
+  Credential Manager / Linux Secret Service key storage, a per-provider model
+  catalog, a versioned rate table, the strict `maxxedbeats.proposal/1`
+  response format, project backups/undo, approved separate-process NRT
+  rendering with audio checks, and a deterministic offline mock provider
+  (`Mock DJ (offline)`). GitHub Copilot uses your Copilot subscription and
+  GitHub sign-in rather than an OpenAI/Anthropic API key; select it under
+  **Choose your DJ**, then sign in under **Keys & Privacy**.
+  See the [provider](./docs/design/providers.md) and
+  [workflow](./docs/design/workflow.md) designs.
+- **Installer:** `scripts/install_maxxedbeats.py` installs, updates, and
+  removes the MaxxedBeats Quark and the ChaosOsc plugin together
+  (marker-protected, `--dry-run`, macOS/Windows/Linux paths).
 - **ChaosOsc server plugin:** a C++17 logistic-map chaotic oscillator UGen
   with `ChaosOsc.ar`/`ChaosOsc.kr(chaosAmount, seed, freq, mul, add)`. The
   `freq` control sets the map's iteration rate; below the sample rate the
@@ -24,43 +55,47 @@ adding a separate user-facing desktop app.
   and as a smooth chaotic modulator. See the
   [ChaosOsc build and install guide](./plugin/ChaosOsc/README.md) and the
   [sound-design notes](./docs/plugin/SOUND_DESIGN.md).
-- **Build and install:** a CMake build (universal arm64/x86_64 on macOS,
-  `.so` on Linux, MSVC `.scx` on Windows) and `scripts/install_chaososc.py`,
-  which installs the plugin, class, and help into SuperCollider's user
-  Extensions folder.
 - **Composition prototype:** `MaxxedBeatsComposition` and
   `examples/procedural_chaos_garden.scd`, rendered offline by
   `scripts/render_composition.py`.
 - **Developer verification:** DSP unit tests, source and help (SCDoc)
-  checks, plugin builds, NRT integration tests, an installed-layout
-  end-to-end test, and an opt-in real-time server test.
+  checks, plugin builds, NRT integration tests, headless assistant-window
+  state tests, installer tests, an installed-layout end-to-end test, and an
+  opt-in real-time server test.
 
-There is still no assistant window to open.
+## Install MaxxedBeats
 
-## Install the ChaosOsc plugin
+**Windows 10/11 x64 without developer tools:** download the
+`MaxxedBeats-Windows-x64` artifact of a successful **Assistant Tests** run
+(prebuilt ChaosOsc, the Quark, `install.ps1`/`uninstall.ps1`) and follow
+[Windows (no developer tools)](./docs/USER_GUIDE.md#windows-no-developer-tools).
 
-Requires CMake 3.16+, a C++17 compiler, Python 3, and SuperCollider 3.14.1
-(the plugin API version it is built against). From the repository root:
+From source, installation requires SuperCollider 3.14.1, Python 3.9+, CMake
+3.16+, and a C++17 compiler (for ChaosOsc). From the repository root:
 
 ```sh
-python3 scripts/install_chaososc.py
+python3 scripts/install_maxxedbeats.py            # add --dry-run to preview
 ```
 
-Then, in SuperCollider, recompile the class library
-(**Language > Recompile Class Library**), reboot the server, and try:
+Then recompile the class library (**Language > Recompile Class Library**),
+reboot the server (`s.reboot`), and open the assistant:
 
 ```supercollider
-{ LeakDC.ar(ChaosOsc.ar(3.9, 0.37)) * 0.1 ! 2 }.play;
+MaxxedBeats.gui;
 ```
 
-Use `python3 scripts/install_chaososc.py --uninstall` to remove it. The
-[plugin guide](./plugin/ChaosOsc/README.md) covers manual CMake builds,
-Windows and Linux paths, and troubleshooting.
+Remove both components with
+`python3 scripts/install_maxxedbeats.py --uninstall`. The
+[user guide](./docs/USER_GUIDE.md) covers API keys, privacy, costs,
+troubleshooting, and uninstalling. To install only the plugin, use
+`python3 scripts/install_chaososc.py` (see the
+[plugin guide](./plugin/ChaosOsc/README.md)) and try
+`{ LeakDC.ar(ChaosOsc.ar(3.9, 0.37)) * 0.1 ! 2 }.play;`.
 
 ## Run the developer checks
 
-Run these commands from the repository root. They test the current prototype;
-they are not commands for installing or running an AI music application.
+Run these commands from the repository root. They are developer checks, not
+the commands for installing or using the assistant.
 
 ### Full headless test suite
 
@@ -83,6 +118,25 @@ bash scripts/run_headless_tests.sh
 The plugin build also needs network access to fetch its pinned API headers
 when they are not already cached. The suite does not launch SCIDE, a GUI, a
 real-time server, or audio hardware.
+
+### Assistant window and installer tests
+
+```sh
+SCLANG=/path/to/sclang SCSYNTH=/path/to/scsynth \
+  python3 -m unittest discover -s tests -p 'test_mb_*.py' -v
+```
+
+These cover the providers (loopback fake servers, temporary keychain), the
+workflow and real NRT renders, the window's state machine with fake
+services, an end-to-end window integration through the real classes with the
+mock provider and real renders (`tests/test_mb_integration.py`), the
+installer, and the `Assistant Tests` workflow
+(`.github/workflows/assistant-tests.yml`, macOS and Windows). All run with an
+isolated `HOME`, no real keys, and no network. For the visual plan,
+`python3 tests/mb_gui/capture_screenshots.py` (macOS, opt-in) drives the
+real window with the mock provider and real renders and captures it with
+`screencapture`; the screenshots still need inspection and do not replace
+the SCIDE sign-off.
 
 ### Static analysis and warning-free builds
 
@@ -188,6 +242,10 @@ versions other than 3.14.1, and release packaging of the AI assistant.
 
 ## Project documentation
 
+- [User guide](./docs/USER_GUIDE.md) — installing, API keys, privacy, API
+  cost and credits, using the assistant window, troubleshooting, uninstalling.
+- [Assistant GUI design](./docs/design/gui.md) — window structure, service
+  port, safety rules, and tests.
 - [Implementation plan](./docs/IMPLEMENTATION_PLAN.md) — product scope,
   planned architecture, implementation slices, and acceptance criteria.
 - [Visual test plan](./docs/VISUAL_TEST_PLAN.md) — the live SCIDE workflow and

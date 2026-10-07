@@ -7,77 +7,105 @@
 
 ## Latest loop report
 
-- **Completed implementation iteration:** `6` — ChaosOsc plugin fix and
-  completion (parent branch `agents/plugin-fix-and-completion`, three
-  parallel workers).
-- **Loop state:** merged to `main` through PR #34 at `f09c686` and verified
-  on `origin/main`; post-merge memory review complete. The plugin is
-  installed in the owner's SuperCollider Extensions folder.
-- **Delivered:** SCDoc help fix, iteration-rate `freq` control with linear
-  interpolation, `ChaosOsc.kr`, `mul`/`add`, CMake build, user installer,
-  installed-layout end-to-end test, opt-in real-time server test, and a
-  three-OS **Plugin Builds** CI workflow.
+- **Most recently completed implementation iteration:** `7` — the MaxxedBeats AI assistant
+  (parent branch `ralph/ai-assistant-20261007`; worker-01 providers,
+  worker-02 workflow, worker-03 GUI/packaging/CI, then integration).
+- **Current follow-up iteration:** `8` — Windows CI fixes and the user's
+  GitHub Copilot provider requirement, on
+  `ralph/ai-assistant-finish-20261007-1607` from `origin/main`
+  `e1c70289c94f8e5d188547f756069f6e249c8836`.
+- **Loop state:** in progress; the implementation is not yet published, opened
+  as a PR, or merged to `main`.
+- **Current verification:** the full local gate passes **213 tests** with four
+  existing platform/opt-in skips. Windows run `37578448992` failed on the
+  Credential Manager target parser and the planted-log fixture; both have
+  local fixes and regressions, but a new Windows CI run is still required.
+  Copilot sign-in now appears in the shared Keys & Privacy provider rows and
+  is covered by GUI/factory tests.
+- **User installation:** the actual assistant is installed and its native
+  window is open on the Mac. It uses installed classes, not test fake services.
+- **Delivered:** in-SuperCollider assistant window (`MaxxedBeats.gui`),
+  OpenAI/Anthropic/mock providers over OS `curl`, OS credential stores,
+  model catalog, usage/cost/credits, project review/apply/backup/undo,
+  approved separate-process NRT rendering with audio checks, a bounded
+  variation loop, GitHub Copilot subscription sign-in, a combined Quark +
+  ChaosOsc installer, help, user guide, and an **Assistant Tests** CI workflow
+  (macOS and Windows).
+- **Windows follow-up (branch `ralph/ai-assistant-windows-20261007`):** the
+  Windows transport (curl.exe + PowerShell helper), Windows Credential
+  Manager backend, and Windows render launching are implemented. The package
+  now requires the Copilot bridge and dependency manifest but still does not
+  require Python for the standard provider flows. No assistant behavior tests
+  are skipped to hide Windows failures.
 
 ## Overall state
 
-The ChaosOsc server plugin is complete for its current scope: it builds with
-CMake on macOS (universal arm64/x86_64), Linux, and Windows (MSVC); installs
-with `scripts/install_chaososc.py` into SuperCollider's user Extensions folder;
-loads from that installed layout; renders offline (NRT); and runs in a
-real-time CoreAudio `scsynth`. The larger AI music assistant (Quark GUI,
-providers, credentials, usage display, variation loop) is not implemented.
+The assistant works end to end on macOS with the offline mock provider:
+open the window from SCIDE, choose your DJ, propose, review the diff,
+confirm the apply (with backup), approve a render that produces a real WAV
+with ChaosOsc and checks, undo, and run a variation session with approved
+renders and a confirmed apply. Live OpenAI/Anthropic calls are implemented
+and tested against loopback fake servers; no billable call has been made.
+On Windows the same flows (live-provider transport against loopback fake
+servers, Credential Manager, renders, variations, GUI integration) are covered
+by tests, but the latest hosted run failed two root causes (three assertions).
+The local fixes pass the Mac headless gate; they still require a new hosted
+Windows run. The zip package is installed with its `install.ps1`,
+smoke-tested, and removed in CI. A physical Windows 10/11 PC and
+SCIDE-launched visual sign-off remain open (manual checks). Copilot's bridge
+and SDK behavior are tested with fakes; live CLI sign-in/generation are not
+verified because Python 3.11 and the Copilot CLI are not installed here.
 
 ## Component status
 
 | Area | Status | Current state |
 | --- | --- | --- |
-| Product architecture and acceptance criteria | Documented | Quark-first, in-SuperCollider experience; no SuperCollider core fork planned. |
-| Development process | Shared workflow | Shared `Ralph Loop` agent with `docs/RALPH_IMPLEMENTATION_PROMPT.md`; no local Ralph shell runner. |
-| Custom C++ server plugin / UGen palette | Implemented (ChaosOsc) | `ChaosOsc.ar`/`.kr(chaosAmount = 3.9, seed = 0.5, freq = inf, mul = 1, add = 0)`. `freq` ≥ the unit rate (default `inf`) iterates once per sample and is bit-identical to the previous two-input plugin; `0 < freq <` rate linearly interpolates; `freq <= 0` holds; NaN uses the default. `chaosAmount` is clamped to `[3.57, 3.999]`; the seed is captured at construction. Output is bounded in `[-1, 1]` but not zero-mean (use `LeakDC`). |
-| Plugin build, install, and help | Implemented | `plugin/ChaosOsc/CMakeLists.txt`, `scripts/install_chaososc.py` (install/uninstall/dry-run, marker-protected), [`plugin/ChaosOsc/README.md`](../plugin/ChaosOsc/README.md); the help file now parses in SCDoc. |
-| Quark packaging and SCIDE entry point | Not started | No Quark GUI or entry point exists. |
-| sclang composition and NRT rendering | Prototype verified | `MaxxedBeatsComposition` + `scripts/render_composition.py` render deterministic stereo WAVs; output is unchanged by the plugin update. |
-| OpenAI and Anthropic providers/model selection | Not started | No API adapters, model discovery, or user settings exist. |
-| Credential storage and privacy controls | Not started | Secure HTTPS and OS credential-store options remain to be investigated. |
-| Usage, estimated dollars, and informational credits | Specified | 100 app credits per estimated USD planned; no metering or display exists. |
-| Review, approval, undo, and candidate isolation | Specified | Planned but not implemented. |
-| In-app variation loop | Specified | User-started, stoppable, isolated, four candidates by default; not implemented. |
-| Tests and CI | Implemented for the plugin | `bash scripts/run_headless_tests.sh` runs the quality gate and all Python tests (98 with the real-time opt-in enabled). GitHub Actions runs **Headless Tests** (macOS 14) and **Plugin Builds** (macOS 14, Ubuntu, Windows Server; Windows also renders NRT with SuperCollider 3.14.1). |
-| Visual application verification | Planned | No GUI exists to test yet. |
+| ChaosOsc server plugin | Implemented | `ChaosOsc.ar`/`.kr(chaosAmount, seed, freq, mul, add)`; CMake build for macOS (universal), Linux, Windows (MSVC). |
+| SCIDE entry point and window | Implemented | `MaxxedBeats.gui`: project, Choose your DJ (explicit provider/model ids, refresh, stale/unavailable labels, no fallback), conversation, plan (with assumptions/uncertainty/questions), diff review, confirmations, render panel, Play/Reveal, usage, history, variations, keys and privacy notice. [GUI design](./design/gui.md). |
+| Providers and transport | Implemented (Windows fixes in progress) | Direct sclang + OS `curl`; TLS enforced; cancellable; keys never in argv/env/files. Windows: `curl.exe` started by a PowerShell helper that writes the key only to curl's stdin. [Provider design](./design/providers.md). |
+| Credentials | Implemented (Windows fixes in progress) | macOS Keychain via `security` (temporary-keychain test); Windows Credential Manager via the PowerShell helper (real round trip with unique test-only targets); Linux Secret Service command-tested only; in-memory fake for tests. |
+| Model catalog | Implemented | Per-provider refresh/cache/selection (`model-catalog.json`, `providers.json`); never substitutes; stale after failure or 24 h. |
+| GitHub Copilot | Implemented; live runtime unverified | Official runtime-backed subscription provider, no API key, dynamic model discovery, tools disabled; sign-in is in the shared credential-row group and package files are required. GUI/factory tests pass. Live CLI sign-in/generation remain unverified. |
+| Usage, USD, credits | Implemented | Versioned rate table `2026-10-06.1`; 100 credits per estimated USD; missing/stale labelled, never zero; local history (`usage-history.json`). |
+| Project, proposals, apply, undo | Implemented | Strict `maxxedbeats.proposal/1`; path confinement; confirmed apply with backups; undo refuses after later user edits. [Workflow design](./design/workflow.md). |
+| Rendering | Implemented (Windows variation fix in progress) | Approved only; separate `sclang` → Score → `scsynth -N`; POSIX `env -i` + isolated HOME, Windows PowerShell launcher with a cleared environment and `sclang -l` (`excludeDefaultPaths`); installed ChaosOsc in the default plugin paths; checks and JSON sidecar. Linux launching unverified. |
+| Variation loop | Implemented | User-started, 1–4 candidates in the GUI (session caps at 16), isolated copies, fixed seeds, renders only with explicit approval, confirmed apply. |
+| Mock provider | Implemented | Deterministic `maxxedbeats.proposal/1` replies with a seed-dependent ChaosOsc composition; drives tests and the visual scenario. |
+| Packaging | Implemented; Windows follow-up pending | `scripts/install_maxxedbeats.py` installs/removes the Quark (with `agent/*.md`) and ChaosOsc together; marker-protected; dry run. Windows without developer tools: `MaxxedBeats-Windows-x64.zip` includes the Copilot bridge/requirements and documents its optional Python/CLI prerequisites; a new hosted package run is pending. |
+| Documentation | Implemented | [User guide](./USER_GUIDE.md), README, SCDoc help, three design docs. |
+| Tests and CI | Implemented; Windows retest pending | Full local gate: 213 tests, four existing platform/opt-in skips. **Assistant Tests** (macOS 14 + Windows), **Headless Tests** (macOS 14), **Plugin Builds** (three OSes). Header downloads retry with backoff and are cached in CI. |
+| Visual verification | Partial | Captured and inspected the native Keys & Privacy page; Copilot appears as a peer row beside OpenAI and Anthropic. SCIDE-launched sign-off and physical Windows visual check remain open. |
 
 ## Verification and platform coverage
 
-- **Integrated parent gate (2026-10-06):** `DJMB_REALTIME_AUDIO_TESTS=1
-  SCLANG=… SCSYNTH=… bash scripts/run_headless_tests.sh` passed: 47 DSP
-  assertions, warning-free analysis/builds, and `Ran 98 tests … OK`
-  (including NRT, installed-layout end-to-end, and real-time tests) after
-  the review round-1 fixes.
-- **MacBook Neo:** the local run used an actual MacBook Neo (`Mac17,5`,
-  Apple A18 Pro, 8 GB, macOS 26.5.2) with SuperCollider 3.14.1. Plugin NRT,
-  installed-layout loading, and real-time audition passed there. The visual
-  GUI sign-off in `VISUAL_TEST_PLAN.md` remains open because no GUI exists.
-- **Real-time audition:** CoreAudio `MacBook Neo Speakers`, 48 kHz,
-  512-frame buffer; 67 concurrent synths, peak CPU 4.25–4.55% over five runs,
-  no server failures or late messages, clean shutdown; hardware outputs were
-  silent by design.
-- **Windows:** CI builds with MSVC (`/W4 /WX`, zero warnings), verifies the
-  exported `load`, round-trips the installer, and renders an NRT smoke test in
-  the official SuperCollider 3.14.1 Windows build. A physical Windows 10 x64
-  machine and Windows real-time audio are not validated.
-- **Linux:** CI builds `ChaosOsc.so`, runs the DSP tests, verifies `load`, and
-  round-trips the installer. No Linux `scsynth` run (no official 3.14.1 Linux
-  binaries).
-- **Other gaps:** the macOS x86_64 slice is built and export-checked but not
-  executed; only SuperCollider 3.14.1 is verified; the first CMake configure
-  needs network access unless `--sc-path`/`-DSC_PATH` is given.
+- **MacBook Neo** (`Mac17,5`, macOS 26, SuperCollider 3.14.1): full headless
+  gate, GUI integration with real NRT renders, Keychain round trip in a
+  temporary keychain, and screenshot capture. See `RALPH_PROGRESS.md`
+  (iterations 7-8) for commands and counts.
+- **Windows:** CI only: the preceding Assistant Tests run on `windows-latest`
+  found a credential-target parser issue and a renderer test-fixture issue;
+  those fixes have not yet had a hosted rerun. Assistant Tests cover every
+  assistant suite with no Windows behavior skips; only the macOS Keychain test
+  is skipped, and its Windows counterpart is the Credential Manager round
+  trip. The workflow also installs/smoke-tests/uninstalls the zip package;
+  Plugin Builds renders an NRT smoke test. No physical Windows 10/11 run.
+- **Linux:** plugin build and installer in CI; assistant untested.
 
 ## Blockers and risks
 
-- No plugin blocker. Physical Windows 10 x64 validation, SCIDE/GUI visual
-  sign-off, and releases other than SuperCollider 3.14.1 remain open.
+- The local Windows fixes need a passing hosted rerun (Windows Server,
+  Windows PowerShell 5.1); a physical Windows 10/11 PC is still unverified,
+  including sound and window appearance.
+- No live OpenAI/Anthropic request has been made (by design; requires the
+  owner's key and consent).
+- Prices change; the rate table must be refreshed (it labels itself stale
+  after 45 days).
 
 ## Open questions and next task
 
-- Start the Quark/SCIDE entry point and provider-path work from the
-  implementation plan; package the plugin artifacts with that extension.
-- Validate on a physical Windows 10 x64 machine (install, NRT, real-time).
+- SCIDE-launched visual sign-off on the MacBook Neo and on a physical
+  Windows 10/11 PC with the zip package (`VISUAL_TEST_PLAN.md`).
+- Rerun the Windows Assistant Tests on the implementation PR and merge through
+  the repository's authorized PR path after all required checks pass.
+- Owner-run live smoke test with a real API key and a spending limit; live
+  Copilot sign-in/generation also needs the optional Python 3.11+/CLI setup.

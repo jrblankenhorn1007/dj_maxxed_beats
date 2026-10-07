@@ -1111,3 +1111,157 @@ Ralph-Status: IN_PROGRESS
 - **Owner install:** `python3 scripts/install_chaososc.py` installed ChaosOsc
   into the default Extensions folder; real-HOME `sclang` compiled the class
   and `scsynth` (default plugin search) rendered finite, non-silent audio.
+
+## Iteration 7 — MaxxedBeats AI assistant — 2026-10-07
+
+- **Parent branch:** `ralph/ai-assistant-20261007`; worker-01 providers
+  (`docs/design/providers.md`), worker-02 workflow (`docs/design/workflow.md`),
+  worker-03 GUI/packaging/CI (`docs/design/gui.md`), merged at `8b1d6be`,
+  then integrated by worker-03. Evidence per worker under
+  [`ralph/`](./ralph/).
+- **Integration (TDD):** `MaxxedBeats.services` wired to the real classes
+  (store/registry/catalog/meter overrides, `approveRenders` only after
+  confirmation, `renderCandidate`, catalog refusals, proposal render
+  settings, `MBWorkflowTry` instead of `try`); `MBMockProvider` emits valid
+  `maxxedbeats.proposal/1` replies with a seed-dependent ChaosOsc
+  composition; installed `MBAgent` finds `<quark>/agent`.
+- **Targeted tests:** `SCLANG=… SCSYNTH=… python3 -m unittest tests.test_mb_gui
+  tests.test_mb_integration tests.test_mb_install tests.test_fetch_sc_plugin_api`
+  → OK. `tests/test_mb_integration.py` (real window, mock provider, fake
+  store, real NRT renders): 38 named checks, WAV re-checked in Python
+  (48 kHz, 2 ch, 2.00 s), no key in any written file; 75 s.
+- **CI hardening:** `fetch_sc_plugin_api.py` retries timeouts/URL/connection
+  errors and HTTP 429/5xx (4 attempts, 1/2/4 s), keeps 404/4xx semantics,
+  writes atomically; `actions/cache@v4` for `plugin/.sc-plugin-api-cache`
+  in all three workflows (cause: Plugin Builds run 37555986033 `TimeoutError`).
+- **Visual (support tooling, not sign-off):** `python3
+  tests/mb_gui/capture_screenshots.py` with the real classes and real renders
+  captured 10 native-window screenshots on the MacBook Neo; inspected; fixed
+  long-path wrapping, "1 files", conversation not scrolling to the newest
+  message, and a zero cost that read like a placeholder.
+- **Full gate:** `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth bash
+  scripts/run_headless_tests.sh` (real-time opt-in unset) → `Ran 180 tests in
+  187.757s … OK (skipped=1)` on the final code (`55bf9e3`).
+- **Host:** MacBook Neo (`Mac17,5`), macOS 26, SuperCollider 3.14.1, Python 3.9.
+- **GitHub CI iterations:** ci1 — Windows assistant suites failed (sclang
+  exits at stdin EOF; `MBProject.resolve` compared backslash realpaths with
+  "/"; settings isolation ignored on Windows) and a macOS timing-flaky tick
+  assertion; ci2/ci3 — CRLF, separator, and env-isolation test fixes; ci4 —
+  Windows-only `_GetLangPort` startup noise and a render-scenario race
+  (child HOME recreated after cancel). Final branch and run IDs: PR
+  description. On Windows the HTTP transport suite and the render-dependent
+  suites (render, variation, GUI integration) are skipped with an explicit
+  "not runtime-verified" reason; all other assistant suites run there.
+- **Unverified:** physical Windows 10 x64, SCIDE-launched visual sign-off,
+  live OpenAI/Anthropic calls, Linux assistant runtime.
+
+### Windows completion and review fixes — Sol takeover
+
+- Removed Windows behavior skips; HTTP, Credential Manager, render,
+  variation and GUI integration now run on Windows. Run 37573392153 failed:
+  stale helper PID cleanup emitted `ERROR: process not found`, triggering
+  the harness's fatal-error watchdog; variation sclang children also timed out.
+- Provider cleanup no longer kills already-finished helpers. Cancellation's
+  benign taskkill exit race is kept out of sclang's error stream. Windows
+  renderer holds child stdin open until exit, as SCIDE does.
+- Review fixes: stale confirmations cannot replace paid requests; each GUI
+  variation's plan/diff/code is displayed before its execution approval;
+  explicit not-a-sandbox warnings; validated reserved directories and write
+  ancestors; case-alias rejection; audio-analysis cancellation closes files;
+  rate aliases compare string values.
+- Red: `SCLANG=... python3 -m unittest discover -s tests -p test_mb_gui.py`
+  failed all four Undo → Send → Confirm safeguards, including dropped reply.
+  Per-candidate approval regression also failed before implementation.
+  Green: 6 GUI tests, 26 workflow tests, 4 real GUI integration tests passed.
+  Provider and project/audio resource agents established their own targeted
+  Red/Green regressions.
+- Final integrated gate: `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
+  bash scripts/run_headless_tests.sh` → **194 tests, OK, 4 platform/opt-in skips**
+  (Windows Credential Manager, two Windows PowerShell package tests, real-time
+  audio opt-in). No Windows assistant behavior suite is skipped.
+- Installed the combined assistant on the Mac. Its actual native window was
+  launched using installed classes and inspected; left running for the user.
+  SCIDE launch document opened, but automated evaluation was denied by macOS
+  Accessibility permission; no permission settings were changed.
+- Windows CI rerun remains required. Live provider calls and physical Windows
+  visual/listening verification are not claimed.
+
+- **ci6 follow-up:** run `37576237679` passed macOS and the Windows package
+  install/smoke/uninstall job. Windows HTTP/provider behavior passed. The
+  Credential Manager test incorrectly treated the requested target echoed
+  in `cmdkey /list`'s `* NONE *` header as a stored credential; assertions now
+  inspect actual `Target:` records, with portable parser regressions.
+  Windows child termination and variation Score execution remained failing.
+- **ci7 fixes (`f6f6aea`):** taskkill runs through PowerShell rather than nested
+  cmd quoting; benign missing PIDs are quiet but still-running failures are
+  surfaced. Render completion does not stop its own callback Routine; kill
+  requests are single-fire. Windows scripts use basenames in their explicit
+  isolated working directory, and stderr is retained live for timeout
+  diagnostics. Run `37578448992` failed on Windows: the Credential Manager
+  test did not recognize the current `Target:` record, and the old `cmd.exe
+  move` render fixture failed to create the symlink (also failing scenario
+  completion). The variation suite passed.
+- **Additional renderer regression:** a composition planted a `scsynth.log`
+  symlink to an external sentinel. Red overwrote the sentinel. Re-resolving
+  logs, Score and output before each child launch produced Green:
+  `python3 -m unittest discover -s tests -p test_mb_workflow_render.py`
+  → **9 tests passed**. Combined GUI/integration/render/provider/parser
+  regressions → **33 passed, 1 Windows-only skip on macOS**.
+
+## Iteration 8 — Windows CI fixes and GitHub Copilot provider row — 2026-10-07
+
+- **Working branch:** `ralph/ai-assistant-finish-20261007-1607`, created from
+  `origin/main` `e1c70289c94f8e5d188547f756069f6e249c8836`. The branch is not
+  yet published or integrated; the origin fetch before publication confirmed
+  `origin/main` had not moved.
+- **Windows Red:** Assistant Tests run `37578448992` failed on Windows x64
+  (`f6f6aea`). The Credential Manager output contained
+  `Target: MaxxedBeatsTest-...:openai`, not the legacy `LegacyGeneric:target=`
+  form. The old `cmd.exe /c move` fixture reported `could not plant log
+  fixture`, which caused both the planted-log assertion and scenario
+  completion to fail. Windows variation tests passed.
+- **Credential parser Green:** added regression coverage for current target
+  records, legacy records, and the empty-listing header. The focused
+  `CredentialListingTests` now pass (3 tests) on macOS; Windows execution
+  remains pending CI.
+- **Renderer fixture Green:** replaced nested shell quoting with
+  `Pipe.argv` and a PowerShell helper that plants a symlink to an explicit
+  external sentinel. The renderer still has to reject the render and preserve
+  the sentinel. `SCLANG=... SCSYNTH=... python3 -m unittest discover -s tests
+  -p 'test_mb_workflow_render.py' -v` → **9 passed** on macOS.
+- **Copilot row Red/Green:** the new GUI check first failed because there was
+  no shared provider-credentials row container:
+  `SCLANG=... PYTHONPATH=tests python3 -m unittest test_mb_gui.GuiStateTests
+  -v` failed `copilotSharesCredentialRows`. Copilot now appears in the same
+  Keys & Privacy row group as OpenAI and Anthropic, with GitHub sign-in and
+  no API-key field. The GUI state and factory tests confirm the row, the
+  `requiresKey: false` metadata, and the sign-in callback.
+- **Package Red/Green:** a test first failed because a package missing
+  `Data/copilot/` was accepted:
+  `PYTHONPATH=tests python3 -m unittest
+  test_mb_package_windows.PackageLayoutTests.test_package_requires_the_copilot_runtime_files
+  -v` failed with `PackageError not raised`. The Windows package now requires
+  both `Data/copilot/bridge.py` and `Data/copilot/requirements.txt`;
+  `PackageLayoutTests` → **4 passed**.
+- **Focused Green:** `SCLANG=... SCSYNTH=... PYTHONPATH=tests python3 -m
+  unittest test_mb_copilot test_mb_gui test_mb_integration
+  test_mb_package_windows.PackageLayoutTests
+  test_mb_providers_wincred.CredentialListingTests
+  test_mb_workflow_render -v` → **40 passed**. After adding factory stub
+  coverage for Copilot sign-in, `EntryPointAndFactoryTests` → **1 passed**.
+- **Full local gate:** `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth bash
+  scripts/run_headless_tests.sh` → **213 tests, OK, 4 existing
+  platform/opt-in skips**. `git diff --check` passed.
+- **Refactor/verification:** grouped all credential controls under the shared
+  provider-row layout, then reran GUI, factory, integration, Copilot, package,
+  Credential Manager parser, and render tests; they passed as recorded above.
+- **Visual check:** `python3 tests/mb_gui/capture_screenshots.py` captured ten
+  native screenshots. Inspected `09-keys-masked.png`: OpenAI, Anthropic, and
+  GitHub Copilot appear as aligned provider rows, with no Copilot key field.
+- **Remaining verification:** CI7's failure is addressed in the working tree,
+  but a new Windows run has not yet been triggered. This Mac has Python 3.9.6,
+  no Python 3.11, and no Copilot CLI; live Copilot sign-in/generation and a
+  physical Windows 10/11 GUI check are not claimed.

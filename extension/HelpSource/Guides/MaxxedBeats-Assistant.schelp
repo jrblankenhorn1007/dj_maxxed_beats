@@ -1,0 +1,69 @@
+TITLE:: MaxxedBeats Assistant
+summary:: Using the MaxxedBeats AI music assistant window
+categories:: Assistant
+related:: Classes/MaxxedBeats, Classes/ChaosOsc
+
+SECTION:: Opening the window
+
+Evaluate code::MaxxedBeats.gui:: in SCIDE. The window has four tabs:
+strong::Compose::, strong::Variations::, strong::Keys & Privacy::, and
+strong::Usage::. The project, the strong::Choose your DJ:: selector, the status
+line, errors, and confirmation requests are always visible at the top.
+
+SECTION:: Choose your DJ
+
+Pick a provider (OpenAI, Anthropic, GitHub Copilot, or the offline mock) and one of its models.
+The window always shows the explicit provider id and model id that the next
+request will use. Press strong::Refresh models:: to fetch the provider's current
+model list. Models the assistant cannot use are labelled strong::unavailable::.
+If your saved model disappears, it is shown as strong::UNAVAILABLE:: and requests
+are blocked until you choose another model: MaxxedBeats never switches provider
+or model on its own. If a refresh fails, the cached list stays visible and is
+labelled as possibly stale.
+
+SECTION:: Provider sign-in, privacy, and cost
+
+On strong::Keys & Privacy::, OpenAI and Anthropic have separate API-key rows;
+GitHub Copilot has a sign-in row alongside them and does not need an API key.
+Use the Copilot row to complete GitHub's browser sign-in. For OpenAI or
+Anthropic, you can save or replace, validate, and remove each key
+independently. Keys are kept in the operating system's credential store
+(macOS Keychain, Windows Credential Manager, Linux Secret Service). Key entry
+is masked; keys are never shown, logged, or written to settings or project
+files. Typed or pasted characters are appended; use strong::Clear:: and paste
+again to correct a key.
+
+Your prompt, the conversation, and only the project files you select under
+strong::Context files:: are sent to the provider you chose. Requests may incur
+charges on your provider account. Credits are an informational estimate
+(100 credits per estimated US$1), not a balance or bill. When pricing is
+missing or stale, USD and credits are labelled unavailable or stale and never
+shown as zero.
+
+SECTION:: Composing
+
+NUMBEREDLIST::
+## Open a project folder (strong::Choose...:: or type a path and press strong::Open::).
+## Select context files, type a prompt, and press strong::Send to DJ::. strong::Cancel:: stops a running request.
+## Review the proposed musical plan and the diff. Nothing has been written yet.
+## strong::Approve and apply...:: asks for confirmation, saves a backup, and writes the files. strong::Reject:: discards the proposal. strong::Undo last apply...:: restores the most recent backup.
+## strong::Render...:: asks for confirmation, then renders the chosen entry file offline in a separate sclang/scsynth process to a new WAV under code::renders/::. The result shows the file, format, and audio checks.
+## strong::Play preview:: plays the rendered WAV on your running server (boot it with code::s.boot::); strong::Reveal file:: shows it in your file browser.
+::
+
+SECTION:: Variations
+
+Start a variation session with a prompt and a candidate limit (1 to 4). Each
+candidate is kept in an isolated session folder with its code, seed, settings,
+render, and checks. strong::Stop:: ends the session early. strong::Audition
+selected:: plays a candidate; strong::Apply selected...:: asks for confirmation
+before replacing the project files (with a backup).
+
+SECTION:: Troubleshooting
+
+LIST::
+## strong::"missing classes":: — re-run code::python3 scripts/install_maxxedbeats.py:: and recompile the class library.
+## strong::No API key / auth errors:: — save or validate the OpenAI/Anthropic key on strong::Keys & Privacy::, or sign in to GitHub Copilot in its provider row.
+## strong::Model unavailable:: — press strong::Refresh models:: and choose a listed model.
+## strong::Play fails:: — boot the server with code::s.boot::; the WAV file is already rendered.
+::

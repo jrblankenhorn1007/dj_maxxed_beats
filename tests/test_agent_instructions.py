@@ -95,6 +95,46 @@ class AgentInstructionContractTests(unittest.TestCase):
         )
         self.assertNotIn("planned update-rate control", supercollider)
 
+    def test_structured_response_format_is_documented(self):
+        workflow = self.read_instruction("WORKFLOW.md")
+        self.assert_mentions_all(
+            workflow,
+            (
+                "exactly one json object",
+                '"maxxedbeats.proposal/1"',
+                '"plan"',
+                '"summary"',
+                '"uncertainty"',
+                '"questions"',
+                '"edits"',
+                '"create"',
+                '"replace"',
+                '"edit"',
+                '"oldtext"',
+                "occurs exactly once",
+                '"entry"',
+                '"render"',
+                '"seed"',
+                "never use absolute paths",
+                "separately approves any render",
+            ),
+        )
+
+    def test_renderable_composition_contract_is_documented(self):
+        supercollider = self.read_instruction("SUPERCOLLIDER.md")
+        self.assert_mentions_all(
+            supercollider,
+            (
+                "separate headless `sclang`",
+                "returns a `score`",
+                "\\d_recv",
+                "~mbrender",
+                "do not boot a server",
+                "render ends exactly at that duration",
+                "silence, and clipping",
+            ),
+        )
+
     def test_safety_prevents_false_success_and_credential_disclosure(self):
         safety = self.read_instruction("SAFETY.md")
         self.assert_mentions_all(

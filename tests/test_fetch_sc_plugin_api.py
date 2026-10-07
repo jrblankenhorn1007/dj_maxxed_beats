@@ -42,7 +42,7 @@ class FetchScPluginApiTests(unittest.TestCase):
                 fetch_sc_plugin_api.urllib.request,
                 "urlopen",
                 side_effect=URLError("offline"),
-            ):
+            ), patch.object(fetch_sc_plugin_api.time, "sleep"):
                 with self.assertRaises(URLError):
                     fetch_sc_plugin_api.fetch(
                         "include/plugin_interface/SC_PlugIn.hpp",
@@ -125,6 +125,9 @@ class FetchScPluginApiTests(unittest.TestCase):
                 SimpleNamespace(
                     path=ntpath,
                     makedirs=lambda *args, **kwargs: None,
+                    getpid=lambda: 1234,
+                    replace=lambda source, target: None,
+                    remove=lambda path: None,
                 ),
             ):
                 with patch.object(
@@ -157,10 +160,107 @@ class FetchScPluginApiTests(unittest.TestCase):
                 fetch_sc_plugin_api.urllib.request,
                 "urlopen",
                 side_effect=fake_urlopen,
-            ):
+            ), patch.object(fetch_sc_plugin_api.time, "sleep"):
                 with self.assertRaises(HTTPError) as ctx:
                     fetch_sc_plugin_api.resolve_headers(cache_dir)
         self.assertEqual(ctx.exception.code, 503)
+
+
+class FetchRetryTests(unittest.TestCase):
+    """Transient failures (timeouts, connection errors, HTTP 429/5xx) are
+    retried with exponential backoff; 404 and other 4xx are not."""
+
+    REL = "include/plugin_interface/SC_PlugIn.hpp"
+
+    def run_fetch(self, outcomes):
+        calls, sleeps = [], []
+
+        def fake_urlopen(url, timeout=20):
+            calls.append(url)
+            outcome = outcomes[len(calls) - 1]
+            if isinstance(outcome, BaseException):
+                raise outcome
+            return _FakeResponse(outcome)
+
+        with tempfile.TemporaryDirectory() as cache_dir:
+            with patch.object(fetch_sc_plugin_api.urllib.request, "urlopen", side_effect=fake_urlopen), \
+                    patch("sys.stderr", new_callable=io.StringIO):
+                try:
+                    text = fetch_sc_plugin_api.fetch(self.REL, cache_dir, sleep=sleeps.append)
+                    error = None
+                except BaseException as caught:  # noqa: B902 - re-checked by callers
+                    text, error = None, caught
+                written = Path(cache_dir, self.REL)
+                files = sorted(p.name for p in written.parent.iterdir()) if written.parent.exists() else []
+                content = written.read_bytes() if written.is_file() else None
+        return SimpleNamespace(text=text, error=error, calls=len(calls), sleeps=sleeps,
+                               files=files, content=content)
+
+    def http(self, code):
+        return HTTPError("https://example.invalid", code, "status", None, None)
+
+    def test_timeout_is_retried_with_backoff_then_succeeds(self):
+        run = self.run_fetch([TimeoutError("timed out"), URLError("reset"), b"#pragma once\n"])
+        self.assertIsNone(run.error)
+        self.assertEqual(run.text, "#pragma once\n")
+        self.assertEqual(run.calls, 3)
+        self.assertEqual(run.sleeps, [1.0, 2.0])
+        self.assertEqual(run.files, ["SC_PlugIn.hpp"])
+
+    def test_connection_errors_and_retryable_statuses_are_retried(self):
+        for failure in (ConnectionResetError("reset"), self.http(429), self.http(500), self.http(503)):
+            with self.subTest(failure=failure):
+                run = self.run_fetch([failure, b"ok"])
+                self.assertIsNone(run.error)
+                self.assertEqual((run.calls, run.sleeps), (2, [1.0]))
+
+    def test_last_error_is_reraised_after_four_attempts(self):
+        run = self.run_fetch([self.http(503)] * 4)
+        self.assertIsInstance(run.error, HTTPError)
+        self.assertEqual(run.error.code, 503)
+        self.assertEqual(run.calls, 4)
+        self.assertEqual(run.sleeps, [1.0, 2.0, 4.0])
+        self.assertEqual(run.files, [])
+
+    def test_timeouts_are_reraised_after_the_last_attempt(self):
+        run = self.run_fetch([TimeoutError("timed out")] * 4)
+        self.assertIsInstance(run.error, TimeoutError)
+        self.assertEqual(run.calls, 4)
+
+    def test_not_found_and_other_client_errors_are_not_retried(self):
+        for code in (404, 400, 403):
+            with self.subTest(code=code):
+                run = self.run_fetch([self.http(code)])
+                self.assertIsInstance(run.error, HTTPError)
+                self.assertEqual(run.error.code, code)
+                self.assertEqual((run.calls, run.sleeps), (1, []))
+
+    def test_write_is_atomic_and_leaves_no_temporary_files(self):
+        run = self.run_fetch([b"// header\n"])
+        self.assertEqual(run.content, b"// header\n")
+        self.assertEqual(run.files, ["SC_PlugIn.hpp"])
+
+    def test_failed_write_leaves_neither_partial_file_nor_temporary(self):
+        with tempfile.TemporaryDirectory() as cache_dir:
+            with patch.object(fetch_sc_plugin_api.urllib.request, "urlopen",
+                              return_value=_FakeResponse(b"data")), \
+                    patch.object(fetch_sc_plugin_api.os, "replace", side_effect=OSError("disk full")):
+                with self.assertRaises(OSError):
+                    fetch_sc_plugin_api.fetch(self.REL, cache_dir, sleep=lambda seconds: None)
+            folder = Path(cache_dir, self.REL).parent
+            self.assertEqual(list(folder.iterdir()), [])
+
+
+class WorkflowCacheTests(unittest.TestCase):
+    def test_every_plugin_building_workflow_caches_the_pinned_headers(self):
+        workflows = Path(__file__).resolve().parents[1] / ".github" / "workflows"
+        for name in ("plugin-builds.yml", "headless-tests.yml", "assistant-tests.yml"):
+            with self.subTest(workflow=name):
+                source = (workflows / name).read_text(encoding="utf-8")
+                self.assertIn("uses: actions/cache@v4", source)
+                self.assertIn("path: plugin/.sc-plugin-api-cache", source)
+                self.assertIn("${{ runner.os }}", source)
+                self.assertIn(fetch_sc_plugin_api.SC_COMMIT, source)
 
 
 class _FakeResponse:
