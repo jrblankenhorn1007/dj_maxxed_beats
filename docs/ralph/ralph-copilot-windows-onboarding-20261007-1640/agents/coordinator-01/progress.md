@@ -80,7 +80,7 @@
   "worktree": "/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-copilot-windows-onboarding-20261007-1640",
   "base_origin_main_sha": "dac46c31f6711ad0d90d40b9634ba92aa5a0203b",
   "rebased_onto_origin_main_sha": null,
-  "implementation_commit_sha": "5d2745c1f0c5475697e68627741f7ea90fe93d52",
+  "implementation_commit_sha": "cab1f464346953e6a39b4477125de0c8bcc6a078",
   "checks": [
     {
       "command": "SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth bash scripts/run_headless_tests.sh",
@@ -88,19 +88,27 @@
     },
     {
       "command": "PYTHONPATH=tests python3 -m unittest test_mb_copilot_setup -q",
-      "result": "PASS (13 tests; one Windows-only case skipped on macOS)"
+      "result": "PASS (14 tests; one Windows-only case skipped on macOS)"
     },
     {
       "command": "Install pinned GitHub Copilot CLI release into a temporary directory; verify SHA-256 and run --version",
       "result": "PASS (GitHub Copilot CLI 1.0.93)"
     },
     {
-      "command": "gh pr checks 41",
-      "result": "PASS on original PR head b7b19a596837b5fd667680385224a162b3e91ee6; rerun on review-fix head pending"
+      "command": "PYTHONPATH=tests python3 -m unittest -v test_mb_copilot_setup.CopilotSetupTests.test_linux_apt_fallback_explains_when_python311_is_unavailable test_mb_copilot_setup.CopilotSetupTests.test_linux_launcher_explains_that_interactive_terminal_is_required",
+      "result": "PASS (2 Linux fallback/terminal tests)"
     },
     {
-      "command": "gh pr checks 42",
-      "result": "Windows Assistant failed because POSIX mode bits and Windows CLI setup delegation were assumed incorrectly; corrected tests pass locally and need a replacement stacked PR"
+      "command": "bash -n extension/Data/copilot/setup-copilot.sh && git diff --check",
+      "result": "PASS"
+    },
+    {
+      "command": "gh pr checks 43 and merge",
+      "result": "PASS on replacement review-fix head 7f77de1f42e7cb7076fab32277e975b327b84e04; merged into PR #41 at f8f400a45297e39b02434d4fc3d665a49889c964"
+    },
+    {
+      "command": "gh pr checks 41",
+      "result": "PASS on current PR head f8f400a45297e39b02434d4fc3d665a49889c964 (macOS, Windows x64/package, headless, ChaosOsc)"
     }
   ],
   "blockers": [],
@@ -111,12 +119,23 @@
       "Replace mutable remote shell-pipe installer with a pinned SHA-256-verified CLI release.",
       "Discover supported macOS Python 3.14 and generic python3 executables.",
       "Require an interactive Linux terminal and document Run in Terminal."
-    ],
-    "round_2": "PENDING_FINAL_PR_HEAD"
+    ]
   },
-  "attested_at_utc": "2026-10-07T21:50:39Z",
+  "review_round_2": {
+    "reviewed_base_sha": "dac46c31f6711ad0d90d40b9634ba92aa5a0203b",
+    "reviewed_head_sha": "f8f400a45297e39b02434d4fc3d665a49889c964",
+    "security_findings": [],
+    "code_findings": [
+      "MEDIUM: Ubuntu 22.04 default APT sources do not provide Python 3.11; setup exited without a supported fallback."
+    ],
+    "fix_commit_sha": "cab1f464346953e6a39b4477125de0c8bcc6a078",
+    "red": "APT fallback regression failed because setup exited without guidance after package installation failure.",
+    "green": "APT fallback and Linux terminal tests pass; full setup module passes (14 tests, one Windows-only skip).",
+    "remediation_confirmation": "PENDING_FINAL_PR_HEAD"
+  },
+  "attested_at_utc": "2026-10-07T22:14:25Z",
   "attestation_kind": "SELF_ATTESTATION",
   "cryptographic_signature_status": "NOT_CRYPTOGRAPHICALLY_SIGNED",
-  "statement": "I, coordinator-01, sign off iteration 1 at implementation commit 5d2745c1f0c5475697e68627741f7ea90fe93d52."
+  "statement": "I, coordinator-01, sign off iteration 1 at implementation commit cab1f464346953e6a39b4477125de0c8bcc6a078."
 }
 ```

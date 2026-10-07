@@ -150,7 +150,9 @@ Mock DJ, OpenAI, and Anthropic do not need this runtime.
   If Python 3.11+ is missing, the helper offers to install it with apt, dnf,
   or pacman; the package manager may request the computer password. On other
   distributions, install Python 3.11+ with the Software app and run the helper
-  again.
+  again. Ubuntu 22.04's standard APT sources provide Python 3.10; if the
+  helper reports that Python 3.11 is unavailable, use a Python source supported
+  by your distribution or upgrade to a release that provides Python 3.11+.
 
 The helpers finish by telling you what to click next; none asks you to paste a
 terminal command. If the installed extension is in a custom folder, open its

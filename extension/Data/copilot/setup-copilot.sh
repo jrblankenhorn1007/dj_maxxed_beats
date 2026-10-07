@@ -42,11 +42,26 @@ if [ -z "$python" ]; then
         exit 1
     fi
     if command -v apt-get >/dev/null 2>&1; then
-        sudo apt-get update && sudo apt-get install -y python3.11 python3.11-venv || exit 1
+        if ! sudo apt-get update; then
+            echo "APT could not refresh package information. Check your internet connection and administrator access, then retry."
+            exit 1
+        fi
+        if ! sudo apt-get install -y python3.11 python3.11-venv; then
+            echo "APT could not install Python 3.11 and its venv package."
+            echo "Those packages may not exist in this release's configured sources (common on Ubuntu 22.04)."
+            echo "Install Python 3.11+ from a source supported by your distribution, or upgrade to a release whose repositories provide it, then run setup again."
+            exit 1
+        fi
     elif command -v dnf >/dev/null 2>&1; then
-        sudo dnf install -y python3.11 || exit 1
+        if ! sudo dnf install -y python3.11; then
+            echo "DNF could not install Python 3.11. Check your enabled repositories or install a supported Python 3.11+ runtime, then retry."
+            exit 1
+        fi
     elif command -v pacman >/dev/null 2>&1; then
-        sudo pacman -S --needed python python-pip || exit 1
+        if ! sudo pacman -S --needed python python-pip; then
+            echo "Pacman could not install Python. Check your configured repositories or install a supported Python 3.11+ runtime, then retry."
+            exit 1
+        fi
     else
         echo "This Linux distribution's package manager is not supported by the automatic setup."
         echo "Install Python 3.11 or newer with your Software app, then run this file again."
