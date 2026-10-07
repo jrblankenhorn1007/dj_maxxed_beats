@@ -518,6 +518,7 @@ MBGuiController {
 			++ settings[\duration] ++ " s, " ++ settings[\sampleRate] ++ " Hz, "
 			++ settings[\numChannels] ++ " ch)? This evaluates the project's composition code in a "
 			++ "separate headless sclang process (never in this interpreter) and renders offline with scsynth."
+			++ " This is NOT a sandbox: it has your filesystem, network and credential-store access."
 			++ (if(proposalState == \pending) { " The pending proposal is NOT applied; the files on disk are rendered." } { "" }),
 			{ this.startRender });
 	}
@@ -603,24 +604,17 @@ MBGuiController {
 
 	// ---- variations --------------------------------------------------------
 
-	// Rendering candidates evaluates generated code in a separate process, so
-	// `renderCandidates: true` first asks for confirmation; only then does the
-	// session receive approveRenders: true.
+	// Approval is per candidate, after its code exists and can be reviewed.
 	startVariations { |prompt, maxCandidates, renderCandidates = false, contextFiles|
 		var blocker = this.requestBlocker(prompt), max;
 		if(blocker.notNil) { ^this.showError(blocker, "Variation session not started: " ++ blocker.detail) };
 		max = (maxCandidates ? maxCandidatesLimit).asInteger.clip(1, maxCandidatesLimit);
-		if(renderCandidates != true) { ^this.runVariations(prompt, max, false, contextFiles) };
-		this.requestConfirm(\variations, "Generate up to " ++ max ++ " candidate(s) with " ++ this.djText
-			++ " (one provider request each; may incur cost) and render each one ("
-			++ renderSettings[\duration] ++ " s) by evaluating its generated code in a separate headless "
-			++ "sclang/scsynth process? Your project is not changed.", {
-				this.runVariations(prompt, max, true, contextFiles)
-			});
+		^this.runVariations(prompt, max, false, contextFiles)
 	}
 
 	runVariations { |prompt, max, approveRenders, contextFiles|
 		var myToken, ok, context;
+		pendingConfirm = nil;
 		varToken = varToken + 1;
 		myToken = varToken;
 		context = (files: (contextFiles ? []).asArray, entry: entryPath);
@@ -661,8 +655,9 @@ MBGuiController {
 		var candidate = this.candidateAt(index);
 		if(candidate.isNil) { ^this };
 		if(this.isWorking) { ^this.showError(MBError(\validation, "Stop the variation session and wait for running work first.")) };
-		this.requestConfirm(\renderCandidate, "Render candidate #" ++ (index + 1) ++ "? Its generated code is "
-			++ "evaluated in a separate headless sclang process and rendered offline with scsynth; the project is not changed.", {
+		this.requestConfirm(\renderCandidate, "Review the selected candidate's code and diff below before rendering #"
+			++ (index + 1) ++ ". A separate process is NOT a sandbox: generated code has your user privileges, "
+			++ "filesystem, network and credential-store access. Approve execution of this candidate?", {
 				var myToken = this.beginBusy(\renderCandidate, "Rendering candidate #" ++ (index + 1) ++ "...");
 				var ok = this.attempt({
 					busyHandle = this.call(\renderCandidate, variation[\session], index,
@@ -768,6 +763,9 @@ MBGuiController {
 	// ---- confirmation, busy state, cancellation ---------------------------
 
 	requestConfirm { |kind, message, action|
+		if(this.isWorking) {
+			^this.showError(MBError(\validation, "Wait for running work before confirming another operation."))
+		};
 		pendingConfirm = (kind: kind, message: message, action: action);
 		status = "Confirmation needed.";
 		this.notify;
@@ -776,6 +774,9 @@ MBGuiController {
 	confirm {
 		var pending = pendingConfirm;
 		if(pending.isNil) { ^this };
+		if(this.isWorking) {
+			^this.showError(MBError(\validation, "Wait for running work; this confirmation cannot start another operation."))
+		};
 		pendingConfirm = nil;
 		pending[\action].value;
 		this.notify;
@@ -789,6 +790,7 @@ MBGuiController {
 	}
 
 	beginBusy { |kind, statusText|
+		pendingConfirm = nil;
 		token = token + 1;
 		busy = kind;
 		busyHandle = nil;

@@ -225,29 +225,33 @@ MBGuiWindow {
 		views[\varPrompt] = TextView().minHeight_(50).maxHeight_(80);
 		views[\varMax] = NumberBox().value_(MBGuiController.maxCandidatesLimit).clipLo_(1)
 			.clipHi_(MBGuiController.maxCandidatesLimit).decimals_(0).step_(1).fixedWidth_(40);
-		views[\candidates] = ListView();
+		views[\candidates] = ListView().action_({ this.refreshCandidateReview });
+		views[\candidateReview] = TextView().editable_(false).minHeight_(100);
 		^View().layout_(VLayout(
-			this.label("Variation session: the DJ proposes and renders up to the limit of candidates "
-				++ "in an isolated session folder. Your project is unchanged until you apply one."),
+			this.label("Variation session: the DJ proposes up to the limit of candidates in a separate session folder. "
+				++ "Review each candidate before rendering. Your project is unchanged until you apply one."),
 			this.label("Variation prompt"),
 			views[\varPrompt],
 			HLayout(
 				this.label("Max candidates (1-" ++ MBGuiController.maxCandidatesLimit ++ ")"),
 				views[\varMax],
-				this.keep(\varRender, CheckBox(text: "Render each candidate (asks first)").value_(true)),
 				this.button(\varStart, "Start session", {
 					controller.setRenderSettings(this.renderSettingsFromViews);
 					controller.startVariations(views[\varPrompt].string, views[\varMax].value.asInteger,
-						views[\varRender].value, this.selectedContextFiles)
+						false, this.selectedContextFiles)
 				}),
 				this.button(\varStop, "Stop", { controller.stopVariations }),
 				[this.keep(\varStatus, StaticText().string_("")), stretch: 1]
 			),
 			[views[\candidates], stretch: 1],
+			[views[\candidateReview], stretch: 1],
 			HLayout(
 				this.button(\audition, "Audition selected", { controller.auditionCandidate(views[\candidates].value) }),
 				this.button(\stopAudition, "Stop", { controller.stopPlayback }),
-				this.button(\renderCandidate, "Render selected...", { controller.renderCandidate(views[\candidates].value) }),
+				this.button(\renderCandidate, "Render selected...", {
+					this.refreshCandidateReview;
+					controller.renderCandidate(views[\candidates].value)
+				}),
 				this.button(\applyCandidate, "Apply selected...", { controller.applyCandidate(views[\candidates].value) }),
 				nil
 			)
@@ -355,6 +359,7 @@ MBGuiWindow {
 		this.setShown(\errorRow, c.error.notNil);
 		views[\error].string = if(c.error.notNil) { MBGuiFormat.errorText(c.error) } { "" };
 		this.setShown(\confirmPanel, c.pendingConfirm.notNil);
+		views[\confirm].enabled = c.pendingConfirm.notNil and: { working.not };
 		views[\confirmText].string = if(c.pendingConfirm.notNil) { c.pendingConfirm[\message] } { "" };
 
 		this.setItems(\contextFiles, files);
@@ -387,6 +392,7 @@ MBGuiWindow {
 		views[\varStop].enabled = variation[\running] == true;
 		views[\varStatus].string = variation[\status] ? "Not started.";
 		this.setItems(\candidates, candidates.collect { |cand, i| MBGuiFormat.candidateLine(cand, i) }.asArray);
+		this.refreshCandidateReview;
 		views[\audition].enabled = candidates.notEmpty;
 		views[\applyCandidate].enabled = candidates.notEmpty and: { working.not } and: { variation[\session].notNil };
 		views[\renderCandidate].enabled = candidates.notEmpty and: { working.not } and: { variation[\session].notNil };
@@ -412,6 +418,21 @@ MBGuiWindow {
 	setShown { |key, flag|
 		shown[key] = flag;
 		views[key].visible = flag;
+	}
+
+	refreshCandidateReview {
+		var index = views[\candidates].value;
+		var candidate = if(index.isKindOf(Integer)) { controller.variation[\candidates][index] };
+		var proposal = candidate !? { candidate[\proposal] }, code = candidate !? { candidate[\code] };
+		views[\candidateReview].string = if(candidate.isNil) { "Select a candidate to review its code." } {
+			(if(proposal.notNil) {
+				MBGuiFormat.planText(proposal) ++ "\n\n" ++ MBGuiFormat.diffText(proposal[\edits] ? [])
+			} { candidate[\summary] ? "" })
+			++ "\n\nFull candidate code:\n"
+			++ (if(code.notNil) { code.keys.asArray.sort.collect { |path|
+				path.asString ++ "\n" ++ code[path].asString
+			}.join("\n\n") } { "No code available." })
+		};
 	}
 
 	isShown { |key| ^shown[key] == true }

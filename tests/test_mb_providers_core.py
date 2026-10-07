@@ -101,6 +101,28 @@ class JsonAndRedactionTests(unittest.TestCase):
 
 
 class UsageMeterTests(unittest.TestCase):
+    def test_non_date_alias_matches_by_string_value(self):
+        workdir = fresh_workdir("rate_alias")
+        rates = load_rates()
+        rates["providers"]["openai"]["models"]["gpt-5"]["aliases"] = ["dj-latest"]
+        path = workdir / "rates.json"
+        path.write_text(json.dumps(rates), encoding="utf-8")
+        body = r"""
+		var table = MBRateTable.new(%PATH%), alias = "dj-" ++ "latest";
+		~emit.(\lookup, table.lookup(\openai, alias));
+		~emit.(\estimate, table.estimate(\openai, alias,
+			(inputTokens: 1000, outputTokens: 100), "2026-10-07"));
+		""".replace("%PATH%", sc_string(str(path)))
+        run = run_sclang("rate_alias", body, workdir=workdir)
+        self.assertIsNotNone(run.get("lookup"))
+        self.assertEqual(run.get("lookup")[0], "gpt-5")
+        estimate = run.get("estimate")
+        self.assertEqual(estimate["matchedModel"], "gpt-5")
+        self.assertEqual(estimate["status"], "ok")
+        gpt5 = rates["providers"]["openai"]["models"]["gpt-5"]
+        self.assertAlmostEqual(estimate["usd"],
+                               (1000 * gpt5["input"] + 100 * gpt5["output"]) / 1e6)
+
     def test_usage_estimates_session_totals_history_and_missing_or_stale_rates(self):
         rates = load_rates()
         workdir = fresh_workdir("usage")
@@ -335,6 +357,33 @@ class CredentialAndMockTests(unittest.TestCase):
 class ProcessRunnerTests(unittest.TestCase):
     """MBProcess reports exit codes, enforces its watchdog timeout, and stays
     cancellable on every platform (Windows: argv + exit-code file polling)."""
+
+    def test_normal_helper_exits_leave_clock_responsive_without_cleanup_errors(self):
+        body = r"""
+		var quick, target = "MaxxedBeatsTest-" ++ 100000000.rand ++ ":openai",
+			ticks = 0, ticker, results = List.new;
+		quick = if(MBProviderPaths.isWindows) {
+			MBProviderPaths.windowsHelperArgv("has", ["-Target", target])
+		} { "exit 1" };
+		ticker = Routine { loop { ticks = ticks + 1; 0.05.wait } }.play(AppClock);
+		3.do {
+			var dir = MBProviderPaths.newRunDir;
+			results.add(~await.({ |done| MBProcess.run(quick, dir, nil, 30, done) }));
+			MBProviderPaths.removeDir(dir);
+		};
+		// Let every deferred pipe close run while the interpreter is still alive.
+		4.wait;
+		ticker.stop;
+		~emit.(\results, results.asArray);
+		~emit.(\ticks, ticks);
+		~emit.(\target, target);
+		"""
+        run = run_sclang("process_normal_exit", body, timeout=60)
+        self.assertEqual(run.get("results"), [[1, "exited"]] * 3)
+        self.assertGreater(run.get("ticks"), 20)
+        self.assertNotIn("ERROR:", run.output)
+        from mb_providers import processes
+        self.assertNotIn(run.get("target"), processes.command_lines())
 
     def test_exit_code_watchdog_timeout_and_cancel(self):
         body = r"""

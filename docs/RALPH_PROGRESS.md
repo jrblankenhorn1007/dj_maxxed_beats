@@ -1155,3 +1155,35 @@ Ralph-Status: IN_PROGRESS
   "not runtime-verified" reason; all other assistant suites run there.
 - **Unverified:** physical Windows 10 x64, SCIDE-launched visual sign-off,
   live OpenAI/Anthropic calls, Linux assistant runtime.
+
+### Windows completion and review fixes — Sol takeover
+
+- Removed Windows behavior skips; HTTP, Credential Manager, render,
+  variation and GUI integration now run on Windows. Run 37573392153 failed:
+  stale helper PID cleanup emitted `ERROR: process not found`, triggering
+  the harness's fatal-error watchdog; variation sclang children also timed out.
+- Provider cleanup no longer kills already-finished helpers. Cancellation's
+  benign taskkill exit race is kept out of sclang's error stream. Windows
+  renderer holds child stdin open until exit, as SCIDE does.
+- Review fixes: stale confirmations cannot replace paid requests; each GUI
+  variation's plan/diff/code is displayed before its execution approval;
+  explicit not-a-sandbox warnings; validated reserved directories and write
+  ancestors; case-alias rejection; audio-analysis cancellation closes files;
+  rate aliases compare string values.
+- Red: `SCLANG=... python3 -m unittest discover -s tests -p test_mb_gui.py`
+  failed all four Undo → Send → Confirm safeguards, including dropped reply.
+  Per-candidate approval regression also failed before implementation.
+  Green: 6 GUI tests, 26 workflow tests, 4 real GUI integration tests passed.
+  Provider and project/audio resource agents established their own targeted
+  Red/Green regressions.
+- Final integrated gate: `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
+  bash scripts/run_headless_tests.sh` → **194 tests, OK, 4 platform/opt-in skips**
+  (Windows Credential Manager, two Windows PowerShell package tests, real-time
+  audio opt-in). No Windows assistant behavior suite is skipped.
+- Installed the combined assistant on the Mac. Its actual native window was
+  launched using installed classes and inspected; left running for the user.
+  SCIDE launch document opened, but automated evaluation was denied by macOS
+  Accessibility permission; no permission settings were changed.
+- Windows CI rerun remains required. Live provider calls and physical Windows
+  visual/listening verification are not claimed.

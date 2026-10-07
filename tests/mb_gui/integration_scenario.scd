@@ -143,19 +143,28 @@ Routine {
 		~waitFor.({ ~idle.value }, 30);
 		~check.("undo_restored", ~read.(~root +/+ "main.scd") == original and: { ~c.error.isNil }, ~c.error);
 
-		// Variation session: 2 candidates, approved renders, then a confirmed apply.
+		// Variation session: review and approve each candidate, then confirm apply.
 		~press.(\tabVariations);
 		~v[\contextFiles].selection = [];
 		~v[\varPrompt].string = "Darker and sparser";
 		~v[\varMax].value = 2;
-		~v[\varRender].value = true;
 		~v[\duration].value = 2;
 		~press.(\varStart);
-		~check.("variation_render_needs_confirmation", ~window.isShown(\confirmPanel) and: { ~c.variation[\running].not });
-		~press.(\confirm);
 		~check.("variation_finished", ~waitFor.({ ~c.variation[\running].not }, 400) and: { ~c.error.isNil }, ~c.error);
 		candidates = ~c.variation[\candidates];
 		~check.("variation_two_candidates", candidates.size == 2 and: { ~v[\candidates].items.size == 2 }, candidates.size);
+		~check.("variation_no_unseen_code_executed", candidates.every { |cand|
+			cand[\status] == \proposed and: { cand[\render].isNil }
+		});
+		candidates.do { |candidate, index|
+			~v[\candidates].value = index;
+			~press.(\renderCandidate);
+			~check.("variation_render_needs_confirmation", ~window.isShown(\confirmPanel)
+				and: { candidate[\render].isNil }
+				and: { ~v[\candidateReview].string.contains(candidate[\code]["main.scd"]) });
+			~press.(\confirm);
+			~waitFor.({ ~idle.value }, 180);
+		};
 		~check.("variation_rendered_with_checks", candidates.every { |cand|
 			cand[\status] == \rendered and: { cand[\render].notNil } and: { File.exists(cand[\render][\path]) }
 			and: { cand[\checks][\ok] == true } }, candidates.collect { |cand| [cand[\status], cand[\error] !? { |e| e.errorString }, cand[\checks]] });

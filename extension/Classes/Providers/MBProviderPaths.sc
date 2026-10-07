@@ -38,7 +38,11 @@ MBProviderPaths {
 	// Stops a Windows process and everything it started (taskkill /T).
 	*killTree { |pid|
 		if(pid.notNil and: { pid > 0 }) {
-			[this.windowsTool("taskkill.exe"), "/F", "/T", "/PID", pid.asString].unixCmd(nil, false)
+			// Exiting concurrently with cancellation is harmless. taskkill's
+			// "ERROR: ... not found" must not enter sclang's error stream.
+			[this.windowsTool("cmd.exe"), "/d", "/s", "/c",
+				"\"" ++ this.windowsTool("taskkill.exe") ++ "\" /F /T /PID "
+					++ pid.asInteger ++ " >NUL 2>&1"].unixCmd(nil, false)
 		}
 	}
 

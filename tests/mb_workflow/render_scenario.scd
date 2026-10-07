@@ -37,6 +37,11 @@ Routine {
 		~check.("render_requires_boolean_approval", ~failedWith.(outcome, \validation), ~describe.(outcome));
 		~check.("unapproved_render_creates_nothing",
 			File.exists(~root +/+ "renders").not and: { File.exists(project.dataDir).not });
+		["data", "renders", "scratch"].do { |name|
+			var reservedProject = MBProject.open(~work +/+ ("reserved-" ++ name));
+			outcome = ~render.(reservedProject, "comp.scd", nil, true);
+			~check.("render_rejects_reserved_" ++ name, ~failedWith.(outcome, \validation), ~describe.(outcome));
+		};
 
 		// End to end: propose (fake provider) -> confirmed apply -> approved render -> checks.
 		agent = MBAgent(project, ~fakeProvider.([~readText.(~work +/+ "proposal.txt")]), ~fakeCatalog.value, ~fakeMeter.value);

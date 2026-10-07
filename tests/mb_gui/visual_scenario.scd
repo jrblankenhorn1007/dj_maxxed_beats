@@ -104,11 +104,15 @@ fork({
 			press.(\tabVariations);
 			v[\varPrompt].string = "Darker and sparser variations";
 			v[\varMax].value = 2;
-			v[\varRender].value = true;
 			v[\duration].value = 3;
 			press.(\varStart);
-			press.(\confirm);
 			waitFor.({ c.variation[\running].not }, 300);
+			c.variation[\candidates].do { |candidate, index|
+				v[\candidates].value = index;
+				press.(\renderCandidate);
+				press.(\confirm);
+				waitFor.({ c.busy.isNil }, 180);
+			};
 			v[\candidates].value = 0;
 		});
 	} { |error|

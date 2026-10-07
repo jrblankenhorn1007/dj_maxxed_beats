@@ -154,7 +154,7 @@ MBResponseFormat {
 		};
 		if(totalBytes > maxTotalEditBytes) { this.fail(\validation, "the proposed edits are too large in total") };
 		paths = specs.collect { |spec| spec["path"] };
-		if(paths.asSet.size != paths.size) {
+		if(paths.collect(_.toLower).asSet.size != paths.size) {
 			this.fail(\validation, "the response edits the same file more than once; combine those changes")
 		};
 		edits = specs.collect { |spec| project.prepareEdit(spec) };

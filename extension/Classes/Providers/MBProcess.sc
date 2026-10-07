@@ -82,13 +82,14 @@ MBProcess {
 	}
 
 	// Pipe.close waits for the process; only close once it has surely ended.
-	prReleaseWindowsPipe { |kill|
-		var finishedPipe = pipe, finishedPid = pid;
+	prReleaseWindowsPipe {
+		var finishedPipe = pipe;
 		pipe = nil;
 		if(finishedPipe.isNil) { ^this };
-		AppClock.sched(if(kill) { 1 } { 2 }, {
-			MBProviderPaths.killTree(finishedPid);
-			AppClock.sched(1, { finishedPipe.close; nil });
+		// Normal completion must never taskkill a stale (possibly reused) PID.
+		// Cancellation and timeout already stop the tree in prKill.
+		AppClock.sched(3, {
+			finishedPipe.close;
 			nil
 		});
 	}
@@ -116,7 +117,7 @@ MBProcess {
 		[watchdog, poller].do { |routine|
 			if(routine.notNil and: { routine !== thisThread }) { routine.stop }
 		};
-		if(MBProviderPaths.isWindows) { this.prReleaseWindowsPipe(why != \exited) };
+		if(MBProviderPaths.isWindows) { this.prReleaseWindowsPipe };
 		onExit.value(code, why);
 	}
 

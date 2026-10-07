@@ -1,6 +1,7 @@
 """MBRenderer: approved, isolated sclang Score build + scsynth NRT with ChaosOsc."""
 
 import json
+import os
 import struct
 import unittest
 
@@ -84,6 +85,15 @@ class MBRendererWorkflowTests(ScenarioTestCase):
             CLASSIC % {"parent_home": json.dumps(str(work / "home"))}
         )
         (work / "empty-plugins").mkdir()
+        outside = work / "outside-render-dir"
+        outside.mkdir()
+        for name, relative in (("data", ".maxxedbeats"), ("renders", "renders"),
+                               ("scratch", ".maxxedbeats/renders")):
+            reserved_project = work / ("reserved-" + name)
+            reserved = reserved_project / relative
+            reserved.parent.mkdir(parents=True, exist_ok=True)
+            (reserved_project / "comp.scd").write_text(COMP)
+            os.symlink(str(outside), str(reserved), target_is_directory=True)
         (work / "proposal.txt").write_text(
             json.dumps(
                 {
@@ -128,6 +138,11 @@ class MBRendererWorkflowTests(ScenarioTestCase):
             "render_requires_boolean_approval",
             "unapproved_render_creates_nothing",
         )
+
+    def test_reserved_symlinks_cannot_receive_render_writes(self):
+        self.assertChecks(*["render_rejects_reserved_" + name
+                            for name in ("data", "renders", "scratch")])
+        self.assertEqual([], list((self.scenario_run.work_dir / "outside-render-dir").iterdir()))
 
     def test_failures_are_actionable_and_leave_no_outputs(self):
         self.assertChecks(

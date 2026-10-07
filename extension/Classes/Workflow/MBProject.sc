@@ -34,13 +34,35 @@ MBProject {
 
 	*writeFile { |absolutePath, text|
 		var file;
-		File.mkdir(absolutePath.dirname);
+		absolutePath = this.prepareWritePath(absolutePath);
 		file = File(absolutePath, "wb");
 		if(file.isOpen.not) { this.fail(\io, "could not open " ++ absolutePath.basename ++ " for writing") };
 		protect { file.write(text) } { file.close };
 		if(this.readFile(absolutePath) != text) {
 			this.fail(\io, "verification failed after writing " ++ absolutePath.basename)
 		};
+	}
+
+	*prepareWritePath { |absolutePath|
+		var current = absolutePath, parent, type, missing = List.new;
+		while {
+			type = File.type(current);
+			if(type == \symlink) { this.fail(\validation, "symbolic links are not allowed in write paths") };
+			if(current != absolutePath and: { type != \not_found } and: { type != \directory }) {
+				this.fail(\validation, "a write path component is not a folder")
+			};
+			if(current == absolutePath and: { type != \not_found } and: { type != \regular }) {
+				this.fail(\validation, "the write destination is not a regular file")
+			};
+			if(current != absolutePath and: { type == \not_found }) { missing.add(current) };
+			parent = current.dirname;
+			parent != current and: { parent.notEmpty }
+		} { current = parent };
+		missing.reverseDo { |dir|
+			File.mkdir(dir);
+			if(File.type(dir) != \directory) { this.fail(\io, "could not create a write folder") };
+		};
+		^absolutePath
 	}
 
 	initProject { |dir|
@@ -59,10 +81,24 @@ MBProject {
 		root = real;
 	}
 
-	dataDir { ^root +/+ ".maxxedbeats" }
-	rendersDir { ^root +/+ "renders" }
-	backupsDir { ^this.dataDir +/+ "backups" }
-	sessionsDir { ^this.dataDir +/+ "sessions" }
+	dataDir { ^this.directory(".maxxedbeats", false) }
+	rendersDir { ^this.directory("renders", false) }
+	backupsDir { ^this.directory(".maxxedbeats/backups", false) }
+	sessionsDir { ^this.directory(".maxxedbeats/sessions", false) }
+
+	directory { |relPath, create = true|
+		var parts = this.components(relPath), path, type;
+		this.resolve(relPath);
+		parts.do { |part, index|
+			path = this.resolve(parts.copyRange(0, index).join("/"));
+			type = File.type(path);
+			if(type == \not_found and: { create }) { File.mkdir(path); type = File.type(path) };
+			if(type != \directory and: { create or: { type != \not_found } }) {
+				MBProject.fail(\validation, "a project folder is not a directory: " ++ relPath.asString.quote)
+			};
+		};
+		^this.resolve(relPath)
+	}
 
 	components { |relPath|
 		var path, parts;
@@ -96,6 +132,9 @@ MBProject {
 
 	resolve { |relPath|
 		var parts = this.components(relPath), current = root, type, real;
+		if(File.type(root) != \directory) {
+			MBProject.fail(\validation, "the project root is no longer a directory")
+		};
 		parts.do { |part, index|
 			current = current +/+ part;
 			type = File.type(current);
@@ -120,7 +159,7 @@ MBProject {
 		if(parts.any { |part| part[0] == $. }) {
 			MBProject.fail(\validation, "hidden files and the .maxxedbeats folder cannot be edited: " ++ relPath.quote)
 		};
-		if(parts[0] == "renders") {
+		if(parts[0].toLower == "renders") {
 			MBProject.fail(\validation, "the renders folder cannot be edited: " ++ relPath.quote)
 		};
 		extension = parts.last.splitext[1];
@@ -139,7 +178,7 @@ MBProject {
 				if(result.size < maxFiles and: { name[0] != $. }) {
 					case
 					{ type == \regular } { result.add(rel) }
-					{ type == \directory and: { level < maxDepth } and: { rel != "renders" } } {
+					{ type == \directory and: { level < maxDepth } and: { rel.toLower != "renders" } } {
 						walk.value(clean, rel, level + 1)
 					};
 				};
@@ -252,7 +291,7 @@ MBProject {
 			MBProject.fail(\validation, "the proposal contains an invalid edit")
 		};
 		paths = edits.collect(_.path);
-		if(paths.asSet.size != paths.size) { MBProject.fail(\validation, "the proposal edits a file more than once") };
+		if(paths.collect(_.toLower).asSet.size != paths.size) { MBProject.fail(\validation, "the proposal edits a file more than once") };
 		// Re-validate everything before touching the disk.
 		edits.do { |edit|
 			var absolute = this.resolveEditable(edit.path);
@@ -269,7 +308,7 @@ MBProject {
 			if(edit.after.isString.not) { MBProject.fail(\validation, "edit for " ++ edit.path.quote ++ " has no contents") };
 		};
 		id = this.prNewBackupId;
-		dir = this.backupsDir +/+ id;
+		dir = this.directory(".maxxedbeats/backups/" ++ id);
 		manifest = (
 			format: "maxxedbeats.backup/1",
 			id: id,
@@ -292,7 +331,7 @@ MBProject {
 		}, \io);
 		if(failure.isKindOf(MBError)) {
 			written.do { |edit|
-				var absolute = root +/+ edit.path;
+				var absolute = this.resolveEditable(edit.path);
 				if(edit.isNew) {
 					File.delete(absolute)
 				} {
@@ -308,7 +347,7 @@ MBProject {
 
 	prNewBackupId {
 		var stamp = Date.getDate.format("%Y%m%d-%H%M%S"), id;
-		File.mkdir(this.backupsDir);
+		this.directory(".maxxedbeats/backups");
 		while {
 			backupCounter = backupCounter + 1;
 			id = stamp ++ "-" ++ backupCounter.asStringToBase(10, 3);

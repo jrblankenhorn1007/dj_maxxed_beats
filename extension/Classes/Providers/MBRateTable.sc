@@ -59,7 +59,7 @@ MBRateTable {
 		model = model.asString;
 		if(models[model].notNil) { ^[model, models[model]] };
 		models.keysValuesDo { |key, rates|
-			if((rates["aliases"] ? []).includes(model)) { ^[key, rates] }
+			if((rates["aliases"] ? []).includesEqual(model)) { ^[key, rates] }
 		};
 		candidates = [
 			model.findRegexp("^(.*)-[0-9]{4}-[0-9]{2}-[0-9]{2}$"),

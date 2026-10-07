@@ -208,23 +208,23 @@ MBRenderer {
 
 		counter = counter + 1;
 		stamp = Date.getDate.format("%Y%m%d-%H%M%S");
-		workDir = project.dataDir +/+ "renders" +/+ (stamp ++ "-" ++ counter.asStringToBase(10, 3)
+		workDir = project.directory(".maxxedbeats/renders/" ++ stamp ++ "-" ++ counter.asStringToBase(10, 3)
 			++ "-" ++ 1000000.rand.asStringToBase(10, 6));
-		File.mkdir(workDir +/+ "home");
-		File.mkdir(workDir +/+ "tmp");
+		project.directory(".maxxedbeats/renders/" ++ workDir.basename ++ "/home");
+		project.directory(".maxxedbeats/renders/" ++ workDir.basename ++ "/tmp");
 		scorePath = workDir +/+ "score.osc";
 		if(MBRenderProcess.isWindows) { this.prWriteWindowsConfig };
 
 		base = MBRenderer.sanitizeName(raw[\name] ? entryPath.asString.basename.splitext[0]);
-		File.mkdir(project.rendersDir);
+		project.directory("renders");
 		name = base ++ "-" ++ stamp;
 		sidecar = 1;
 		while { File.exists(project.rendersDir +/+ name ++ ".wav") or: { File.exists(project.rendersDir +/+ name ++ ".json") } } {
 			sidecar = sidecar + 1;
 			name = base ++ "-" ++ stamp ++ "-" ++ sidecar;
 		};
-		outputPath = project.rendersDir +/+ name ++ ".wav";
-		metadataPath = project.rendersDir +/+ name ++ ".json";
+		outputPath = project.resolve("renders/" ++ name ++ ".wav");
+		metadataPath = project.resolve("renders/" ++ name ++ ".json");
 		// Reserve the name immediately so concurrent renders never collide.
 		MBProject.writeFile(metadataPath, MBWorkflowJSON.stringify((format: "maxxedbeats.render/1", status: "rendering")));
 		MBProject.writeFile(workDir +/+ "entry-snapshot.scd", MBProject.readFile(entryAbsolute));
@@ -445,16 +445,22 @@ MBRenderer {
 	}
 
 	prCleanHome {
-		if(workDir.notNil and: {
-			MBProject.comparablePath(workDir).beginsWith(MBProject.comparablePath(project.dataDir) ++ "/")
-		}) {
-			MBWorkflowTry.value({ File.deleteAll(workDir +/+ "home"); File.deleteAll(workDir +/+ "tmp") });
+		var outcome;
+		if(workDir.notNil) {
+			outcome = MBWorkflowTry.mbError({
+				["home", "tmp"].do { |name|
+					File.deleteAll(project.resolve(".maxxedbeats/renders/" ++ workDir.basename ++ "/" ++ name))
+				};
+			}, \io);
+			if(outcome.isKindOf(MBError)) { outcome.errorString.warn };
 		};
 	}
 
 	prRemoveOutputs {
 		[outputPath, metadataPath].do { |path|
-			if(path.notNil and: { File.exists(path) }) { File.delete(path) };
+			if(path.notNil and: { File.exists(path) }) {
+				File.delete(project.resolve("renders/" ++ path.basename))
+			};
 		};
 		this.prCleanHome;
 	}

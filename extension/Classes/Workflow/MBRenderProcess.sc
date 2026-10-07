@@ -162,21 +162,41 @@ the language stays responsive. It never judges musical quality.
 */
 MBAudioCheck {
 	classvar <>chunkFrames = 32768;
+	var <file, routine, cancelled = false;
 
 	*analyze { |path, expected, onDone, silenceThresholdDb = -60, clipThreshold = 0.999|
-		var routine = Routine {
-			var file, outcome;
-			file = MBWorkflowTry.value({ SoundFile.openRead(path) });
-			if(file.isKindOf(SoundFile).not) {
-				onDone.value(MBError(\render, "the rendered file could not be opened as audio: " ++ path.basename));
-			} {
-				outcome = this.prScan(file, expected, silenceThresholdDb, clipThreshold);
-				file.close;
-				onDone.value(outcome);
-			};
+		^super.new.init(path, expected, onDone, silenceThresholdDb, clipThreshold)
+	}
+
+	init { |path, expected, onDone, silenceThresholdDb, clipThreshold|
+		routine = Routine {
+			var outcome = try {
+				protect {
+					file = SoundFile.openRead(path);
+					if(file.isNil) {
+						MBError(\render, "the rendered file could not be opened as audio: " ++ path.basename)
+					} {
+						MBAudioCheck.prScan(file, expected, silenceThresholdDb, clipThreshold)
+					}
+				} {
+					this.closeFile
+				}
+			} { |error| MBProject.asMBError(error, \render) };
+			if(cancelled.not) { onDone.value(outcome) };
 		};
 		routine.play(AppClock);
-		^routine
+		^this
+	}
+
+	closeFile {
+		if(file.notNil and: { file.isOpen }) { file.close };
+	}
+
+	stop {
+		cancelled = true;
+		routine.stop;
+		this.closeFile;
+		^this
 	}
 
 	*prScan { |file, expected, silenceThresholdDb, clipThreshold|

@@ -228,6 +228,9 @@ for actual charges.
    finishes, the window shows the new WAV file, its duration and format, and
    audio checks (non-finite samples, silence, clipping, duration); warnings
    are labelled.
+   **A separate process is not a sandbox:** approved composition code has
+   your user privileges, including filesystem, network, and credential-store
+   access. Review the code before approving execution.
 7. **Listen:** **Play preview** plays the rendered file on your running
    server (boot it first with `s.boot`); **Stop** ends playback. **Reveal
    file** shows the WAV in Finder, Explorer, or your file manager.
@@ -238,14 +241,15 @@ conversation. A failed action is never reported as completed.
 ## Variation sessions
 
 On **Variations**, type a variation prompt, choose how many candidates (1 to
-4), and press **Start session**. With **Render each candidate** ticked, you
-first confirm that each generated candidate may be rendered in a separate
-process (with the length, rate, and channels from the Compose tab); untick it
-to only generate code. Each candidate is one provider request with its own
+4), and press **Start session**. Starting a session generates code only; it
+does not authorize execution of code you have not seen. Each candidate is one provider request with its own
 fixed seed. Its code, seed, settings, render, and checks are kept in an
 isolated folder under `.maxxedbeats/sessions/`; failed candidates are listed
-as FAILED with the reason. **Stop** ends the session early. **Render
-selected...** renders one candidate later (after confirmation), **Audition
+as FAILED with the reason. **Stop** ends the session early. Select a candidate
+to review its plan, diff, and full generated code. **Render selected...**
+requires approval for that specific candidate after review (with the length,
+rate, and channels from the Compose tab). It is not a sandbox and has the
+same user privileges described above. **Audition
 selected** plays it, and **Apply selected...** (after confirmation, with a
 backup) applies that candidate's changes to your project. Your project is
 unchanged until you apply one.

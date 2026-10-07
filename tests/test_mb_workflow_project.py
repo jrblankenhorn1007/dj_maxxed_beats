@@ -24,6 +24,21 @@ class MBProjectWorkflowTests(ScenarioTestCase):
         (work / "outside-dir").mkdir()
         os.symlink(str(work / "outside-dir"), str(project / "dirlink"))
         os.symlink(str(work / "outside.scd"), str(project / "filelink.scd"))
+        for name, relative in (
+            ("data", ".maxxedbeats"),
+            ("renders", "renders"),
+            ("backups", ".maxxedbeats/backups"),
+            ("sessions", ".maxxedbeats/sessions"),
+            ("render-work", ".maxxedbeats/renders"),
+            ("nested", ".maxxedbeats/backups/id/after/sub"),
+        ):
+            for kind in ("link", "file"):
+                reserved = work / (name + "-" + kind) / relative
+                reserved.parent.mkdir(parents=True, exist_ok=True)
+                if kind == "link":
+                    os.symlink(str(work / "outside-dir"), str(reserved), target_is_directory=True)
+                else:
+                    reserved.write_text("not a directory")
         cls.scenario_run = run_scenario("project_scenario", work)
 
     def test_scenario_completed_without_failures(self):
@@ -48,7 +63,7 @@ class MBProjectWorkflowTests(ScenarioTestCase):
             "edit_diff_is_unified",
             "edit_diff_keeps_context_small",
             "new_file_diff_uses_dev_null",
-            *["prepare_edit_rejects_{}".format(index) for index in range(12)]
+            *["prepare_edit_rejects_{}".format(index) for index in range(14)]
         )
 
     def test_apply_requires_confirmation_and_backs_up(self):
@@ -76,6 +91,35 @@ class MBProjectWorkflowTests(ScenarioTestCase):
             "second_apply_succeeds",
             "undo_refuses_to_overwrite_later_user_changes",
             "undo_after_revert_restores_original",
+        )
+
+    def test_reserved_paths_and_case_aliases_are_safe(self):
+        self.assertChecks(
+            "reserved_directories_are_created",
+            "reserved_access_revalidates",
+            "apply_rejects_case_aliases",
+            "response_rejects_case_aliases",
+            "case_aliases_leave_files_untouched",
+            *["reserved_{}_{}_rejected".format(name, kind)
+              for name in ("data", "renders", "backups", "sessions", "render-work", "nested")
+              for kind in ("link", "file")],
+        )
+
+
+class MBAudioCheckResourceTests(ScenarioTestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.scenario_run = run_scenario("audio_resource_scenario", new_work_dir("audio-resource"))
+
+    def test_soundfiles_close_on_every_exit(self):
+        self.assertScenarioCompleted()
+        self.assertChecks(
+            "cancel_during_scan_has_open_file",
+            "cancel_closes_file",
+            "cancel_stops_callback",
+            "stop_before_start_does_not_open",
+            "normal_scan_closes_file",
+            "error_scan_closes_file",
         )
 
 

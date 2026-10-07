@@ -9,7 +9,7 @@ var args = thisProcess.argv, here = thisProcess.nowExecutingPath.dirname;
 AppClock.sched(240, { "MBTEST FAIL watchdog :: scenario timed out".postln; 1.exit; nil });
 
 Routine {
-	var project, outcome, proposal, edit, comp, original, backups, spec;
+	var project, outcome, proposal, edit, comp, original, backups, spec, reserved;
 	try {
 		comp = ~root +/+ "comp.scd";
 		original = ~readText.(comp);
@@ -44,6 +44,32 @@ Routine {
 		~check.("read_rejects_symlink_escape", ~throwsKind.({ project.read("filelink.scd") }, \validation));
 		~check.("read_missing_is_io_error", ~throwsKind.({ project.read("missing.scd") }, \io));
 
+		reserved = [
+			["data", { |p| p.dataDir }],
+			["renders", { |p| p.rendersDir }],
+			["backups", { |p| p.backupsDir }],
+			["sessions", { |p| p.sessionsDir }],
+			["render-work", { |p| MBProject.writeFile(p.dataDir +/+ "renders/id/test.txt", "escape") }],
+			["nested", { |p| MBProject.writeFile(p.backupsDir +/+ "id/after/sub/test.txt", "escape") }]
+		];
+		reserved.do { |entry|
+			["link", "file"].do { |kind|
+				var p = MBProject.open(~work +/+ (entry[0] ++ "-" ++ kind));
+				~check.("reserved_" ++ entry[0] ++ "_" ++ kind ++ "_rejected",
+					~throwsKind.({ entry[1].value(p) }, \validation));
+			}
+		};
+		reserved = MBProject.open(~root +/+ "sub");
+		[".maxxedbeats", "renders", ".maxxedbeats/backups", ".maxxedbeats/sessions"].do { |path|
+			reserved.directory(path)
+		};
+		~check.("reserved_directories_are_created",
+			[reserved.dataDir, reserved.rendersDir, reserved.backupsDir, reserved.sessionsDir]
+				.every { |path| File.type(path) == \directory });
+		File.delete(reserved.sessionsDir);
+		~writeText.(~root +/+ "sub/.maxxedbeats/sessions", "not a folder");
+		~check.("reserved_access_revalidates", ~throwsKind.({ reserved.sessionsDir }, \validation));
+
 		[
 			(path: ".maxxedbeats/x.scd", action: "create", newText: "1"),
 			(path: "renders/x.scd", action: "create", newText: "1"),
@@ -56,7 +82,9 @@ Routine {
 			(path: "comp.scd", action: "edit", oldText: "", newText: "b"),
 			(path: "comp.scd", action: "replace", newText: original),
 			(path: "comp.scd", action: "rename", newText: "x"),
-			(path: "../escape.scd", action: "create", newText: "1")
+			(path: "../escape.scd", action: "create", newText: "1"),
+			(path: "Renders/x.scd", action: "create", newText: "1"),
+			(path: "RENDERS/x.scd", action: "create", newText: "1")
 		].do { |badSpec, index|
 			~check.("prepare_edit_rejects_" ++ index,
 				~throwsKind.({ project.prepareEdit(badSpec) }, \validation), badSpec);
@@ -146,6 +174,18 @@ Routine {
 		~check.("apply_rejects_empty_edit_list", ~failedWith.(outcome, \validation), ~describe.(outcome));
 		outcome = ~await.({ |ok, fail| project.apply((plan: "p", summary: "s", edits: ["comp.scd"]), true, ok, fail) });
 		~check.("apply_rejects_non_edit_objects", ~failedWith.(outcome, \validation), ~describe.(outcome));
+		spec = [
+			(path: "alias.scd", action: "create", newText: "first"),
+			(path: "ALIAS.scd", action: "create", newText: "second")
+		];
+		outcome = ~await.({ |ok, fail|
+			project.apply((edits: spec.collect { |item| project.prepareEdit(item) }), true, ok, fail)
+		});
+		~check.("apply_rejects_case_aliases", ~failedWith.(outcome, \validation), ~describe.(outcome));
+		~check.("response_rejects_case_aliases",
+			~throwsKind.({ MBResponseFormat.parse(~proposalJSON.(spec), project) }, \validation));
+		~check.("case_aliases_leave_files_untouched",
+			File.exists(~root +/+ "alias.scd").not and: { File.exists(~root +/+ "ALIAS.scd").not });
 		~check.("outside_file_never_touched", ~readText.(~work +/+ "outside.scd") == "// outside\n");
 	} { |error|
 		~check.("uncaught_error", false, error.errorString);

@@ -360,6 +360,19 @@ addCase.(\renderRequiresConfirmation, { |t|
 	check.(\revealed, calls.(t, \reveal).size == 1);
 });
 
+addCase.(\staleConfirmationCannotReplacePaidRequest, { |t|
+	ready.(t);
+	press.(t, \undo);
+	check.(\undoPending, t[\c].pendingConfirm.notNil);
+	press.(t, \send);
+	check.(\confirmationCleared, t[\c].pendingConfirm.isNil);
+	check.(\confirmationDisabled, t[\v][\confirm].enabled.not);
+	t[\c].confirm;
+	check.(\undoNotStarted, calls.(t, \undo).isEmpty);
+	t[\f].succeedPropose;
+	check.(\proposalDelivered, t[\c].proposal.notNil and: { t[\c].proposalState == \pending });
+});
+
 addCase.(\progressResetsOnNextOperation, { |t|
 	ready.(t);
 	press.(t, \render);
@@ -434,7 +447,6 @@ addCase.(\variationSession, { |t|
 	ready.(t);
 	t[\v][\varPrompt].string = "darker bassline";
 	t[\v][\varMax].value = 4;
-	t[\v][\varRender].value = false;
 	press.(t, \varStart);
 	check.(\started, calls.(t, \startVariations).any { |c| c[1] == \mock and: { c[2] == "mock-dj-1" }
 		and: { c[4] == 4 } }, calls.(t, \startVariations).cs);
@@ -466,25 +478,22 @@ addCase.(\variationRendersNeedConfirmation, { |t|
 	t[\v][\varPrompt].string = "brighter";
 	t[\v][\varMax].value = 2;
 	t[\v][\duration].value = 3;
-	t[\v][\varRender].value = true;
 	press.(t, \varStart);
-	check.(\confirmFirst, calls.(t, \startVariations).isEmpty and: { t[\w].isShown(\confirmPanel) }
-		and: { t[\v][\confirmText].string.contains("separate headless") }, t[\v][\confirmText].string);
-	press.(t, \cancelConfirm);
-	check.(\cancelled, calls.(t, \startVariations).isEmpty and: { t[\c].variation[\running].not });
-	press.(t, \varStart);
-	press.(t, \confirm);
 	call = calls.(t, \startVariations).first;
-	check.(\approved, call.notNil and: { call[5] == true } and: { call[6][\duration] == 3 }
+	check.(\notBatchApproved, call.notNil and: { call[5] == false } and: { call[6][\duration] == 3 }
 		and: { call[7][\files] == ["main.scd"] } and: { call[7][\entry] == "main.scd" }, call.cs);
 	t[\f].fire(\variations, 0, (index: 0, seed: 0.618, status: \failed, error: MBError(\validation, "bad path")));
 	check.(\failedShown, t[\v][\candidates].items[0].contains("FAILED (validation)"), t[\v][\candidates].items.cs);
-	t[\f].fire(\variations, 0, (index: 1, seed: 0.2361, status: \proposed, summary: "Second"));
+	t[\f].fire(\variations, 0, (index: 1, seed: 0.2361, status: \proposed, summary: "Second",
+		proposal: t[\f][\proposal].value, code: (main: "~kick = 1;")));
 	t[\f].fire(\variations, 1, t[\f][\variationCandidates], true);
 	check.(\done, t[\c].variation[\running].not and: { t[\v][\varStatus].string.contains("Finished") }, t[\v][\varStatus].string);
 	t[\v][\candidates].value = 1;
 	press.(t, \renderCandidate);
 	check.(\renderNeedsConfirm, calls.(t, \renderCandidate).isEmpty and: { t[\w].isShown(\confirmPanel) });
+	check.(\codeVisible, t[\v][\candidateReview].string.contains("~kick = 1;"));
+	check.(\notSandboxed, t[\v][\confirmText].string.contains("NOT a sandbox")
+		and: { t[\v][\confirmText].string.contains("credential") });
 	press.(t, \confirm);
 	check.(\renderCalled, calls.(t, \renderCandidate).any { |c| c[1] == 1 });
 	t[\f].fire(\renderCandidate, 2, (stage: \rendering, fraction: 0.5, message: "scsynth"));
@@ -515,7 +524,6 @@ addCase.(\proposalSuggestionsAndSelectModelErrors, { |t|
 addCase.(\variationCapEnforced, { |t|
 	ready.(t);
 	t[\v][\varPrompt].string = "faster";
-	t[\v][\varRender].value = false;
 	t[\v][\varMax].value = 2;
 	press.(t, \varStart);
 	3.do { |i| t[\f].fire(\variations, 0, t[\f][\candidate].value(i)) };
@@ -526,7 +534,6 @@ addCase.(\variationCapEnforced, { |t|
 addCase.(\variationMaxClipped, { |t|
 	ready.(t);
 	t[\v][\varPrompt].string = "x";
-	t[\v][\varRender].value = false;
 	t[\v][\varMax].value = 10;
 	press.(t, \varStart);
 	check.(\clipped, calls.(t, \startVariations).first !? { |c| c[4] == 4 } ? false,
@@ -536,7 +543,6 @@ addCase.(\variationMaxClipped, { |t|
 addCase.(\variationDoneAndFailure, { |t|
 	ready.(t);
 	t[\v][\varPrompt].string = "x";
-	t[\v][\varRender].value = false;
 	press.(t, \varStart);
 	t[\f].fire(\variations, 0, t[\f][\candidate].value(0));
 	t[\f].fire(\variations, 2, MBError(\rateLimit, "429 slow down"));

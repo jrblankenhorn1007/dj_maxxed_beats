@@ -52,8 +52,7 @@ MBVariationSession {
 		onFailure = argOnFailure;
 		approveRenders = argApproveRenders === true;
 		id = "session-" ++ Date.getDate.format("%Y%m%d-%H%M%S") ++ "-" ++ 1000000.rand.asStringToBase(10, 6);
-		dir = project.sessionsDir +/+ id;
-		File.mkdir(dir);
+		dir = project.directory(".maxxedbeats/sessions/" ++ id);
 		state = \running;
 		this.prWriteSession;
 		this.prNext(0);
@@ -135,14 +134,13 @@ MBVariationSession {
 			number: index + 1,
 			seed: seed,
 			prompt: prompt,
-			dir: dir +/+ ("candidate-" ++ (index + 1).asStringToBase(10, 2)),
+			dir: project.directory(".maxxedbeats/sessions/" ++ id ++ "/candidate-" ++ (index + 1).asStringToBase(10, 2)),
 			status: \proposing,
 			code: Dictionary.new,
 			render: nil,
 			checks: nil,
 			error: nil
 		);
-		File.mkdir(candidate[\dir]);
 		candidates.add(candidate);
 		^candidate
 	}
@@ -214,14 +212,15 @@ MBVariationSession {
 	}
 
 	prMaterialize { |candidate, proposal|
-		var root = candidate[\dir] +/+ "project", files = project.files, total = 0, candidateProject, entry, settings;
+		var relative = ".maxxedbeats/sessions/" ++ id ++ "/candidate-" ++ candidate[\number].asStringToBase(10, 2) ++ "/project";
+		var root = project.directory(relative), files = project.files, total = 0, candidateProject, entry, settings;
 		files.do { |path| total = total + File.fileSize(project.resolve(path)) };
 		if(total > maxCopyBytes) {
 			MBError(\validation, "the project is too large to copy into a sampling session").throw
 		};
 		files.do { |path|
-			var target = root +/+ path;
-			File.mkdir(target.dirname);
+			var target = project.resolve(relative ++ "/" ++ path);
+			MBProject.prepareWritePath(target);
 			File.copy(project.resolve(path), target);
 			if(File.exists(target).not) {
 				MBError(\io, "could not copy " ++ path.quote ++ " into the session workspace").throw

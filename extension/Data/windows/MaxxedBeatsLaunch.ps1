@@ -8,7 +8,7 @@ path of a JSON file written next to the log:
     "workingDirectory": "...", "log": "C:\\...\\sclang.log" }
 
 The child runs with a cleared environment that holds only the listed
-variables (nothing is inherited, so no secrets), stdin closed (like NUL), no
+variables (nothing is inherited, so no secrets), stdin held open without input, no
 window, and stdout followed by stderr in the log file. Exits with the child's
 exit code (126 if it could not be started). Stopping this process tree
 (taskkill /T) also stops the child.
@@ -59,10 +59,10 @@ try {
         $info.EnvironmentVariables[$entry.Name] = [string]$entry.Value
     }
     $process = [System.Diagnostics.Process]::Start($info)
-    $process.StandardInput.Close()
     $copyOut = $process.StandardOutput.BaseStream.CopyToAsync($log)
     $copyErr = $process.StandardError.BaseStream.CopyToAsync($errorLog)
     $process.WaitForExit()
+    $process.StandardInput.Close()
     $copyOut.Wait()
     $copyErr.Wait()
     $errorLog.WriteTo($log)
