@@ -1,0 +1,57 @@
+TITLE:: MaxxedBeats
+summary:: Entry point of the MaxxedBeats AI music assistant window
+categories:: Assistant
+related:: Guides/MaxxedBeats-Assistant, Classes/ChaosOsc
+
+DESCRIPTION::
+MaxxedBeats opens an in-SuperCollider assistant window. You describe music, the
+provider and model you choose ("Choose your DJ") proposes a musical plan and
+reviewable code changes to a project folder of code::.scd:: files, and approved
+compositions are rendered offline to WAV with scsynth in a separate process.
+
+Nothing is written, evaluated, or rendered without your explicit confirmation.
+Prompts and the project files you select are sent to the provider you choose;
+API usage may incur charges on your provider account. See
+link::Guides/MaxxedBeats-Assistant:: for setup, privacy, cost, and
+troubleshooting.
+
+CLASSMETHODS::
+
+METHOD:: gui
+Open the assistant window, or bring it to the front if it is already open.
+
+ARGUMENT:: services
+Optional service port (an Event of functions). Omit it to use the installed
+provider and workflow classes; see link::#*services::.
+
+returns:: The window object.
+
+METHOD:: current
+returns:: The open window, or nil.
+
+METHOD:: services
+Build the service port that connects the window to the provider, credential
+store, model catalog, usage meter, project, agent, renderer, and variation
+classes.
+
+ARGUMENT:: lookup
+Optional function mapping a class name Symbol to a class; used by tests.
+
+returns:: An Event of functions. Throws an MBError of kind code::\config:: when
+part of MaxxedBeats is not installed.
+
+METHOD:: unavailableServices
+A service port whose every operation reports the given error, so the window
+can explain what is missing.
+
+ARGUMENT:: error
+The MBError to report.
+
+METHOD:: clearCurrent
+Forget the current window (called when it closes).
+
+EXAMPLES::
+
+code::
+MaxxedBeats.gui;
+::
