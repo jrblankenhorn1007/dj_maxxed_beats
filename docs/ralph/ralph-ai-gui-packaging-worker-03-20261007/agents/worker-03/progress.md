@@ -35,7 +35,7 @@ Branch `ralph/ai-gui-packaging-worker-03-20261007` (base 961b1c2). Design:
   layout legible, no clipping; defects found and fixed (see above). SCIDE
   launch with the real mock provider and NRT render, and Windows 10, remain
   open.
-- Full gate: see final report.
+- Full gate `scripts/run_headless_tests.sh` (SCLANG/SCSYNTH = SC 3.14.1 app): 125 tests OK, 1 skipped (opt-in real-time audio).
 
 ## Notes
 
