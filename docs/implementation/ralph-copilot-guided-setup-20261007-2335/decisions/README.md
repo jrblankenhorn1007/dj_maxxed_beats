@@ -1,5 +1,5 @@
 # Branch decisions
 
-The append-only project decision is
-[DEC-044: Name the platform setup helper in Copilot runtime errors](../../../decision_log.md#dec-044--name-the-platform-setup-helper-in-copilot-runtime-errors).
+- [DEC-044: Name the platform setup helper in Copilot runtime errors](../../../decisions/ralph-copilot-guided-setup-20261007-2335/README.md)
+- [Coordinator PR record](../../../decisions/ralph-copilot-guided-setup-20261007-2335/agents/coordinator-01/pr-pending.md)
 *** End of File
