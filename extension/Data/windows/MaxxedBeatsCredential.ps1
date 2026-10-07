@@ -154,6 +154,13 @@ function Invoke-Request {
         $config = 'header = "' + [string]$spec.headerPrefix + $key + '"' + "`n"
         $key = $null
     }
+    # .NET Framework writes Console.InputEncoding's preamble (a UTF-8 BOM when
+    # the console code page is 65001) into a redirected stdin, which would
+    # corrupt curl's config line; use an encoding without one.
+    try { [Console]::InputEncoding = New-Object System.Text.UTF8Encoding($false) } catch { }
+    if ([Console]::InputEncoding.GetPreamble().Length -gt 0) {
+        throw 'the console input encoding adds a byte order mark; cannot pass the key to curl'
+    }
     $info = New-Object System.Diagnostics.ProcessStartInfo
     $info.FileName = $curl
     $info.Arguments = (@($spec.args) | ForEach-Object { ConvertTo-CommandLineArgument ([string]$_) }) -join ' '

@@ -60,8 +60,13 @@ desktop app.
 
 ## Install MaxxedBeats
 
-Requires SuperCollider 3.14.1, Python 3.9+, CMake 3.16+, and a C++17
-compiler (for ChaosOsc). From the repository root:
+**Windows 10/11 x64 without developer tools:** download the
+`MaxxedBeats-Windows-x64` artifact of a successful **Assistant Tests** run
+(prebuilt ChaosOsc, the Quark, `install.ps1`/`uninstall.ps1`) and follow
+[Windows (no developer tools)](./docs/USER_GUIDE.md#windows-no-developer-tools).
+
+From source, installation requires SuperCollider 3.14.1, Python 3.9+, CMake
+3.16+, and a C++17 compiler (for ChaosOsc). From the repository root:
 
 ```sh
 python3 scripts/install_maxxedbeats.py            # add --dry-run to preview

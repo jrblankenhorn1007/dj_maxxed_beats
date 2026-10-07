@@ -158,7 +158,7 @@ Routine {
 		~check.("variation_two_candidates", candidates.size == 2 and: { ~v[\candidates].items.size == 2 }, candidates.size);
 		~check.("variation_rendered_with_checks", candidates.every { |cand|
 			cand[\status] == \rendered and: { cand[\render].notNil } and: { File.exists(cand[\render][\path]) }
-			and: { cand[\checks][\ok] == true } }, candidates.collect { |cand| [cand[\status], cand[\error], cand[\checks]] });
+			and: { cand[\checks][\ok] == true } }, candidates.collect { |cand| [cand[\status], cand[\error] !? { |e| e.errorString }, cand[\checks]] });
 		~check.("variation_candidates_differ", candidates.size == 2 and: { candidates[0][\seed] != candidates[1][\seed] }
 			and: { candidates[0][\code].values.asArray != candidates[1][\code].values.asArray });
 		~check.("variation_project_unchanged", ~read.(~root +/+ "main.scd") == original);

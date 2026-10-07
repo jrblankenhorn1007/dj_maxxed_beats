@@ -123,7 +123,7 @@ Routine {
 				and: { candidate[\checks][\ok] } and: { (candidate[\render][\duration] - 2.0).abs < 0.01 }
 				and: { MBWorkflowJSON.parse(~readText.(candidate[\render][\metadataPath]))["sessionId"] == session.id }
 			} },
-			session.candidates.collect { |c| [c[\status], c[\error]] });
+			session.candidates.collect { |c| [c[\status], c[\error] !? { |e| e.errorString }] });
 		~check.("rendered_session_keeps_original_untouched",
 			~readText.(~root +/+ "comp.scd") == original and: { File.exists(~root +/+ "renders").not });
 

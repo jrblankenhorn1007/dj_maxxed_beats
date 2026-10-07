@@ -117,9 +117,10 @@ MBHttp {
 
 	// Non-secret description of the curl run, read by the PowerShell helper.
 	*windowsSpec { |request|
-		var auth = request[\auth];
+		var auth = request[\auth], args = this.curlArgList(request);
+		// -q must stay first; --stderr early so option errors land in the file.
 		^(curl: this.windowsCurl,
-			args: this.curlArgList(request) ++ ["--stderr", "curl-stderr.txt"],
+			args: [args[0], "--stderr", "curl-stderr.txt"] ++ args.drop(1),
 			headerPrefix: auth !? { auth[\header] })
 	}
 
