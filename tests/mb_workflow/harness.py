@@ -202,8 +202,23 @@ def run_scenario_file(script, work_dir, extra_args=(), timeout=600):
         sys.stderr.write("\n[{}] {}\n{}\n".format(
             Path(script).name, "\n".join(failures),
             "" if run.done else "did not finish; output tail:\n" + output[-4000:]))
+        for log in _unfinished_render_logs(work_dir):
+            sys.stderr.write("--- {} (tail)\n{}\n".format(log, log.read_text(
+                encoding="utf-8", errors="replace")[-2500:]))
         sys.stderr.flush()
     return run
+
+
+def _unfinished_render_logs(work_dir, limit=3):
+    """Render child logs without a written Score (diagnostics only)."""
+    logs = []
+    for log in Path(work_dir).rglob("sclang.log"):
+        try:
+            if "MB_RENDER_SCORE_WRITTEN" not in log.read_text(encoding="utf-8", errors="replace"):
+                logs.append(log)
+        except OSError:
+            pass
+    return sorted(logs, key=lambda path: path.stat().st_mtime)[-limit:]
 
 
 def run_like_scide(command, environment, timeout):
