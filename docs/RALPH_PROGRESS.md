@@ -1313,3 +1313,67 @@ Ralph-Status: IN_PROGRESS
   is open. The task stays in progress until this status update is merged and
   its merge SHA is verified on fetched `origin/main`; no completion marker is
   emitted before that verification.
+
+## Iteration 9 — Copilot runtime onboarding and Windows package — 2026-10-07
+
+- **Run/task:** `copilot-setup-onboarding-20261007-1640` /
+  `copilot-runtime-setup-onboarding`; coordinator branch
+  `ralph/copilot-windows-onboarding-20261007-1640`, based on fetched
+  `origin/main` `dac46c31f6711ad0d90d40b9634ba92aa5a0203b`.
+- **Root cause correction:** the native GitHub Copilot CLI was present at a
+  per-user package path and reported version `1.0.92`, but the `copilot`
+  command was absent from `PATH`; the existing bridge only searched `PATH`,
+  so SCIDE could not launch the installed CLI. The default system Python is
+  3.9.6, below the SDK's Python 3.11 minimum. The prior Iteration 8 note
+  saying there was "no Copilot CLI" was too broad; the corrected fact is that
+  the native CLI was installed but undiscoverable to SCIDE. Copilot uses
+  browser sign-in through its official CLI, not an API-key field.
+- **Split:** no workers were dispatched. The Resource Manager reported no
+  free slots, and CLI discovery, private runtime setup, runtime refresh,
+  package files, and user instructions form one coupled acceptance path.
+- **CLI discovery Red/Green:** the per-user native-install test failed against
+  the prior resolver because no executable was found outside `PATH`.
+  `PYTHONPATH=tests python3 -m unittest
+  test_mb_copilot.CopilotBridgeTests.test_resolve_cli_finds_per_user_native_install_outside_path
+  -v` now passes, as does the simulated Windows `%APPDATA%` native-package
+  path test.
+- **Runtime configuration Red/Green:** the saved-interpreter and already-open
+  SCIDE refresh tests first failed with default `python3`/unset CLI paths.
+  The provider now reloads `copilot-runtime.json` for each request.
+  `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  PYTHONPATH=tests python3 -m unittest
+  test_mb_copilot.CopilotProviderTests.test_default_provider_uses_saved_copilot_runtime_paths
+  test_mb_copilot.CopilotProviderTests.test_provider_picks_up_runtime_setup_without_restarting_scide
+  -v` passes.
+- **Setup/package Red/Green:** the launcher permission test first failed for
+  both macOS/Linux launchers; `chmod +x` made it pass, and
+  `bash -n extension/Data/copilot/setup-copilot.command
+  extension/Data/copilot/setup-copilot.sh` passed. The stable CLI-shim test
+  first showed that resolving a WinGet shim pinned a versioned binary; setup
+  now preserves the shim path, and
+  `PYTHONPATH=tests python3 -m unittest
+  test_mb_copilot_setup.CopilotSetupTests.test_setup_preserves_cli_shim_path_for_package_updates
+  -v` passes. The package-layout test first failed because
+  `Uninstall-MaxxedBeats.cmd` was missing; the installer, later Copilot setup,
+  and uninstall wrappers are now required in the zip. The SCIDE launcher is
+  also included so users evaluate one documented line instead of typing
+  source code into Terminal.
+- **Focused verification:** `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
+  PYTHONPATH=tests python3 -m unittest test_mb_copilot test_mb_copilot_setup
+  test_mb_install test_mb_package_windows -q` → **49 tests passed, 3 skipped**
+  before the stable-shim regression test was added.
+- **Final local gate:** `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
+  bash scripts/run_headless_tests.sh` → **228 tests passed, 5 skipped** in
+  247.111 seconds. The skips were the three Windows PowerShell package-script
+  tests (PowerShell unavailable locally), the Windows Credential Manager
+  test, and opt-in real-time audio.
+- **Environment coverage:** direct native CLI version check passed; live
+  sign-in/generation was not attempted because Python 3.11+ is not installed
+  here. The Windows package script tests must pass in hosted Windows CI;
+  physical Windows 10/11 GUI verification remains manual.
+- **Integration:** no implementation commit, PR, merge, or
+  `origin/main` integration is claimed yet. Continue with final diff/status
+  validation, publication, exact-head Windows/macOS checks, independent
+  review, protected merge, and post-merge memory review.

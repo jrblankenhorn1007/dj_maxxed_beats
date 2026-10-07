@@ -5,6 +5,19 @@
 > This snapshot is rewritten each iteration; `RALPH_PROGRESS.md` holds
 > per-iteration test evidence, and `decision_log.md` is append-only.
 
+## Onboarding follow-up in progress
+
+- Branch `ralph/copilot-windows-onboarding-20261007-1640` is addressing the
+  Copilot runtime setup gap: the native CLI was installed per-user but absent
+  from SCIDE's `PATH`, and the local default Python 3.9.6 is below the SDK's
+  Python 3.11 minimum. The existing Copilot provider uses browser sign-in,
+  not an API-key field.
+- The branch adds private runtime setup, live config refresh, platform
+  launchers, one-click Windows package wrappers, and install/launch/sign-in
+  instructions. Its local full gate passes 228 tests with five platform or
+  opt-in skips. Hosted Windows package-script checks and real sign-in remain
+  unverified; the branch has not yet been merged.
+
 ## Latest loop report
 
 - **Most recently merged implementation iteration:** `8` — Windows CI fixes

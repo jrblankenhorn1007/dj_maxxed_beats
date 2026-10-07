@@ -40,12 +40,63 @@ def runtime_error(error):
     return BackendError("network", "Copilot runtime failed; check the CLI installation and connection.")
 
 
+def native_cli_candidates():
+    platform_name = {"darwin": "darwin", "win32": "win32", "linux": "linux"}.get(sys.platform)
+    if platform_name is None:
+        return
+    home = Path.home()
+    executable = "copilot.exe" if sys.platform == "win32" else "copilot"
+    package_roots = [
+        home / ".local" / "copilot-cli" / "lib" / "node_modules" / "@github" /
+        "copilot" / "node_modules" / "@github",
+        home / ".local" / "lib" / "node_modules" / "@github" /
+        "copilot" / "node_modules" / "@github",
+        home / ".npm-global" / "lib" / "node_modules" / "@github" /
+        "copilot" / "node_modules" / "@github",
+    ]
+    if sys.platform == "win32":
+        appdata = Path(os.environ.get("APPDATA", home / "AppData" / "Roaming"))
+        package_roots.insert(
+            0, appdata / "npm" / "node_modules" / "@github" /
+            "copilot" / "node_modules" / "@github")
+        local_appdata = Path(os.environ.get("LOCALAPPDATA", home / "AppData" / "Local"))
+        package_roots.append(
+            local_appdata / "npm" / "node_modules" / "@github" /
+            "copilot" / "node_modules" / "@github")
+        yield local_appdata / "Programs" / "GitHub Copilot" / executable
+        program_files = Path(os.environ.get("ProgramFiles", "C:/Program Files"))
+        yield program_files / "GitHub Copilot" / executable
+    for root in package_roots:
+        if root.is_dir():
+            yield from root.glob("copilot-{}-*/{}".format(platform_name, executable))
+
+
 def resolve_cli(spec):
-    cli = spec.get("cli") or shutil.which("copilot")
-    if not cli or not Path(cli).is_file():
-        raise BackendError("config", "Install the official GitHub Copilot CLI and run copilot login; "
-                           "set MBCopilotProvider's cliPath if it is not on PATH.")
-    return str(Path(cli).resolve())
+    configured = spec.get("cli")
+    if configured:
+        cli = Path(configured).expanduser()
+        if cli.is_file():
+            return str(cli.resolve())
+        raise BackendError(
+            "config", "The saved GitHub Copilot CLI location no longer exists. "
+            "Run the included Copilot setup helper again.")
+    environment_cli = os.environ.get("MBCOPILOT_CLI_PATH")
+    if environment_cli:
+        cli = Path(environment_cli).expanduser()
+        if cli.is_file():
+            return str(cli.resolve())
+        raise BackendError(
+            "config", "MBCOPILOT_CLI_PATH does not point to a file. "
+            "Run the included Copilot setup helper again.")
+    for candidate in native_cli_candidates():
+        if candidate.is_file():
+            return str(candidate.resolve())
+    cli = shutil.which("copilot")
+    if cli and Path(cli).is_file():
+        return str(Path(cli).resolve())
+    raise BackendError(
+        "config", "The official GitHub Copilot CLI was not found. "
+        "Run the included Copilot setup helper, then try again.")
 
 
 def runtime_environment():
@@ -72,8 +123,9 @@ async def run_login(spec, directory):
     except asyncio.TimeoutError:
         raise BackendError("network", "Copilot browser sign-in timed out; retry sign-in.") from None
     except OSError:
-        raise BackendError("config", "Could not launch the official GitHub Copilot CLI; "
-                           "check MBCopilotProvider's cliPath.") from None
+        raise BackendError(
+            "config", "Could not start the GitHub Copilot CLI. "
+            "Run the included Copilot setup helper again.") from None
     finally:
         if process is not None and process.returncode is None:
             try:
@@ -99,8 +151,9 @@ def sdk_client(spec, directory):
         if version("github-copilot-sdk") != "1.0.16":
             raise ImportError()
     except Exception:
-        raise BackendError("config", "Install optional Copilot dependencies with Python 3.11+: "
-                           "python -m pip install -r extension/Data/copilot/requirements.txt") from None
+        raise BackendError(
+            "config", "Run the included Copilot setup helper to install Python 3.11+ "
+            "and the required SDK.") from None
     cli = resolve_cli(spec)
     return CopilotClient(
         connection=StdioRuntimeConnection(path=cli, args=[

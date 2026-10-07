@@ -7,6 +7,7 @@ and approve them, and SuperCollider renders the result offline to a WAV file.
 
 - [Install](#install)
   - [Windows (no developer tools)](#windows-no-developer-tools)
+  - [Set up GitHub Copilot on any platform](#set-up-github-copilot-on-any-platform)
 - [Open the assistant](#open-the-assistant)
 - [Choose your DJ: provider and model](#choose-your-dj-provider-and-model)
 - [API keys: add, replace, validate, remove](#api-keys-add-replace-validate-remove)
@@ -64,8 +65,10 @@ sclang reports duplicate classes.
 
 `MaxxedBeats-Windows-x64.zip` contains the MaxxedBeats Quark (with its agent
 instructions), the ChaosOsc plugin prebuilt with MSVC (`ChaosOsc.scx`),
-`install.ps1`, `uninstall.ps1`, and a short `README.txt`. You need no
-Python, CMake, or compiler. It is built by the **Assistant Tests** workflow
+`Install-MaxxedBeats.cmd`, `Setup-Copilot.cmd`,
+`Uninstall-MaxxedBeats.cmd`, the PowerShell scripts, the SCIDE launcher, and
+a short `README.txt`. You need no Python, CMake, or compiler. It is built by
+the **Assistant Tests** workflow
 (job "Windows package") on every push to this repository; open a successful
 run on GitHub's **Actions** tab and download the artifact
 **MaxxedBeats-Windows-x64** (GitHub delivers it as
@@ -81,26 +84,35 @@ Step by step:
 1. Install SuperCollider 3.14.1 and start it once, then close it.
 2. Download `MaxxedBeats-Windows-x64.zip`, right-click it, choose
    **Extract All...**, and open the extracted folder (it contains
-   `install.ps1`). Do not run anything from inside the zip.
-3. Click the folder's address bar, type
-   `powershell -ExecutionPolicy Bypass -File install.ps1` and press Enter.
-   The script copies `MaxxedBeats\` and `ChaosOsc\` into
-   `%LOCALAPPDATA%\SuperCollider\Extensions` and prints the next steps. It
-   refuses to touch a `MaxxedBeats` or `ChaosOsc` folder there that it did
-   not install (no marker file) and then changes nothing.
-4. Start SuperCollider (if it is already open: **Language > Recompile Class
-   Library**), then evaluate `s.reboot;` and `MaxxedBeats.gui;`.
-5. In the window, choose **Mock DJ (offline)** to try it without a key, or
-   OpenAI / Anthropic after saving your API key on **Keys & Privacy**. Keys
-   are kept in Windows Credential Manager (entries `MaxxedBeats:openai` and
-   `MaxxedBeats:anthropic`), never in files.
+   `Install-MaxxedBeats.cmd`). Do not run anything from inside the zip.
+3. Double-click `Install-MaxxedBeats.cmd`; you do not need to type a command.
+   The installer copies the marked `MaxxedBeats\` and `ChaosOsc\` folders into
+   `%LOCALAPPDATA%\SuperCollider\Extensions`. It refuses to replace folders
+   it did not install and leaves them unchanged.
+4. When asked about Copilot, choose **Y** to let WinGet install Python 3.13
+   and the official GitHub Copilot CLI if they are missing. The helper then
+   installs the pinned SDK into MaxxedBeats' private runtime. Choose **N** to
+   skip this optional provider; Mock DJ, OpenAI, and Anthropic still work. If
+   WinGet is missing, install Microsoft App Installer from
+   <https://aka.ms/getwinget> and double-click `Install-MaxxedBeats.cmd` again.
+5. Start or restart SuperCollider. If it was already open, choose
+   **Language > Recompile Class Library**. Reboot the audio server so it loads
+   ChaosOsc.
+6. In SCIDE choose **File > Open**, open
+   `%LOCALAPPDATA%\SuperCollider\Extensions\MaxxedBeats\LaunchMaxxedBeats.scd`,
+   click its one line, and press **Ctrl+Enter**. This opens the assistant; you
+   do not need to type code into Terminal.
+7. In the window, choose **Mock DJ (offline)** to try it without an account,
+   or choose **GitHub Copilot** and sign in as described below. OpenAI and
+   Anthropic still use API keys saved on **Keys & Privacy** in Windows
+   Credential Manager (entries `MaxxedBeats:openai` and `MaxxedBeats:anthropic`).
 
-To update, extract the newer zip and run its `install.ps1` again (it replaces
-the marked folders). To uninstall, run
-`powershell -ExecutionPolicy Bypass -File uninstall.ps1` from the extracted
-folder, then recompile the class library. Either script only ever replaces
-or removes folders carrying the MaxxedBeats install marker, so it is
-compatible with `scripts/install_maxxedbeats.py`.
+To update, extract the newer zip and double-click `Install-MaxxedBeats.cmd`
+again (it replaces only marked folders). To uninstall, double-click
+`Uninstall-MaxxedBeats.cmd` from the extracted folder, then recompile the class
+library.
+Either script only ever replaces or removes folders carrying the MaxxedBeats
+install marker, so it is compatible with `scripts/install_maxxedbeats.py`.
 
 How it works on Windows: provider requests run `%SystemRoot%\System32\curl.exe`
 (TLS verified against the Windows certificate store) through a small
@@ -112,14 +124,45 @@ and use the ChaosOsc you installed. CI verifies all of this on a hosted
 Windows runner; checking it on a physical PC (sound and window appearance)
 is still a manual step.
 
+### Set up GitHub Copilot on any platform
+
+Copilot is optional and does not use an API key. The setup helper installs the
+official GitHub Copilot CLI when needed, creates a private Python 3.11+
+environment containing the pinned SDK, and saves only the Python/CLI program
+locations in MaxxedBeats settings. It does not copy VS Code sign-in details.
+Mock DJ, OpenAI, and Anthropic do not need this runtime.
+
+- **Windows:** use `Install-MaxxedBeats.cmd` in the ready-made Windows zip.
+  Approve the optional WinGet install when prompted. To set up Copilot later,
+  double-click `Setup-Copilot.cmd` in the extracted folder.
+- **macOS:** after installing MaxxedBeats, in Finder choose **Go > Go to
+  Folder**, open
+  `~/Library/Application Support/SuperCollider/Extensions/MaxxedBeats/Data/copilot`,
+  and double-click `setup-copilot.command`. It offers to install Python with
+  Homebrew, or opens the official Python download page if Python 3.11+ is
+  missing; the Copilot CLI is installed per-user from GitHub's official
+  installer.
+- **Linux:** in the file manager open
+  `~/.local/share/SuperCollider/Extensions/MaxxedBeats/Data/copilot`, then
+  show hidden files if `.local` is not visible (usually **Ctrl+H**), then
+  right-click `setup-copilot.sh` and choose **Run as Program**. If Python 3.11+
+  is missing, the helper offers to install it with apt, dnf, or pacman; the
+  package manager may request the computer password. On other distributions,
+  install Python 3.11+ with the Software app and run the helper again.
+
+The helpers finish by telling you what to click next; none asks you to paste a
+terminal command. If the installed extension is in a custom folder, open its
+`Data/copilot` folder instead. For SCIDE, open the installed
+`LaunchMaxxedBeats.scd` file with **File > Open** and press **Ctrl+Enter** on
+Windows/Linux or **Cmd+Return** on macOS.
+
 ## Open the assistant
 
-```supercollider
-MaxxedBeats.gui;
-```
-
-Evaluating it again brings the open window to the front. The help browser
-has a **MaxxedBeats** page and a **MaxxedBeats Assistant** guide.
+Open `LaunchMaxxedBeats.scd` from the installed `MaxxedBeats` folder in SCIDE
+and evaluate its single line with **Ctrl+Enter** on Windows/Linux or
+**Cmd+Return** on macOS. This runs `MaxxedBeats.gui;` in the SCIDE editor, not
+in Terminal. Evaluating it again brings the open window to the front. The help
+browser has a **MaxxedBeats** page and a **MaxxedBeats Assistant** guide.
 
 The window shows, at the top: the project folder, **Choose your DJ**, the
 status line with progress and **Stop request**, any error (with **Dismiss**),
@@ -144,14 +187,13 @@ and any confirmation request. Below are four tabs: **Compose**,
    GitHub Models API.
 
    The **Keys & Privacy** tab shows Copilot's sign-in row alongside the
-   OpenAI and Anthropic API-key rows. Install the [official GitHub Copilot
-   CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/install-copilot-cli)
-   if it is not already installed. Copilot also needs Python 3.11+ and the
-   optional SDK dependency listed in the installed extension's
-   `Data/copilot/requirements.txt`; install it with
-   `python -m pip install -r <path-to-that-file>`. OpenAI, Anthropic, and
-   Mock do not need Python or the Copilot SDK. Click **Sign in to GitHub
-   Copilot...** in its row and complete GitHub's browser sign-in.
+   OpenAI and Anthropic API-key rows. Run the included platform setup helper
+   once if the installer did not set up Copilot. It installs the official
+   [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/install-copilot-cli)
+   and Python SDK into a private runtime; you do not need to type a `pip`
+   command or set a CLI path. OpenAI, Anthropic, and Mock do not need Python
+   or the Copilot SDK. Click **Sign in to GitHub Copilot...** in its row and
+   complete GitHub's browser sign-in.
    The runtime may need its own sign-in even if you are already signed in to the
    VS Code Copilot extension; MaxxedBeats does not extract VS Code credentials.
    Then press **Refresh models**, choose an available model, and send your prompt.

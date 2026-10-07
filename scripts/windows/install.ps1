@@ -19,7 +19,9 @@ $ProgressPreference = 'SilentlyContinue'
 $packageDir = $PSScriptRoot
 $items = @(
     @{ Name = 'MaxxedBeats'; Marker = '.maxxedbeats-install-marker';
-       Required = @('MaxxedBeats.quark', 'Classes\MaxxedBeats.sc', 'agent\ROLE.md', 'Data\windows\MaxxedBeatsCredential.ps1') },
+       Required = @('MaxxedBeats.quark', 'Classes\MaxxedBeats.sc', 'agent\ROLE.md',
+                    'Data\windows\MaxxedBeatsCredential.ps1', 'Data\copilot\setup_copilot.py',
+                    'Data\copilot\requirements.txt') },
     @{ Name = 'ChaosOsc'; Marker = '.chaososc-install-marker';
        Required = @('ChaosOsc.scx', 'Classes\ChaosOsc.sc') }
 )
@@ -91,7 +93,9 @@ Write-Output ''
 Write-Output 'Next steps:'
 Write-Output '  1. Start SuperCollider (SCIDE). If it was already open, recompile the class library:'
 Write-Output '     Language > Recompile Class Library (or evaluate thisProcess.recompile).'
-Write-Output '  2. Reboot the audio server so it loads ChaosOsc: s.reboot'
-Write-Output '  3. Open the assistant: MaxxedBeats.gui'
+Write-Output '  2. If the audio server is already running, reboot it so it loads ChaosOsc.'
+Write-Output '  3. In SCIDE choose File > Open and open LaunchMaxxedBeats.scd from:'
+Write-Output ('     ' + (Join-Path (Join-Path $ExtensionsDir 'MaxxedBeats') 'LaunchMaxxedBeats.scd'))
+Write-Output '     Select its single line and press Ctrl+Enter.'
 Write-Output '     (help: search the SCIDE help browser for "MaxxedBeats").'
 exit 0
