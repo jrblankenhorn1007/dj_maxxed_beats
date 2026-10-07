@@ -1381,9 +1381,11 @@ Ralph-Status: IN_PROGRESS
   is open from `ralph/copilot-windows-onboarding-20261007-1640`, with base
   `dac46c31f6711ad0d90d40b9634ba92aa5a0203b`; its original exact head was
   `b7b19a596837b5fd667680385224a162b3e91ee6`. All initial hosted checks passed
-  on that head. The review-fix implementation is now committed locally as
-  `5d2745c1f0c5475697e68627741f7ea90fe93d52`. No merge or `origin/main`
-  integration is claimed.
+  on that head. PR #43's review fixes merged into PR #41 at
+  `f8f400a45297e39b02434d4fc3d665a49889c964`; all hosted checks passed on that
+  head. The current Ubuntu APT fallback implementation is committed locally as
+  `cab1f464346953e6a39b4477125de0c8bcc6a078`. No merge to `main` or
+  `origin/main` integration is claimed.
 - **Round-1 independent review:** PR #41 at base
   `dac46c31f6711ad0d90d40b9634ba92aa5a0203b` / head
   `b7b19a596837b5fd667680385224a162b3e91ee6` received one high-confidence
@@ -1395,7 +1397,7 @@ Ralph-Status: IN_PROGRESS
   per-platform SHA-256 before extracting only the `copilot` regular file,
   probe Python 3.11+ by version including Python 3.14 and `python3`, and
   require Linux's documented "Run in Terminal" flow with a clear non-TTY
-  message. Round 2 remains pending on the final PR head.
+  message.
 - **Review-fix Red:** The new
   `PYTHONPATH=tests python3 -m unittest -v
   test_mb_copilot_setup.CopilotSetupTests.test_cli_setup_installs_only_a_checksum_verified_release_when_missing
@@ -1410,11 +1412,11 @@ Ralph-Status: IN_PROGRESS
   `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
   SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
   PYTHONPATH=tests python3 -m unittest test_mb_copilot_setup -q`
-  (**13 tests; the Windows-only delegation test is skipped on macOS**). A real
+  (**14 tests; the Windows-only delegation test is skipped on macOS**). A real
   download into a temporary directory verified
   the pinned release checksum and ran `copilot --version` → **GitHub Copilot
   CLI 1.0.93**.
-- **Full local product gate before the final Windows-only test-matrix fix:**
+- **Full local product gate before the Windows test-matrix and Ubuntu fallback additions:**
   `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
   SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
   bash scripts/run_headless_tests.sh` → **232 tests passed, 5 skipped** in
@@ -1422,8 +1424,9 @@ Ralph-Status: IN_PROGRESS
   Windows Credential Manager, and opt-in real-time audio.
 - **Initial hosted gate:** all Assistant (Windows x64/macOS), Windows package,
   headless-tests, and ChaosOsc plugin-build checks passed on PR #41's original
-  head `b7b19a596837b5fd667680385224a162b3e91ee6`; the review fixes still
-  require exact-head hosted checks.
+  head `b7b19a596837b5fd667680385224a162b3e91ee6`. After the review fixes
+  merged through PR #43, all exact-head PR #41 checks also passed on
+  `f8f400a45297e39b02434d4fc3d665a49889c964`.
 - **Windows CI Red on the first review-fix PR:** PR #42 head
   `494310d5ed47b1b935ddcd84c9434e228ccae326` passed all hosted jobs except its
   two Windows Assistant runs. They exposed test-only assumptions: Windows
@@ -1434,9 +1437,11 @@ Ralph-Status: IN_PROGRESS
   and adds a Windows-specific delegation test.
 - **Windows CI Green locally:** `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
   SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
-  PYTHONPATH=tests python3 -m unittest test_mb_copilot_setup -q` → **13 tests,
+  PYTHONPATH=tests python3 -m unittest test_mb_copilot_setup -q` → **14 tests,
   one Windows-only test skipped on macOS**. The test-only correction is commit
-  `1dc19c9f13c96732f399858f6277527026b8f02e`; it still needs hosted Windows CI.
+  `1dc19c9f13c96732f399858f6277527026b8f02e`. It was merged via PR #43 at
+  `f8f400a45297e39b02434d4fc3d665a49889c964`; all hosted checks on updated
+  PR #41 head `f8f400a` pass.
 - **Repository rule:** after PR #41 opened, a plain `git push` of the PR-status
   commit was rejected with GH013: "Code coverage checks require merging via
   API or UI." The local status commit `7440702` is preserved; use a review-fix
@@ -1444,8 +1449,28 @@ Ralph-Status: IN_PROGRESS
   bypassing the rule.
 - **API update restriction:** a direct GitHub Contents API update to the open
   review-fix branch was also rejected: "Code coverage checks require a pull
-  request." Publish the test-only correction through a replacement stacked PR
-  rather than writing directly to either open PR branch.
-- **Current review disposition:** round-1 high/medium findings are resolved;
-  independent round-2 review and hosted checks on the final PR head remain
-  pending. No live GitHub authentication or generation was attempted.
+  request." This is why test-only corrections were integrated through the
+  replacement stacked PR #43 instead of writing directly to an open PR branch.
+- **Round-2 review:** on exact PR #41 base
+  `dac46c31f6711ad0d90d40b9634ba92aa5a0203b` / head
+  `f8f400a45297e39b02434d4fc3d665a49889c964`, the security review found no
+  vulnerabilities. The code review found one MEDIUM: Ubuntu 22.04's standard
+  APT sources lack Python 3.11, and the helper exited without a fallback.
+- **Ubuntu fallback Red/Green:** the new PTY-driven regression
+  `PYTHONPATH=tests python3 -m unittest -v
+  test_mb_copilot_setup.CopilotSetupTests.test_linux_apt_fallback_explains_when_python311_is_unavailable`
+  failed before the fix because APT failure printed no next step. Setup now
+  distinguishes APT refresh/install failures and explains that Ubuntu 22.04
+  may need a distribution-supported Python 3.11+ source or OS upgrade. The
+  targeted command
+  `PYTHONPATH=tests python3 -m unittest -v
+  test_mb_copilot_setup.CopilotSetupTests.test_linux_apt_fallback_explains_when_python311_is_unavailable
+  test_mb_copilot_setup.CopilotSetupTests.test_linux_launcher_explains_that_interactive_terminal_is_required`
+  passes both cases; `bash -n extension/Data/copilot/setup-copilot.sh` and
+  `git diff --check` also pass. The full setup module passes 14 tests (one
+  Windows-only skip). Implementation commit:
+  `cab1f464346953e6a39b4477125de0c8bcc6a078`.
+- **Current review disposition:** the round-2 finding is fixed locally;
+  publish the fallback as a stacked PR against PR #41's current head, rerun
+  exact-head CI, and obtain targeted remediation confirmation. No live GitHub
+  authentication or generation was attempted.
