@@ -62,7 +62,7 @@ MBGuiWindow {
 
 	build { |bounds|
 		var tabNames = [[\tabCompose, "Compose"], [\tabVariations, "Variations"],
-			[\tabKeys, "Keys & Privacy"], [\tabUsage, "Usage"]];
+			[\tabKeys, "Keys && Privacy"], [\tabUsage, "Usage"]];
 		window = Window("MaxxedBeats — AI music assistant", bounds);
 		window.view.minSize = Size(980, 680);
 		window.onClose = { this.cleanup };
@@ -144,7 +144,7 @@ MBGuiWindow {
 		^HLayout(
 			[this.keep(\status, StaticText().string_("")), stretch: 1],
 			views[\progress],
-			this.button(\cancel, "Cancel", { controller.cancel })
+			this.button(\cancel, "Stop request", { controller.cancel })
 		)
 	}
 
@@ -263,7 +263,7 @@ MBGuiWindow {
 		var key = { |name| (name ++ "_" ++ id).asSymbol };
 		masks[id] = mask;
 		views[key.("keyField")] = mask.field.minWidth_(160);
-		views[key.("keyMask")] = mask.display.minWidth_(220);
+		views[key.("keyMask")] = mask.display.minWidth_(240);
 		views[key.("keyStatus")] = StaticText().minWidth_(220);
 		^HLayout(
 			this.label(MBGuiFormat.providerLabel(info), true).minWidth_(150),

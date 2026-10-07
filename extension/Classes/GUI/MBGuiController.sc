@@ -718,6 +718,7 @@ MBGuiController {
 		token = token + 1;
 		busy = kind;
 		busyHandle = nil;
+		progress = nil;
 		error = nil;
 		status = statusText;
 		this.notify;

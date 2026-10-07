@@ -359,6 +359,21 @@ addCase.(\renderRequiresConfirmation, { |t|
 	check.(\revealed, calls.(t, \reveal).size == 1);
 });
 
+addCase.(\progressResetsOnNextOperation, { |t|
+	ready.(t);
+	press.(t, \render);
+	press.(t, \confirm);
+	t[\f].fire(\render, 0, t[\f][\renderResult].value);
+	check.(\full, t[\c].progress == 1);
+	press.(t, \send);
+	check.(\reset, t[\c].progress.isNil);
+	// Qt treats a single "&" as a mnemonic marker; the tab must escape it.
+	check.(\tabLabel, t[\v][\tabKeys].states[0][0] == "Keys && Privacy");
+	t[\v][\keyField_openai].string = "sk-0123456789012345678901234567890";
+	t[\w].masks[\openai].sync;
+	check.(\maskShort, t[\v][\keyMask_openai].string.size < 30, t[\v][\keyMask_openai].string);
+});
+
 addCase.(\renderFailureNotSuccess, { |t|
 	openProject.(t);
 	press.(t, \render);

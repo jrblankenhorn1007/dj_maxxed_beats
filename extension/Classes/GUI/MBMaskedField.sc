@@ -69,7 +69,7 @@ MBMaskedField {
 	updateDisplay {
 		if(display.isNil or: { display.isClosed }) { ^this };
 		display.string = if(secret.size == 0) { "(no key entered)" } {
-			String.fill(secret.size.min(24), $*) ++ " (" ++ secret.size ++ " characters)"
+			String.fill(secret.size.min(12), $*) ++ " (" ++ secret.size ++ " chars)"
 		};
 	}
 }
