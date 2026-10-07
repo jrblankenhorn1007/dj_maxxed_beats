@@ -94,7 +94,6 @@ def run_sclang_script(name, script, include_paths, timeout=None):
             command,
             cwd=str(ROOT),
             env=isolated_environment(name),
-            stdin=subprocess.DEVNULL,
             capture_output=True,
             text=True,
             encoding="utf-8",

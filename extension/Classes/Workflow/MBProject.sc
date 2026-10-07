@@ -87,6 +87,13 @@ MBProject {
 		^parts
 	}
 
+	// Containment checks compare paths with "/" separators; Windows paths
+	// (File.realpath answers backslashes there) are also case-insensitive.
+	*comparablePath { |path|
+		path = path.asString.replace("\\", "/");
+		^if(thisProcess.platform.name == \windows) { path.toLower } { path }
+	}
+
 	resolve { |relPath|
 		var parts = this.components(relPath), current = root, type, real;
 		parts.do { |part, index|
@@ -101,7 +108,7 @@ MBProject {
 		};
 		if(File.exists(current)) {
 			real = File.realpath(current);
-			if(real.isNil or: { real.beginsWith(root ++ "/").not }) {
+			if(real.isNil or: { MBProject.comparablePath(real).beginsWith(MBProject.comparablePath(root) ++ "/").not }) {
 				MBProject.fail(\validation, "path resolves outside the project: " ++ relPath.asString.quote)
 			};
 		};

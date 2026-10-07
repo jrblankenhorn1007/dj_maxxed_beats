@@ -11,6 +11,7 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -87,6 +88,12 @@ def builtin_plugin_dir(scsynth):
 
 
 def ensure_plugin_built():
+    if sys.platform == "win32":
+        raise unittest.SkipTest(
+            "Windows render launching (MBRenderProcess) is designed but not runtime-verified "
+            "and the ChaosOsc smoke build script is POSIX-only; tracked gap in "
+            "docs/design/workflow.md"
+        )
     if PLUGIN_LIBRARY.is_file():
         return PLUGIN_BUILD_DIR
     WORK_ROOT.mkdir(parents=True, exist_ok=True)

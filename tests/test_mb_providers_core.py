@@ -3,6 +3,7 @@ credential fake, mock provider, and registry. No network, no real keys."""
 
 import datetime
 import json
+import os
 import unittest
 
 from mb_providers.harness import (
@@ -236,7 +237,8 @@ class CatalogTests(unittest.TestCase):
         self.assertEqual(run.get("unknownProvider"), ["err", {"kind": "config",
                          "detail": run.get("unknownProvider")[1]["detail"]}])
         settings_path, cache_path = run.get("files")
-        self.assertTrue(settings_path.startswith(str(run.home)))
+        self.assertTrue(os.path.normcase(os.path.normpath(settings_path)).startswith(
+            os.path.normcase(os.path.normpath(str(run.home)))))
         with open(settings_path, encoding="utf-8") as handle:
             settings = json.load(handle)
         self.assertEqual(settings["selectedModels"]["mock"], "mock-composer-1")
