@@ -7,22 +7,25 @@
 
 ## Latest loop report
 
-- **Most recently completed implementation iteration:** `7` — the MaxxedBeats AI assistant
-  (parent branch `ralph/ai-assistant-20261007`; worker-01 providers,
-  worker-02 workflow, worker-03 GUI/packaging/CI, then integration).
-- **Current follow-up iteration:** `8` — Windows CI fixes and the user's
-  GitHub Copilot provider requirement, on
-  `ralph/ai-assistant-finish-20261007-1607` from `origin/main`
-  `e1c70289c94f8e5d188547f756069f6e249c8836`.
+- **Most recently merged implementation iteration:** `8` — Windows CI fixes
+  and the requested GitHub Copilot provider; PR #37 merged to `origin/main` at
+  `66aac98e566f3ecb25d893d726e9568e8c65f6bf`.
 - **Implementation commit:** `822db890bef35da1e559634af4ddc0f418afa60d`.
-- **Loop state:** in progress; the implementation is not yet published, opened
-  as a PR, or merged to `main`.
+- **Post-merge memory/status follow-up:** in progress on
+  `ralph/assistant-postmerge-followup-20261007-a29464e`, based on merged
+  `origin/main`. It records the categorized cross-platform lessons and
+  coordinator run progress; the final sign-out status will follow after this
+  merge. This is part of iteration 8, not a new implementation iteration.
+- **Loop state:** implementation content is merged and verified; the run
+  remains in progress until the memory update and final sign-out status are
+  merged and verified.
 - **Current verification:** the full local gate passes **213 tests** with four
-  existing platform/opt-in skips. Windows run `37578448992` failed on the
-  Credential Manager target parser and the planted-log fixture; both have
-  local fixes and regressions, but a new Windows CI run is still required.
-  Copilot sign-in now appears in the shared Keys & Privacy provider rows and
-  is covered by GUI/factory tests.
+  existing platform/opt-in skips. PR run `37653854390` passed the Windows
+  assistant suite (105 tests; only the macOS Keychain test skipped), macOS
+  suite, and Windows package install/smoke/uninstall. Headless Tests
+  `37653854360` and all three Plugin Builds jobs in `37653854372` passed.
+  Copilot sign-in appears in the shared Keys & Privacy provider rows and is
+  covered by GUI/factory tests.
 - **User installation:** the actual assistant is installed and its native
   window is open on the Mac. It uses installed classes, not test fake services.
 - **Delivered:** in-SuperCollider assistant window (`MaxxedBeats.gui`),
@@ -48,14 +51,13 @@ with ChaosOsc and checks, undo, and run a variation session with approved
 renders and a confirmed apply. Live OpenAI/Anthropic calls are implemented
 and tested against loopback fake servers; no billable call has been made.
 On Windows the same flows (live-provider transport against loopback fake
-servers, Credential Manager, renders, variations, GUI integration) are covered
-by tests, but the latest hosted run failed two root causes (three assertions).
-The local fixes pass the Mac headless gate; they still require a new hosted
-Windows run. The zip package is installed with its `install.ps1`,
-smoke-tested, and removed in CI. A physical Windows 10/11 PC and
-SCIDE-launched visual sign-off remain open (manual checks). Copilot's bridge
-and SDK behavior are tested with fakes; live CLI sign-in/generation are not
-verified because Python 3.11 and the Copilot CLI are not installed here.
+servers, Credential Manager, renders, variations, GUI integration) pass the
+hosted Assistant Tests suite; no Windows behavior tests are skipped. The zip
+package is installed with its `install.ps1`, smoke-tested, and removed in CI.
+A physical Windows 10/11 PC and SCIDE-launched visual sign-off remain open
+(manual checks). Copilot's bridge and SDK behavior are tested with fakes; live
+CLI sign-in/generation are not verified because Python 3.11 and the Copilot
+CLI are not installed here.
 
 ## Component status
 
@@ -63,18 +65,18 @@ verified because Python 3.11 and the Copilot CLI are not installed here.
 | --- | --- | --- |
 | ChaosOsc server plugin | Implemented | `ChaosOsc.ar`/`.kr(chaosAmount, seed, freq, mul, add)`; CMake build for macOS (universal), Linux, Windows (MSVC). |
 | SCIDE entry point and window | Implemented | `MaxxedBeats.gui`: project, Choose your DJ (explicit provider/model ids, refresh, stale/unavailable labels, no fallback), conversation, plan (with assumptions/uncertainty/questions), diff review, confirmations, render panel, Play/Reveal, usage, history, variations, keys and privacy notice. [GUI design](./design/gui.md). |
-| Providers and transport | Implemented (Windows fixes in progress) | Direct sclang + OS `curl`; TLS enforced; cancellable; keys never in argv/env/files. Windows: `curl.exe` started by a PowerShell helper that writes the key only to curl's stdin. [Provider design](./design/providers.md). |
-| Credentials | Implemented (Windows fixes in progress) | macOS Keychain via `security` (temporary-keychain test); Windows Credential Manager via the PowerShell helper (real round trip with unique test-only targets); Linux Secret Service command-tested only; in-memory fake for tests. |
+| Providers and transport | Implemented | Direct sclang + OS `curl`; TLS enforced; cancellable; keys never in argv/env/files. Windows: `curl.exe` started by a PowerShell helper that writes the key only to curl's stdin. [Provider design](./design/providers.md). |
+| Credentials | Implemented | macOS Keychain via `security` (temporary-keychain test); Windows Credential Manager via the PowerShell helper (real round trip with unique test-only targets); Linux Secret Service command-tested only; in-memory fake for tests. |
 | Model catalog | Implemented | Per-provider refresh/cache/selection (`model-catalog.json`, `providers.json`); never substitutes; stale after failure or 24 h. |
 | GitHub Copilot | Implemented; live runtime unverified | Official runtime-backed subscription provider, no API key, dynamic model discovery, tools disabled; sign-in is in the shared credential-row group and package files are required. GUI/factory tests pass. Live CLI sign-in/generation remain unverified. |
 | Usage, USD, credits | Implemented | Versioned rate table `2026-10-06.1`; 100 credits per estimated USD; missing/stale labelled, never zero; local history (`usage-history.json`). |
 | Project, proposals, apply, undo | Implemented | Strict `maxxedbeats.proposal/1`; path confinement; confirmed apply with backups; undo refuses after later user edits. [Workflow design](./design/workflow.md). |
-| Rendering | Implemented (Windows variation fix in progress) | Approved only; separate `sclang` → Score → `scsynth -N`; POSIX `env -i` + isolated HOME, Windows PowerShell launcher with a cleared environment and `sclang -l` (`excludeDefaultPaths`); installed ChaosOsc in the default plugin paths; checks and JSON sidecar. Linux launching unverified. |
+| Rendering | Implemented | Approved only; separate `sclang` → Score → `scsynth -N`; POSIX `env -i` + isolated HOME, Windows PowerShell launcher with a cleared environment and `sclang -l` (`excludeDefaultPaths`); installed ChaosOsc in the default plugin paths; checks and JSON sidecar. Linux launching unverified. |
 | Variation loop | Implemented | User-started, 1–4 candidates in the GUI (session caps at 16), isolated copies, fixed seeds, renders only with explicit approval, confirmed apply. |
 | Mock provider | Implemented | Deterministic `maxxedbeats.proposal/1` replies with a seed-dependent ChaosOsc composition; drives tests and the visual scenario. |
-| Packaging | Implemented; Windows follow-up pending | `scripts/install_maxxedbeats.py` installs/removes the Quark (with `agent/*.md`) and ChaosOsc together; marker-protected; dry run. Windows without developer tools: `MaxxedBeats-Windows-x64.zip` includes the Copilot bridge/requirements and documents its optional Python/CLI prerequisites; a new hosted package run is pending. |
+| Packaging | Implemented | `scripts/install_maxxedbeats.py` installs/removes the Quark (with `agent/*.md`) and ChaosOsc together; marker-protected; dry run. Windows without developer tools: `MaxxedBeats-Windows-x64.zip` includes the Copilot bridge/requirements and documents its optional Python/CLI prerequisites; hosted install/smoke/uninstall passed. |
 | Documentation | Implemented | [User guide](./USER_GUIDE.md), README, SCDoc help, three design docs. |
-| Tests and CI | Implemented; Windows retest pending | Full local gate: 213 tests, four existing platform/opt-in skips. **Assistant Tests** (macOS 14 + Windows), **Headless Tests** (macOS 14), **Plugin Builds** (three OSes). Header downloads retry with backoff and are cached in CI. |
+| Tests and CI | Implemented | Full local gate: 213 tests, four existing platform/opt-in skips. PR #37 passes **Assistant Tests** (macOS 14 + Windows), **Headless Tests** (macOS 14), and **Plugin Builds** (three OSes). Header downloads retry with backoff and are cached in CI. |
 | Visual verification | Partial | Captured and inspected the native Keys & Privacy page; Copilot appears as a peer row beside OpenAI and Anthropic. SCIDE-launched sign-off and physical Windows visual check remain open. |
 
 ## Verification and platform coverage
@@ -83,20 +85,16 @@ verified because Python 3.11 and the Copilot CLI are not installed here.
   gate, GUI integration with real NRT renders, Keychain round trip in a
   temporary keychain, and screenshot capture. See `RALPH_PROGRESS.md`
   (iterations 7-8) for commands and counts.
-- **Windows:** CI only: the preceding Assistant Tests run on `windows-latest`
-  found a credential-target parser issue and a renderer test-fixture issue;
-  those fixes have not yet had a hosted rerun. Assistant Tests cover every
-  assistant suite with no Windows behavior skips; only the macOS Keychain test
-  is skipped, and its Windows counterpart is the Credential Manager round
-  trip. The workflow also installs/smoke-tests/uninstalls the zip package;
-  Plugin Builds renders an NRT smoke test. No physical Windows 10/11 run.
+- **Windows:** CI only: PR #37 Assistant Tests pass on `windows-latest` and run
+  all assistant behavior suites; the sole skip is the macOS Keychain test.
+  The workflow also installs/smoke-tests/uninstalls the zip package; Plugin
+  Builds renders an NRT smoke test. No physical Windows 10/11 run.
 - **Linux:** plugin build and installer in CI; assistant untested.
 
 ## Blockers and risks
 
-- The local Windows fixes need a passing hosted rerun (Windows Server,
-  Windows PowerShell 5.1); a physical Windows 10/11 PC is still unverified,
-  including sound and window appearance.
+- A physical Windows 10/11 PC is still unverified, including sound and window
+  appearance.
 - No live OpenAI/Anthropic request has been made (by design; requires the
   owner's key and consent).
 - Prices change; the rate table must be refreshed (it labels itself stale
@@ -106,7 +104,7 @@ verified because Python 3.11 and the Copilot CLI are not installed here.
 
 - SCIDE-launched visual sign-off on the MacBook Neo and on a physical
   Windows 10/11 PC with the zip package (`VISUAL_TEST_PLAN.md`).
-- Rerun the Windows Assistant Tests on the implementation PR and merge through
-  the repository's authorized PR path after all required checks pass.
+- Merge and verify the post-merge memory update, then merge the final
+  coordinator sign-out status record.
 - Owner-run live smoke test with a real API key and a spending limit; live
   Copilot sign-in/generation also needs the optional Python 3.11+/CLI setup.
