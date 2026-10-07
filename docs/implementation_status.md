@@ -63,8 +63,10 @@ sign-off remain open.
 ## Blockers and risks
 
 - Windows transport, credential backend, and render process launching are
-  designed but not verified on a Windows desktop; macOS-only test paths are
-  skipped there.
+  designed but not verified on a Windows desktop. In Windows CI the HTTP
+  transport suite and the render-dependent suites (render, variation, GUI
+  integration) are skipped with that reason; the GUI state machine,
+  factory, installer, provider core, and project/agent suites run there.
 - No live OpenAI/Anthropic request has been made (by design; requires the
   owner's key and consent).
 - Prices change; the rate table must be refreshed (it labels itself stale

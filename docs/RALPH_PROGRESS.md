@@ -1142,9 +1142,16 @@ Ralph-Status: IN_PROGRESS
 - **Full gate:** `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
   SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth bash
   scripts/run_headless_tests.sh` (real-time opt-in unset) → `Ran 180 tests in
-  187.597s … OK (skipped=1)`.
+  187.757s … OK (skipped=1)` on the final code (`55bf9e3`).
 - **Host:** MacBook Neo (`Mac17,5`), macOS 26, SuperCollider 3.14.1, Python 3.9.
-- **GitHub CI:** verified on a `ralph/ai-assistant-20261007-ciN` branch
-  before the PR (run IDs in the PR description).
+- **GitHub CI iterations:** ci1 — Windows assistant suites failed (sclang
+  exits at stdin EOF; `MBProject.resolve` compared backslash realpaths with
+  "/"; settings isolation ignored on Windows) and a macOS timing-flaky tick
+  assertion; ci2/ci3 — CRLF, separator, and env-isolation test fixes; ci4 —
+  Windows-only `_GetLangPort` startup noise and a render-scenario race
+  (child HOME recreated after cancel). Final branch and run IDs: PR
+  description. On Windows the HTTP transport suite and the render-dependent
+  suites (render, variation, GUI integration) are skipped with an explicit
+  "not runtime-verified" reason; all other assistant suites run there.
 - **Unverified:** physical Windows 10 x64, SCIDE-launched visual sign-off,
   live OpenAI/Anthropic calls, Linux assistant runtime.
