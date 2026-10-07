@@ -81,6 +81,32 @@ and the expected interaction result. If the agent environment cannot capture
 and inspect a native window, report that limitation rather than inferring
 visual success from logs.
 
+## Assistant window tooling
+
+- Entry point: `MaxxedBeats.gui` in SCIDE, after
+  `python3 scripts/install_maxxedbeats.py` and a class-library recompile.
+- Widget driver: `MBGuiWindow.views` names every control (for example
+  `\send`, `\approve`, `\confirm`, `\render`, `\keyField_openai`), so a
+  driver can call the real widgets' actions. `tests/mb_gui/visual_scenario.scd`
+  is such a driver: it opens the window through `MaxxedBeats.gui` with
+  deterministic offline services and walks ten states (startup, request in
+  flight, proposal diff, apply confirmation, render progress and result,
+  usage, a provider error, masked key entry, a stopped variation session).
+  To run it from SCIDE for sign-off, open the file and evaluate it: each
+  state is held for `MB_VISUAL_STEP_SECONDS` (default 5) for capture and the
+  window stays open (it never exits SCIDE's interpreter).
+- macOS capture: `python3 tests/mb_gui/capture_screenshots.py [--out DIR]`
+  launches sclang (isolated `HOME`) with that scenario and captures each
+  state with `screencapture -x -o -l <window id>` into
+  `tests/.build/mb-gui-screens/` (not committed). The terminal needs Screen
+  Recording permission. This is a sclang launch, not an SCIDE launch, so it
+  supports but does not replace the sign-off above.
+- Windows: run the scenario from SCIDE and capture the window with the
+  Snipping Tool (Win+Shift+S) or `Alt+PrintScreen` at each step.
+- Until the provider and workflow layers are merged, the scenario uses the
+  fake services in `tests/mb_gui/fake_services.scd`; the sign-off run must use
+  the real `MBMockProvider` and a real NRT render.
+
 ## Evidence to retain
 
 For each tested platform, record in `docs/RALPH_PROGRESS.md` and

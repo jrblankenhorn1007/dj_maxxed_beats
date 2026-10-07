@@ -1,0 +1,103 @@
+name: Assistant Tests
+
+# Headless tests of the MaxxedBeats assistant (GUI state machine, installer,
+# and the provider/workflow suites named tests/test_mb_*.py) on macOS and
+# Windows with the pinned SuperCollider 3.14.1 release. No provider keys or
+# live API calls are used.
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  assistant-tests:
+    name: Assistant (${{ matrix.label }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            label: macOS
+          - os: windows-latest
+            label: Windows x64
+    defaults:
+      run:
+        shell: bash
+    env:
+      MB_EXTENSIONS_DIR: .runtime/mb-extensions
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Provision SuperCollider 3.14.1 (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          set -euo pipefail
+          dmg_url="https://github.com/supercollider/supercollider/releases/download/Version-3.14.1/SuperCollider-3.14.1-macOS-universal.dmg"
+          expected_sha256="ed264b32752d27fc86e506dd0a7eb36de7c19ebce73c3fdf2ed5514f8c73f02e"
+          runtime_dir="${GITHUB_WORKSPACE}/.runtime"
+          dmg_path="${runtime_dir}/SuperCollider-3.14.1-macOS-universal.dmg"
+          mount_point="${runtime_dir}/mount"
+
+          mkdir -p "${mount_point}"
+          curl --fail --location --retry 3 --retry-delay 2 \
+            "${dmg_url}" --output "${dmg_path}"
+          printf '%s  %s\n' "${expected_sha256}" "${dmg_path}" \
+            | shasum -a 256 --check
+
+          hdiutil attach -readonly -nobrowse -noautoopen \
+            -mountpoint "${mount_point}" "${dmg_path}"
+
+          sclang_path="${mount_point}/SuperCollider.app/Contents/MacOS/sclang"
+          scsynth_path="${mount_point}/SuperCollider.app/Contents/Resources/scsynth"
+          test -x "${sclang_path}"
+          test -x "${scsynth_path}"
+          echo "SCLANG=${sclang_path}" >> "${GITHUB_ENV}"
+          echo "SCSYNTH=${scsynth_path}" >> "${GITHUB_ENV}"
+
+      - name: Provision SuperCollider 3.14.1 (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          set -euo pipefail
+          zip_url="https://github.com/supercollider/supercollider/releases/download/Version-3.14.1/SuperCollider-3.14.1-win64.zip"
+          expected_sha256="a5f95416307d35c039ca53a9f9c6151c26585064d3229521093a60dddb9458cd"
+          zip_path=".runtime/SuperCollider-3.14.1-win64.zip"
+          mkdir -p .runtime
+          curl --fail --location --retry 3 --retry-delay 2 "${zip_url}" --output "${zip_path}"
+          printf '%s  %s\n' "${expected_sha256}" "${zip_path}" | sha256sum --check
+          python -m zipfile -e "${zip_path}" .runtime/
+          test -f .runtime/SuperCollider/sclang.exe
+          test -f .runtime/SuperCollider/scsynth.exe
+          echo "SCLANG=${GITHUB_WORKSPACE}/.runtime/SuperCollider/sclang.exe" >> "${GITHUB_ENV}"
+          echo "SCSYNTH=${GITHUB_WORKSPACE}/.runtime/SuperCollider/scsynth.exe" >> "${GITHUB_ENV}"
+
+      - name: Install the Quark and ChaosOsc with the combined installer
+        run: |
+          set -euo pipefail
+          python scripts/install_maxxedbeats.py --extensions-dir "${MB_EXTENSIONS_DIR}" --build-dir build/mb-installer
+          test -f "${MB_EXTENSIONS_DIR}/MaxxedBeats/.maxxedbeats-install-marker"
+          test -f "${MB_EXTENSIONS_DIR}/MaxxedBeats/Classes/MaxxedBeats.sc"
+          test -f "${MB_EXTENSIONS_DIR}/ChaosOsc/.chaososc-install-marker"
+
+      - name: Run the assistant suites (tests/test_mb_*.py)
+        env:
+          PYTHONWARNINGS: error
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: python -m unittest discover -s tests -p 'test_mb_*.py' -v
+
+      - name: Uninstall with the combined installer
+        if: always()
+        run: |
+          set -euo pipefail
+          python scripts/install_maxxedbeats.py --uninstall --extensions-dir "${MB_EXTENSIONS_DIR}"
+          test ! -e "${MB_EXTENSIONS_DIR}/MaxxedBeats"
+          test ! -e "${MB_EXTENSIONS_DIR}/ChaosOsc"
