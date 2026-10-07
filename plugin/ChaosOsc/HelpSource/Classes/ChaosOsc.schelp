@@ -1,38 +1,116 @@
 TITLE:: ChaosOsc
-categories:: UGens>Generators
-summary:: Logistic-map chaotic oscillator.
+categories:: UGens>Generators>Chaotic
+summary:: Logistic-map chaotic oscillator with an interpolating iteration rate.
+related:: Classes/LeakDC, Classes/K2A
 
 DESCRIPTION::
-ChaosOsc generates a deterministic chaotic signal using a logistic map. It is
-provided by the ChaosOsc server plugin and produces an audio-rate signal in
-the range -1 to 1.
+ChaosOsc iterates the logistic map code::x = r * x * (1 - x):: and scales the
+map state from the range 0 to 1 to an output in the range -1 to 1
+(code::2 * x - 1::). The sequence is deterministic for a given seed and
+chaosAmount, so renders are reproducible. It is provided by the ChaosOsc
+server plugin.
 
-The constructor is ::ChaosOsc.ar(chaosAmount, seed)::.
+The constructors are code::ChaosOsc.ar(chaosAmount, seed, freq, mul, add)::
+and code::ChaosOsc.kr(chaosAmount, seed, freq, mul, add)::.
+
+By default (code::freq = inf::) the map advances once per output sample:
+once per audio sample for .ar and once per control block for .kr. This gives
+broadband, noise-like output, and a two-argument call such as
+code::ChaosOsc.ar(3.82, seed):: is bit-identical to the original two-argument
+ChaosOsc. A lower freq advances the map freq times per second and linearly
+interpolates between successive map states, turning the same chaotic sequence
+into a smooth, wandering modulation source. A freq of 0 or below holds the
+current value.
+
+subsection:: Output range and DC offset
+The output stays within -1 to 1 (before mul and add), but it does not fill
+that range evenly and it is emphasis::not:: zero-mean. The largest value is
+code::chaosAmount / 2 - 1:: (0.95 at 3.9) and the mean is positive: roughly
++0.19 at chaosAmount 3.9 and up to about +0.34 near 3.7. At the bottom of the
+clamped range (3.57) the output only spans about -0.32 to 0.79. Before mixing
+ChaosOsc as an audio signal, remove the offset with
+code::LeakDC.ar(ChaosOsc.ar(...))::, as in the examples. The plugin keeps the
+offset so that existing material renders unchanged.
+
+Some chaosAmount values inside the clamped range fall in periodic windows of
+the logistic map (for example a period-3 cycle around 3.83 to 3.84) and sound
+pitched rather than noisy.
 
 CLASSMETHODS::
 
-METHOD:: ar
-Create an audio-rate chaotic oscillator.
+METHOD:: ar, kr
+Create an audio-rate or control-rate chaotic oscillator.
 
 ARGUMENT:: chaosAmount
-The logistic-map growth rate, clamped by the plugin to the range 3.57 to 3.999.
-Defaults to 3.9. Audio-rate inputs are read per sample and can be modulated at
-audio rate. Scalar and control-rate inputs are broadcast across each audio block.
-Control-rate changes take effect on the next block.
+The logistic-map growth rate, clamped by the plugin to the range 3.57 to 3.999
+(NaN uses 3.57). Defaults to 3.9. Audio-rate inputs are read per sample;
+scalar and control-rate inputs are read once per block, so control-rate
+changes take effect on the next block. A new chaosAmount only affects the
+output on samples where the map advances.
 
 ARGUMENT:: seed
-The initial map state, normally in the open interval 0 to 1. Defaults to 0.5.
-The seed is captured when the Synth is created; changing the input afterward
-does not reseed the oscillator.
+The initial map state, normally in the open interval 0 to 1 (values at or
+beyond 0 or 1 are nudged just inside; NaN uses 0.5). Defaults to 0.5. The seed
+is captured when the Synth is created; changing the input afterward does not
+reseed the oscillator.
+
+ARGUMENT:: freq
+Map iterations per second (Hz). Defaults to code::inf::. Read once per block,
+whatever its input rate.
+list::
+## At or above the unit's sample rate (code::SampleRate.ir:: for .ar,
+code::ControlRate.ir:: for .kr), including the default, the map advances once
+per output sample.
+## Between 0 and the sample rate, the map advances freq times per second and
+the output is linearly interpolated between successive map states, so it moves
+by at most code::2 * freq / sampleRate:: per output sample.
+## At 0 or below, the oscillator holds (freezes) its current value. Raising
+freq again continues from the held value.
+## NaN behaves like the default.
+::
+
+ARGUMENT:: mul
+Output will be multiplied by this value. Defaults to 1.0.
+
+ARGUMENT:: add
+This value will be added to the output. Defaults to 0.0.
 
 RETURNS::
-An audio-rate UGen.
+The ChaosOsc output with code::madd(mul, add):: applied. With the default mul
+and add this is the ChaosOsc UGen itself, so no extra UGen is added.
 
 EXAMPLES::
 
 code::
+// Audio-rate chaotic noise. LeakDC removes the positive DC offset.
 {
-    var signal = ChaosOsc.ar(3.9, 0.37);
-    (signal * 0.1) ! 2
+    var noise = LeakDC.ar(ChaosOsc.ar(3.9, 0.37));
+    (noise * 0.1) ! 2
+}.play;
+::
+
+code::
+// Slow, smoothly interpolated modulation: 4 map steps per second at control rate.
+{
+    var wander = ChaosOsc.kr(3.95, 0.21, 4);
+    var pitch = wander.linexp(-1, 1, 200, 800);
+    (SinOsc.ar(pitch) * 0.1) ! 2
+}.play;
+::
+
+code::
+// Audio-rate interpolation: lower freq values give a softer, smoother texture.
+{
+    var freq = MouseX.kr(100, SampleRate.ir, 1);
+    (LeakDC.ar(ChaosOsc.ar(3.9, 0.37, freq)) * 0.1) ! 2
+}.play;
+::
+
+code::
+// Freeze and release: hold the filter sweep while the mouse button is down.
+{
+    var rate = 8 * (1 - MouseButton.kr(0, 1, 0));
+    var cutoff = ChaosOsc.kr(3.9, 0.5, rate).linexp(-1, 1, 300, 3000);
+    (LPF.ar(Saw.ar(110), cutoff) * 0.1) ! 2
 }.play;
 ::

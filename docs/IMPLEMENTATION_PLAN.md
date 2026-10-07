@@ -327,9 +327,10 @@ the shared Red-Green-Refactor procedure. Use the
 - Require GitHub Actions to pass on every push and pull request. Its canonical
   `bash scripts/run_headless_tests.sh` entrypoint runs source syntax checks,
   Clang static analysis, warning-as-error C++ unit/plugin builds, and all
-  Python tests including the SuperCollider NRT integration. The current
-  plugin build and CI coverage are macOS-specific; this gate does not replace
-  Windows or MacBook Neo validation.
+  Python tests including the SuperCollider NRT integration. The separate
+  **Plugin Builds** workflow builds and export-checks the plugin on macOS,
+  Linux, and Windows and renders a Windows NRT smoke test; neither workflow
+  replaces physical Windows 10 x64 or MacBook Neo GUI validation.
 - Use cross-platform CI for Windows 10 x64 and Apple Silicon macOS builds.
   Record any tests that require physical audio hardware as manual checks, and
   never treat subjective listening as a substitute for automated

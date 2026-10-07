@@ -28,6 +28,8 @@ documentation rather than repeating the product overview.
 - [Ralph implementation prompt](./RALPH_IMPLEMENTATION_PROMPT.md) — the
   project's shared development-workflow entry point and source-of-truth
   references.
+- [ChaosOsc build and install guide](../plugin/ChaosOsc/README.md) — CMake
+  build, installer, SuperCollider setup, and troubleshooting.
 - [Sound-design notes](./plugin/SOUND_DESIGN.md) — the ChaosOsc DSP
   prototype, controls, build state, and open verification gaps.
 - [Quality-check entrypoint](../scripts/run_quality_checks.sh) — shell/Python

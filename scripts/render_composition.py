@@ -8,6 +8,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import sys
+import tempfile
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -228,12 +229,25 @@ def render(args):
             format(args.seed, ".9g"),
         ]
     )
-    language_result = run_checked(
-        sclang_command,
-        environment,
-        "sclang composition",
-        args.timeout,
-    )
+    # Compile only the repository classes: an installed ChaosOsc extension in
+    # the user's Extensions folder would otherwise duplicate the class and
+    # abort class-library compilation.
+    with tempfile.TemporaryDirectory(prefix="djmb-sclang-home-") as language_home:
+        language_environment = dict(environment)
+        language_environment.update(
+            {
+                "HOME": language_home,
+                "XDG_CONFIG_HOME": os.path.join(language_home, ".config"),
+                "XDG_DATA_HOME": os.path.join(language_home, ".local", "share"),
+                "LOCALAPPDATA": os.path.join(language_home, "AppData", "Local"),
+            }
+        )
+        language_result = run_checked(
+            sclang_command,
+            language_environment,
+            "sclang composition",
+            args.timeout,
+        )
     if (
         "MAXXED_BEATS_COMPOSITION_SCORE_WRITTEN"
         not in language_result.stdout + language_result.stderr

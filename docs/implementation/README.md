@@ -120,3 +120,4 @@ follow the current prompt before merging and add their dossier when integrated.
 Copy [`_template/`](./_template/README.md) to the exact branch slug. For a
 historical dossier, populate only the information present in the repository
 or verifiable PR metadata and label gaps explicitly.
+- [`agents/plugin-fix-and-completion`](./agents-plugin-fix-and-completion/README.md) — ChaosOsc plugin fix and completion (iteration 6; parent PR pending).

@@ -2,30 +2,48 @@
 // dependency-free, unit-tested `chaososc::ChaosOscCore` (see
 // ChaosOscCore.hpp and docs/plugin/SOUND_DESIGN.md for the DSP rationale).
 //
-// This file is intentionally thin: all chaotic-map math lives in
-// ChaosOscCore.hpp so it stays testable without the SuperCollider
-// toolchain. This wrapper only does per-sample plumbing (reading unit
+// This file is intentionally thin: all chaotic-map and interpolation math
+// lives in ChaosOscCore.hpp so it stays testable without the SuperCollider
+// toolchain. This wrapper only does per-block plumbing (reading unit
 // inputs/outputs and driving the core once per sample), which is what
 // SC_PlugIn.hpp's SCUnit base class expects of a UGen's calc function. It
 // performs no I/O, allocation, locking, or blocking calls in `next()`, so
 // it is safe to run on the real-time audio thread.
 //
 // sclang-facing controls (see ChaosOsc.sc / ChaosOsc.schelp):
-//   ChaosOsc.ar(chaosAmount, seed)
+//   ChaosOsc.ar(chaosAmount, seed, freq, mul, add)
+//   ChaosOsc.kr(chaosAmount, seed, freq, mul, add)
 //     chaosAmount: logistic-map growth rate, clamped internally to
 //                  [3.57, 3.999] (see ChaosOscCore::clampChaosAmount).
 //                  Audio-rate inputs are read per sample; scalar and control-
-//                  rate inputs are broadcast across the current audio block.
+//                  rate inputs are read once per block. It only takes effect
+//                  on samples where the map advances.
 //     seed:        initial map state in (0, 1), read once at Ctor time.
 //                  Not re-read per sample; changing the seed input after
 //                  the synth has started has no effect (this is
 //                  intentional -- see docs/plugin/SOUND_DESIGN.md).
+//     freq:        map iterations per second, read once per block for any
+//                  input rate. >= the unit's sample rate (the control rate
+//                  for .kr) advances once per output sample; lower positive
+//                  values interpolate linearly between map steps; <= 0
+//                  holds; NaN behaves like the default (inf).
+//     mul, add:    applied by sclang (madd), not by this plugin.
+//
+// The Ctor computes its initialisation sample through the regular calc
+// function, which advances the core once (exactly as the original two-input
+// plugin did), so default-rate output stays bit-identical.
 
 #include "SC_PlugIn.hpp"
 
 #include "ChaosOscCore.hpp"
 
 static InterfaceTable* ft;
+
+namespace {
+
+enum ChaosOscInput { kChaosAmountInput = 0, kSeedInput = 1, kFreqInput = 2 };
+
+}  // namespace
 
 class ChaosOsc : public SCUnit {
 public:
@@ -38,22 +56,26 @@ private:
 };
 
 ChaosOsc::ChaosOsc() {
-    const float seed = in0(1);
+    const float seed = in0(kSeedInput);
     mCore.reset(seed);
 
     set_calc_function<ChaosOsc, &ChaosOsc::next>();
 }
 
 void ChaosOsc::next(int nSamples) {
-    float* outBuf = out(0);
-    if (isAudioRateIn(0)) {
-        chaososc::processBlock(mCore, in(0), outBuf, nSamples);
-        return;
-    }
+    // SynthDefs compiled by the original two-input class have no freq input;
+    // they keep the default once-per-sample behaviour.
+    const double freq = numInputs() > kFreqInput
+                            ? static_cast<double>(in0(kFreqInput))
+                            : chaososc::kDefaultIterationRate;
+    mCore.setIterationRate(freq, sampleRate());
 
-    const float chaosAmount = in0(0);
-    for (int i = 0; i < nSamples; ++i) {
-        outBuf[i] = static_cast<float>(mCore.next(chaosAmount));
+    float* outBuf = out(0);
+    if (isAudioRateIn(kChaosAmountInput)) {
+        chaososc::processBlock(mCore, in(kChaosAmountInput), outBuf, nSamples);
+    } else {
+        chaososc::processBlock(mCore, in0(kChaosAmountInput), outBuf,
+                               nSamples);
     }
 }
 
