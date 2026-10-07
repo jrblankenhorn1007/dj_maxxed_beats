@@ -2,8 +2,10 @@
 """Opt-in screenshot capture for docs/VISUAL_TEST_PLAN.md (macOS only).
 
 Launches sclang with an isolated HOME, runs tests/mb_gui/visual_scenario.scd
-(which opens the real agent window through MaxxedBeats.gui with offline fake
-services and drives its widgets), and captures the native window with
+(which opens the real agent window through MaxxedBeats.gui wired to the real
+classes with the offline MBMockProvider, renders for real with the ChaosOsc
+plugin built by the test harness, and drives the widgets), and captures the
+native window with
 `screencapture -l <window id>` at each step. Screenshots are written to the
 output folder (default tests/.build/mb-gui-screens/<timestamp>) and must
 still be inspected by a person or agent; capturing is not visual sign-off.
@@ -92,16 +94,23 @@ class _CoreGraphics:
         return None if best is None else int(best[1])
 
 
-def isolated_environment(out_dir):
-    home = ROOT / "tests" / ".build" / "mb-gui-visual" / "home"
+def isolated_environment(out_dir, sclang, stamp):
+    sys.path.insert(0, str(ROOT / "tests" / "mb_workflow"))
+    import harness
+
+    scsynth = os.environ.get("SCSYNTH") or str(Path(sclang).parent.parent / "Resources" / "scsynth")
+    work = ROOT / "tests" / ".build" / "mb-gui-visual" / stamp
+    home = work / "home"
     home.mkdir(parents=True, exist_ok=True)
-    environment = os.environ.copy()
+    environment = harness.isolated_environment(home)
     environment.update({
-        "HOME": str(home),
-        "XDG_CONFIG_HOME": str(home / ".config"),
-        "XDG_DATA_HOME": str(home / ".local" / "share"),
         "MB_VISUAL_OUT": str(out_dir),
         "MB_VISUAL_EXIT": "1",
+        "MB_VISUAL_PROJECT": str(work / "MaxxedBeats Demo"),
+        "MB_PLUGIN_DIR": str(harness.ensure_plugin_built()),
+        "MB_BUILTIN_PLUGIN_DIR": str(harness.builtin_plugin_dir(scsynth)),
+        "MB_SCLANG": sclang,
+        "MB_SCSYNTH": scsynth,
     })
     return environment
 
@@ -110,7 +119,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--out", help="output folder for PNG screenshots")
     parser.add_argument("--sclang", default=os.environ.get("SCLANG", DEFAULT_SCLANG))
-    parser.add_argument("--timeout", type=float, default=180.0)
+    parser.add_argument("--timeout", type=float, default=600.0)
     args = parser.parse_args(argv)
     if sys.platform != "darwin":
         print("capture_screenshots.py uses macOS screencapture; on Windows run "
@@ -123,8 +132,9 @@ def main(argv=None):
     graphics = _CoreGraphics()
 
     process = subprocess.Popen(
-        [args.sclang, "--include-path", str(ROOT / "extension" / "Classes"), str(SCENARIO)],
-        cwd=str(ROOT), env=isolated_environment(out_dir), stdin=subprocess.DEVNULL,
+        [args.sclang, "--include-path", str(ROOT / "extension" / "Classes"),
+         "--include-path", str(ROOT / "plugin" / "ChaosOsc" / "Classes"), str(SCENARIO)],
+        cwd=str(ROOT), env=isolated_environment(out_dir, args.sclang, stamp), stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace",
     )
     timer = threading.Timer(args.timeout, process.kill)
@@ -155,6 +165,8 @@ def main(argv=None):
                 (out_dir / (name + ".ack")).write_text("ok", encoding="utf-8")
             elif line.startswith(("MB_VISUAL_ERROR", "MB_VISUAL_TIMEOUT", "ERROR:")):
                 problems.append(line)
+            elif line.startswith("MB_VISUAL_NOTE"):
+                print(line)
             elif line == "MB_VISUAL_DONE":
                 break
         process.wait(timeout=30)

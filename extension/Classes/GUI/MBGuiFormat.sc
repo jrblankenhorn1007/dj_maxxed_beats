@@ -66,9 +66,10 @@ MBGuiFormat {
 		var usd = this.usd(record[\usd]);
 		var credits = this.credits(record[\credits]);
 		var stale = (record[\rateStatus] ? \missing).asSymbol == \stale;
-		var usdText = if(usd.notNil) {
-			"est. " ++ usd ++ (if(stale) { " (stale)" } { "" })
-		} { "est. USD unavailable" };
+		var usdText = case
+		{ record[\usd] == 0 } { "no cost (US$0, free/offline model)" }
+		{ usd.notNil } { "est. " ++ usd ++ (if(stale) { " (stale)" } { "" }) }
+		{ "est. USD unavailable" };
 		var creditText = if(credits.notNil) { credits ++ " credits (estimate)" } { "credits unavailable" };
 		^usdText ++ " · " ++ creditText ++ " · " ++ this.rateText(record)
 	}
@@ -150,12 +151,12 @@ MBGuiFormat {
 		} { "WARNING: " ++ warnings.join("; ") }
 	}
 
-	*renderText { |result|
+	*renderText { |result, root|
 		var duration;
 		if(result.isNil) { ^"No render yet." };
 		duration = result[\duration];
 		^[
-			"File: " ++ result[\path],
+			"File: " ++ this.displayPath(result[\path], root),
 			"Duration " ++ (if(duration.isNumber) { this.fixed(duration, 2) ++ " s" } { "?" })
 				++ " · " ++ (result[\sampleRate] ? "?") ++ " Hz · "
 				++ (result[\numChannels] ? "?") ++ " ch"
@@ -181,8 +182,17 @@ MBGuiFormat {
 			{ candidate[\status] == \rendering } { "rendering..." }
 			{ this.candidateAudioPath(candidate).isNil } { "not rendered" }
 			{ this.checksText(checks) });
-		parts = parts.add((candidate[\summary] ? candidate[\plan] ? "").asString);
+		parts = parts.add((candidate[\plan] ? candidate[\summary] ? "").asString.keep(160));
 		^parts.join(" — ")
+	}
+
+	*fileCount { |n| ^n.asString ++ (if(n == 1) { " file" } { " files" }) }
+
+	// A path inside `root` is shown relative to it; others are shown whole.
+	*displayPath { |path, root|
+		path = path.asString;
+		if(root.notNil and: { path.beginsWith(root.asString +/+ "") }) { ^path.copyToEnd(root.asString.size + 1) };
+		^path
 	}
 
 	*timeText { |time|

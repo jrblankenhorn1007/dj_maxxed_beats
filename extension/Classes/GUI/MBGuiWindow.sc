@@ -341,8 +341,9 @@ MBGuiWindow {
 		refreshing = true;
 
 		views[\projectLabel].string = if(project.isNil) { "No project open" } {
-			"Open: " ++ project[\root] ++ " (" ++ files.size ++ " files)"
+			"Open: " ++ project[\root].asString.basename ++ " (" ++ MBGuiFormat.fileCount(files.size) ++ ")"
 		};
+		views[\projectLabel].toolTip = if(project.isNil) { "" } { project[\root].asString };
 		views[\openProject].enabled = working.not;
 		views[\chooseProject].enabled = working.not;
 
@@ -361,7 +362,7 @@ MBGuiWindow {
 		if(c.entryPath.notNil and: { scd.indexOfEqual(c.entryPath).notNil }) {
 			views[\entry].value = scd.indexOfEqual(c.entryPath)
 		};
-		views[\conversation].string = c.conversation.collect { |m| this.conversationLine(m) }.join("\n\n");
+		this.setConversation(c.conversation.collect { |m| this.conversationLine(m) }.join("\n\n"));
 		views[\plan].string = if(c.proposal.isNil) { "No proposal yet." } { MBGuiFormat.planText(c.proposal) };
 		views[\duration].value = c.renderSettings[\duration];
 		views[\sampleRate].value = ["44100", "48000", "96000"].indexOfEqual(c.renderSettings[\sampleRate].asString) ? 1;
@@ -374,7 +375,8 @@ MBGuiWindow {
 		views[\reject].enabled = idle and: { c.proposalState == \pending };
 		views[\undo].enabled = working.not and: { project.notNil };
 		views[\render].enabled = working.not and: { project.notNil } and: { scd.notEmpty };
-		views[\renderResult].string = MBGuiFormat.renderText(c.renderResult);
+		views[\renderResult].string = MBGuiFormat.renderText(c.renderResult, project !? { project[\root] });
+		views[\renderResult].toolTip = c.renderResult !? { |r| r[\path].asString } ? "";
 		views[\play].enabled = c.renderResult.notNil and: { c.isPlaying.not };
 		views[\reveal].enabled = c.renderResult.notNil;
 		views[\stopPlay].enabled = c.isPlaying;
@@ -413,6 +415,15 @@ MBGuiWindow {
 	}
 
 	isShown { |key| ^shown[key] == true }
+
+	// Keeps the newest message visible.
+	setConversation { |text|
+		var view = views[\conversation];
+		if(view.string != text) {
+			view.string = text;
+			view.select(text.size, 0);
+		};
+	}
 
 	// Replacing items clears the selection, so only replace changed lists.
 	setItems { |key, items|

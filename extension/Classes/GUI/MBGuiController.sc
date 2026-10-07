@@ -535,7 +535,7 @@ MBGuiController {
 					progress = 1;
 					renderResult = result;
 					error = nil;
-					status = "Render finished: " ++ result[\path]
+					status = "Render finished: " ++ MBGuiFormat.displayPath(result[\path], project[\root])
 						++ (if(warnings.isEmpty) { "" } { " (with warnings: " ++ warnings.join("; ") ++ ")" });
 					this.notify;
 				}),

@@ -216,7 +216,8 @@ addCase.(\projectOpen, { |t|
 	check.(\opened, t[\c].project.notNil and: { t[\c].project[\root] == "/fake/project" });
 	check.(\files, t[\v][\contextFiles].items.size == 3);
 	check.(\entryScdOnly, t[\v][\entry].items == ["main.scd", "drums.scd"], t[\v][\entry].items.cs);
-	check.(\label, t[\v][\projectLabel].string.contains("/fake/project"));
+	check.(\label, t[\v][\projectLabel].string == "Open: project (3 files)"
+		and: { t[\v][\projectLabel].toolTip == "/fake/project" }, t[\v][\projectLabel].string);
 });
 
 addCase.(\projectOpenFailure, { |t|
@@ -580,6 +581,11 @@ addCase.(\formatting, { |t|
 	check.(\redactHeader, MBGuiFormat.redact("x-api-key: sk-ant-api03-ZZZZZZ").contains("ZZZZZZ").not);
 	check.(\redactGiven, MBGuiFormat.redact("oops plainsecretvalue", ["plainsecretvalue"]) == "oops [redacted]");
 	check.(\errorText, MBGuiFormat.errorText(MBError(\parse, "bad JSON")) == "Error (parse): bad JSON");
+	check.(\zeroCostIsExplicit, MBGuiFormat.costText((usd: 0, credits: 0, rateStatus: \ok, rateTable: "v")).contains("no cost"));
+	check.(\nilCostUnavailable, MBGuiFormat.costText((rateStatus: \missing)).contains("unavailable"));
+	check.(\displayPath, MBGuiFormat.displayPath("/p/x/renders/a.wav", "/p/x") == "renders/a.wav"
+		and: { MBGuiFormat.displayPath("/q/a.wav", "/p/x") == "/q/a.wav" });
+	check.(\fileCount, MBGuiFormat.fileCount(1) == "1 file" and: { MBGuiFormat.fileCount(2) == "2 files" });
 });
 
 // Run every case in a fresh window; the optional setup function prepares

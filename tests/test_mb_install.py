@@ -204,6 +204,10 @@ class UninstallTests(InstallerTestCase):
         self.assertIn("Nothing to uninstall", out)
 
 
+def sclang_path(path):
+    return '"' + str(path).replace("\\", "/").replace('"', '\\"') + '"'
+
+
 class PlatformAndCliTests(unittest.TestCase):
     def test_default_extensions_dir_matches_supercollider_per_platform(self):
         self.assertEqual(
@@ -246,7 +250,10 @@ class PlatformAndCliTests(unittest.TestCase):
             "(\n"
             '("MBTEST " ++ (if(MaxxedBeats.respondsTo(\\gui) and: { MBGuiWindow.notNil }) '
             '{ "PASS" } { "FAIL" }) ++ " installed/compiles").postln;\n'
-            '"MBTEST DONE passes=1 failures=0".postln;\n'
+            '("MBTEST " ++ (if(MBAgent.findInstructionsDir.replace(92.asAscii.asString, "/") == ' + sclang_path(extensions / "MaxxedBeats" / "agent")
+            + ' and: { MBAgent.systemPrompt.contains("maxxedbeats.proposal/1") }) '
+            '{ "PASS" } { "FAIL" }) ++ " installed/agentInstructions :: " ++ MBAgent.findInstructionsDir).postln;\n'
+            '"MBTEST DONE passes=2 failures=0".postln;\n'
             "0.exit;\n"
             ")\n",
             encoding="utf-8",
@@ -254,7 +261,7 @@ class PlatformAndCliTests(unittest.TestCase):
         output = run_sclang_script("installed-compile", script, [extensions / "MaxxedBeats"])
         passes, failures, done = parse_results(output)
         self.assertEqual(failures, [], output[-2000:])
-        self.assertEqual(len(passes), 1, output[-2000:])
+        self.assertEqual(len(passes), 2, output[-2000:])
         self.assertNotIn("duplicate", output.lower())
 
 
