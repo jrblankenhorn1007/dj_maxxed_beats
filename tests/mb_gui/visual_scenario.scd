@@ -4,20 +4,28 @@
 // real widgets step by step, and before each screenshot prints
 //   MB_CAPTURE_READY <name>
 // then waits for <MB_VISUAL_OUT>/<name>.ack written by the capture script.
+// Without MB_VISUAL_OUT (for example when evaluated in SCIDE) each step is
+// held for MB_VISUAL_STEP_SECONDS (default 5) so it can be captured by hand,
+// and the window stays open. sclang exits only when MB_VISUAL_EXIT is "1".
 // No provider is contacted, no real key is used, nothing is rendered.
 (
 var here = thisProcess.nowExecutingPath.dirname;
-var outDir = "MB_VISUAL_OUT".getenv ?? { Platform.defaultTempDir +/+ "mb-visual" };
+var outDir = "MB_VISUAL_OUT".getenv;
+var stepSeconds = ("MB_VISUAL_STEP_SECONDS".getenv ? "5").asFloat;
+var exitWhenDone = "MB_VISUAL_EXIT".getenv == "1";
 var f = (here +/+ "fake_services.scd").load.value;
 var w, v, c;
 var press = { |key| v[key].doAction };
 var choose = { |key, substring| v[key].valueAction = v[key].items.detectIndex { |i| i.contains(substring) } };
 var capture = { |name|
-	var ack = outDir +/+ name ++ ".ack", waited = 0;
+	var ack, waited = 0;
 	0.4.wait;
 	("MB_CAPTURE_READY " ++ name).postln;
-	while { File.exists(ack).not and: { waited < 60 } } { 0.1.wait; waited = waited + 0.1 };
-	if(File.exists(ack).not) { ("MB_VISUAL_TIMEOUT " ++ name).postln };
+	if(outDir.isNil) { stepSeconds.wait } {
+		ack = outDir +/+ name ++ ".ack";
+		while { File.exists(ack).not and: { waited < 60 } } { 0.1.wait; waited = waited + 0.1 };
+		if(File.exists(ack).not) { ("MB_VISUAL_TIMEOUT " ++ name).postln };
+	};
 };
 
 f[\history].clear;
@@ -75,8 +83,10 @@ fork({
 		("MB_VISUAL_ERROR " ++ error.errorString).postln;
 	};
 	"MB_VISUAL_DONE".postln;
-	w.close;
-	0.5.wait;
-	0.exit;
+	if(exitWhenDone) {
+		w.close;
+		0.5.wait;
+		0.exit;
+	};
 }, AppClock);
 )

@@ -1,0 +1,226 @@
+# MaxxedBeats user guide
+
+MaxxedBeats is an AI music assistant that runs inside SuperCollider. You
+describe music in a window opened from SCIDE, the provider and model you
+choose propose a musical plan and changes to your `.scd` project, you review
+and approve them, and SuperCollider renders the result offline to a WAV file.
+
+- [Install](#install)
+- [Open the assistant](#open-the-assistant)
+- [Choose your DJ: provider and model](#choose-your-dj-provider-and-model)
+- [API keys: add, replace, validate, remove](#api-keys-add-replace-validate-remove)
+- [Privacy](#privacy)
+- [API cost, usage, and credits](#api-cost-usage-and-credits)
+- [Compose, review, and render](#compose-review-and-render)
+- [Variation sessions](#variation-sessions)
+- [Troubleshooting](#troubleshooting)
+- [Update and uninstall](#update-and-uninstall)
+
+## Install
+
+Prerequisites:
+
+| | macOS (Apple Silicon or Intel) | Windows 10/11 x64 | Linux |
+| --- | --- | --- | --- |
+| SuperCollider | 3.14.1 | 3.14.1 | 3.14.1 |
+| Python | 3.9 or newer | 3.9 or newer (`py`/`python`) | 3.9 or newer |
+| CMake | 3.16+ (`brew install cmake`) | 3.16+ (`winget install Kitware.CMake`) | 3.16+ (`sudo apt install cmake`) |
+| C++17 compiler | `xcode-select --install` | Visual Studio 2022 (or Build Tools) with "Desktop development with C++" | `build-essential` or clang |
+
+From a checkout of this repository:
+
+```sh
+python3 scripts/install_maxxedbeats.py --dry-run   # preview, changes nothing
+python3 scripts/install_maxxedbeats.py
+```
+
+(On Windows use `python` or `py` instead of `python3`.) The installer builds
+the ChaosOsc plugin and copies the MaxxedBeats Quark (classes, help, agent
+instructions) into SuperCollider's user Extensions folder:
+
+- macOS: `~/Library/Application Support/SuperCollider/Extensions`
+- Windows: `%LOCALAPPDATA%\SuperCollider\Extensions`
+- Linux: `~/.local/share/SuperCollider/Extensions` (or `$XDG_DATA_HOME/...`)
+
+It creates `MaxxedBeats/` and `ChaosOsc/`, each with a hidden install marker.
+Folders without that marker are never replaced unless you pass `--force`, and
+both folders are checked before anything is built or copied. Use
+`--extensions-dir DIR` for another location.
+
+Afterwards, in SCIDE:
+
+1. **Language > Recompile Class Library** (or `thisProcess.recompile`).
+2. Reboot the audio server so it loads ChaosOsc: `s.reboot`.
+
+The installer warns if another copy of MaxxedBeats is in your Extensions
+folder or on an include path in `sclang_conf.yaml`; remove duplicates, or
+sclang reports duplicate classes.
+
+## Open the assistant
+
+```supercollider
+MaxxedBeats.gui;
+```
+
+Evaluating it again brings the open window to the front. The help browser
+has a **MaxxedBeats** page and a **MaxxedBeats Assistant** guide.
+
+The window shows, at the top: the project folder, **Choose your DJ**, the
+status line with progress and **Stop request**, any error (with **Dismiss**),
+and any confirmation request. Below are four tabs: **Compose**,
+**Variations**, **Keys & Privacy**, and **Usage**.
+
+## Choose your DJ: provider and model
+
+1. Pick a provider: OpenAI, Anthropic, or the offline mock provider (used for
+   demos and tests; it needs no key and costs nothing).
+2. Press **Refresh models** to fetch the provider's model list.
+3. Pick a model. The window always shows the exact **Provider id** and
+   **Model id** the next request will use, and each provider remembers its
+   own model.
+
+MaxxedBeats never switches provider or model on its own:
+
+- Models the assistant cannot use are labelled **[unavailable: reason]** and
+  cannot be selected.
+- If your saved model is no longer offered, it stays selected, is labelled
+  **UNAVAILABLE**, and requests are blocked until you choose another model.
+- If a refresh fails, the error is shown and the cached list stays visible,
+  labelled as possibly stale.
+
+## API keys: add, replace, validate, remove
+
+Open **Keys & Privacy**. Each provider has its own row, so you only need a
+key for the provider you use.
+
+- **Add or replace:** paste the key into the field and press **Save /
+  replace**. The field never shows the key; only a count of `*` characters
+  appears. Characters can only be appended: if you make a mistake, press
+  **Clear** and paste again.
+- **Validate:** asks the provider whether the stored key works. A rejected key
+  is shown as *invalid*.
+- **Remove:** press **Remove...** and confirm. Requests to that provider then
+  fail until you add a key again.
+
+Keys are stored in your operating system's credential store: macOS Keychain,
+Windows Credential Manager, or the Linux Secret Service (for example GNOME
+Keyring or KWallet). They are never displayed, logged, posted to the post
+window, or written to settings, project files, or render metadata. Error
+messages are redacted.
+
+Get keys from your provider account: OpenAI (platform.openai.com, API keys)
+or Anthropic (console.anthropic.com, API keys). Use a key with a spending
+limit you are comfortable with.
+
+## Privacy
+
+- Your prompt, the conversation so far, and **only the project files you
+  select** under *Context files* are sent to the provider you chose. With no
+  file selected, only the prompt and conversation are sent.
+- Nothing is sent anywhere else. There is no telemetry. Usage history stays
+  on your computer.
+- Settings (not secrets) are stored under SuperCollider's user configuration
+  folder in `MaxxedBeats/`. Backups and variation sessions live in your
+  project's `.maxxedbeats/` folder; renders go to `renders/` with a JSON
+  metadata file that never contains keys.
+- The provider's own data-retention policy applies to what you send.
+
+## API cost, usage, and credits
+
+Model requests may incur charges on **your** provider account. After each
+request the Compose tab and the **Usage** tab show:
+
+- provider and model, and the input, output, and cached-input token counts
+  reported by the provider (`?` when the provider did not report one);
+- the **estimated** cost in US dollars, from a versioned rate table whose
+  version is shown;
+- **credits**: an informational estimate at 100 credits per estimated US$1.
+  Credits are not a balance, a purchase, an invoice, or an exact bill.
+
+If the rate for a model is missing, USD and credits are shown as
+**unavailable** and the rates as **MISSING**; if rates are outdated they are
+labelled **STALE**. Unknown cost is never shown as zero. The Usage tab also
+shows the current session's totals and the local history, which **Clear
+history...** deletes (after confirmation). Check your provider's billing page
+for actual charges.
+
+## Compose, review, and render
+
+1. **Open a project:** press **Choose...** (or type a folder path and press
+   **Open**). A project is a folder of `.scd` files; the assistant never
+   modifies files outside it.
+2. **Ask:** select context files, type a prompt, and press **Send to DJ**.
+   **Stop request** cancels a running request.
+3. **Review:** the proposed musical plan and the diff of every file change
+   appear. *PENDING REVIEW: nothing has been written yet.*
+4. **Approve or reject:** **Approve and apply...** asks you to confirm, saves
+   a backup, then writes the files. **Reject** discards the proposal; nothing
+   is written. While a proposal is pending, approve or reject it before
+   sending another prompt.
+5. **Undo:** **Undo last apply...** (after confirmation) restores the most
+   recent backup.
+6. **Render:** choose the entry file, length in seconds, sample rate, and
+   channels, then press **Render...** and confirm. Generated code is evaluated
+   only in a separate headless sclang process (never in your interpreter) and
+   rendered offline by scsynth, so no audio device is needed. When it
+   finishes, the window shows the new WAV file, its duration and format, and
+   audio checks (non-finite samples, silence, clipping, duration); warnings
+   are labelled.
+7. **Listen:** **Play preview** plays the rendered file on your running
+   server (boot it first with `s.boot`); **Stop** ends playback. **Reveal
+   file** shows the WAV in Finder, Explorer, or your file manager.
+
+Errors (API, network, parsing, rendering) appear in red at the top and in the
+conversation. A failed action is never reported as completed.
+
+## Variation sessions
+
+On **Variations**, type a variation prompt, choose how many candidates (1 to
+4), and press **Start session**. Each candidate's code, seed, settings,
+render, and checks are kept in an isolated session folder, and the list shows
+each candidate's checks. **Stop** ends the session early; the session also
+stops at the limit. **Audition selected** plays a candidate; **Apply
+selected...** (after confirmation, with a backup) replaces the project's files
+with that candidate's. Your project is unchanged until you apply one.
+
+## Troubleshooting
+
+| Symptom | What to do |
+| --- | --- |
+| `MaxxedBeats` is not defined | Run the installer, then recompile the class library. |
+| "missing classes" error in the window | The installation is incomplete; re-run `python3 scripts/install_maxxedbeats.py` and recompile. |
+| Duplicate class errors after recompiling | Remove other MaxxedBeats copies or include paths named by the installer's warnings. |
+| "No API key is stored" / auth error | Save the key on **Keys & Privacy**, then **Validate**. Check the key has API access and billing enabled. |
+| Model unavailable | Press **Refresh models** and select a listed model. |
+| Model refresh failed / stale list | Check your connection and key; the cached list is shown until a refresh succeeds. |
+| Rate limit (`rateLimit`) | Wait and retry, or check your provider plan's limits. |
+| Render failed | Read the error; fix the composition (or Undo) and render again. Make sure ChaosOsc is installed and the class library was recompiled. |
+| Play preview fails | Boot the server (`s.boot`). The WAV is already rendered; you can also open it via **Reveal file**. |
+| `ChaosOsc` not found by scsynth | Reboot the server after installing (`s.reboot`). |
+| Installer: "refusing to overwrite" | A folder not created by the installer exists; move it away or re-run with `--force`. |
+| Installer: CMake or compiler missing | Install the prerequisites listed in [Install](#install). |
+
+## Update and uninstall
+
+To update, pull the latest source and run the installer again; it replaces
+the marked folders. Then recompile the class library and reboot the server.
+
+To uninstall:
+
+1. Optionally remove your API keys first (**Keys & Privacy > Remove...**).
+   Uninstalling does not delete keys from the OS credential store; you can
+   also delete the entries named for MaxxedBeats in Keychain Access, Windows
+   Credential Manager, or your Linux keyring.
+2. Close the assistant window and run:
+
+   ```sh
+   python3 scripts/install_maxxedbeats.py --uninstall --dry-run   # preview
+   python3 scripts/install_maxxedbeats.py --uninstall
+   ```
+
+   This removes only the marked `MaxxedBeats/` and `ChaosOsc/` folders.
+3. Recompile the class library and reboot the server.
+
+Your projects, renders, backups, and the settings folder
+(`MaxxedBeats/` under SuperCollider's user configuration folder) are left in
+place; delete them yourself if you no longer need them.

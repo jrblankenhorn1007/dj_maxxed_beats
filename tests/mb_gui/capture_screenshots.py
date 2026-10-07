@@ -101,6 +101,7 @@ def isolated_environment(out_dir):
         "XDG_CONFIG_HOME": str(home / ".config"),
         "XDG_DATA_HOME": str(home / ".local" / "share"),
         "MB_VISUAL_OUT": str(out_dir),
+        "MB_VISUAL_EXIT": "1",
     })
     return environment
 
