@@ -31,7 +31,8 @@
   runtime paths plus the official browser flow remove shell setup and avoid
   handling Copilot credentials in MaxxedBeats.
 - **Consequences:** Copilot still needs Python 3.11+ and the official CLI.
-  Setup may use WinGet, Homebrew/system packages, or the official installer.
+  Windows setup uses WinGet; macOS/Linux setup downloads the pinned official
+  CLI release and verifies its SHA-256 before installing the executable.
   Unit tests use fakes; no live sign-in or generation is claimed.
 
 ## Verification
