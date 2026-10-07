@@ -39,22 +39,38 @@ read with `.path`, `.isNew`, `.diffString` (MBEdit or an Event).
 | `apply` | `project, proposal, confirmed, onSuccess, onFailure` |
 | `undo` | `project, onSuccess, onFailure` |
 | `render` | `project, entryPath, settings, approved, onProgress, onSuccess, onFailure` → handle |
-| `startVariations` | `project, providerId, modelId, prompt, maxCandidates, onCandidate, onDone, onFailure` → session |
+| `startVariations` | `project, providerId, modelId, prompt, maxCandidates, approveRenders, settings, context, onCandidate, onDone, onFailure` → session |
+| `renderCandidate` | `session, index, onProgress, onSuccess(candidate), onFailure` → handle |
 | `stopVariations` / `applyVariation` | `session` / `session, index, confirmed, onSuccess, onFailure` |
 | `cancel` | `handle` |
 | `play` / `stopPlayback` / `reveal` | `path, onStarted, onDone, onFailure` → handle / `handle` / `path` |
 
 `context` is `(files: [selected relative paths], entry:, history: [(role:,
-content:)])`. `onProgress` may pass a Number in 0..1 or `(fraction:,
-message:)`. A candidate is shown from `seed`, `summary`/`plan`, `checks`, and
-its audio path `renderPath`, `render[\path]`, or `audioPath`; its index for
-`applyVariation` is its 0-based position in arrival order.
+content:)])`, a subset of `MBAgent`'s context. `onProgress` receives
+`MBRenderer`'s `(stage:, fraction:, message:)` (a plain Number also works).
+A candidate (`MBVariationSession`) is shown from `seed`, `plan`/`summary`,
+`status` (`\failed` shows the error), `checks`, and `render[\path]`; its
+index for `applyVariation`/`renderCandidate` is its 0-based position, which
+equals the session's `index` because failed candidates are delivered too.
+`selectModel` may return an `MBError` (the catalog refused), shown as an
+error. Render requests add the applied proposal's `seed` and whitelisted
+`metadata`; a proposal's suggested `entry` and `render` settings are adopted
+by the render panel.
 
-`MaxxedBeats.services` maps the port onto the contract classes, looked up by
-name (`MBProviderRegistry.default`, `MBCredentialStore.default`; catalog and
-meter via `.default` when defined, else `.new`; `MBProject.open`,
-`MBAgent.new(project, provider, catalog, meter)`, `MBRenderer.render`,
-`MBVariationSession.new(agent, project, max)`). Before `propose` and
+`MaxxedBeats.services(lookup, overrides)` maps the port onto the contract
+classes, looked up by name (`MBProviderRegistry.default`,
+`MBCredentialStore.default`, `MBModelCatalog.default`, `MBUsageMeter.default`,
+`MBProject.open`, `MBAgent.new(project, provider, catalog, meter)`,
+`MBRenderer.render`, `MBVariationSession.new(agent, project, max, settings,
+context)` + `.start(…, approveRenders)`). `overrides` may supply `store`,
+`registry`, `catalog`, `meter` (a store override builds a registry and
+catalog that use it; the integration tests and visual scenario use
+`MBCredentialStore.fake`). `validateKey` passes the provider so the store can
+list its models. The GUI writes no settings files; if it ever needs one it
+must not reuse `providers.json`, `model-catalog.json`, or
+`usage-history.json` (provider layer). Exceptions are captured with
+`MBWorkflowTry`, never a plain `try` (sclang 3.14.1 corrupts the caller when
+an error is raised during argument evaluation). Before `propose` and
 `startVariations` it checks that `catalog.selectedModel(providerId)` equals
 the model shown in the window and otherwise fails with `\unavailableModel`.
 Missing classes raise `MBError(\config)`; `MaxxedBeats.gui` then opens with
@@ -82,8 +98,9 @@ Missing classes raise `MBError(\config)`; `MaxxedBeats.gui` then opens with
   requests, in the conversation. Status never reports success after a failure.
 - Unknown USD/credits are "unavailable"; rates are labelled MISSING or STALE;
   zero is never substituted.
-- Variation sessions are capped at 1–4 candidates; extra candidates are
-  ignored and the session is stopped at the cap.
+- Variation sessions are capped at 1–4 candidates; a candidate beyond the
+  cap is ignored and stops the session. Rendering candidates
+  (`approveRenders: true`, or Render selected) needs a confirmation first.
 
 ## Masked key entry
 
@@ -106,12 +123,19 @@ editing is not supported (use Clear). The key is read once on Save, passed to
   reports widgets of an unshown window as invisible, so the window tracks
   intended visibility (`isShown`). Factory tests use
   `tests/mb_gui/stubs/MBTestStubs.sc` (contract stand-ins with distinct names).
+- `tests/test_mb_integration.py` runs `tests/mb_gui/integration_scenario.scd`:
+  the real window via `MaxxedBeats.gui` and `MaxxedBeats.services` with
+  `MBMockProvider`, the fake store, and real NRT renders (propose, diff,
+  confirmed apply, approved render, undo, a 2-candidate rendered variation
+  session and confirmed apply, provider-failure and unavailable-model paths
+  with no files touched, key round trip); Python re-checks the WAV.
 - `tests/test_mb_install.py` covers the installer with a fake ChaosOsc build
   plus an installed-layout sclang compile; `tests/test_mb_install_workflow.py`
   checks the CI workflow contract.
 - `tests/mb_gui/capture_screenshots.py` (opt-in, macOS) runs
-  `visual_scenario.scd`, which opens the real window via `MaxxedBeats.gui`,
-  drives the widgets through ten states, and captures the native window with
+  `visual_scenario.scd`, which opens the real window via `MaxxedBeats.gui`
+  wired to the real classes with `MBMockProvider` and real renders, drives
+  the widgets through ten states, and captures the native window with
   `screencapture -l <CGWindowID>` (window found by sclang's PID through
   CoreGraphics via ctypes). It synchronizes through `MB_CAPTURE_READY` lines
   and `.ack` files. It is evidence for, not a substitute of, the SCIDE sign-off.

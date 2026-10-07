@@ -72,8 +72,10 @@ and any confirmation request. Below are four tabs: **Compose**,
 
 ## Choose your DJ: provider and model
 
-1. Pick a provider: OpenAI, Anthropic, or the offline mock provider (used for
-   demos and tests; it needs no key and costs nothing).
+1. Pick a provider: OpenAI, Anthropic, or **Mock DJ (offline)**. The mock
+   needs no key, never uses the network, and costs nothing: it answers with a
+   deterministic ChaosOsc sketch (it does not understand your prompt), which
+   is handy for trying the whole workflow.
 2. Press **Refresh models** to fetch the provider's model list.
 3. Pick a model. The window always shows the exact **Provider id** and
    **Model id** the next request will use, and each provider remembers its
@@ -97,8 +99,9 @@ key for the provider you use.
   replace**. The field never shows the key; only a count of `*` characters
   appears. Characters can only be appended: if you make a mistake, press
   **Clear** and paste again.
-- **Validate:** asks the provider whether the stored key works. A rejected key
-  is shown as *invalid*.
+- **Validate:** asks the provider whether the stored key works by listing its
+  models (a free request). A rejected key is shown as *invalid*; with no key
+  stored you get an auth error and nothing is sent.
 - **Remove:** press **Remove...** and confirm. Requests to that provider then
   fail until you add a key again.
 
@@ -137,7 +140,8 @@ request the Compose tab and the **Usage** tab show:
 - **credits**: an informational estimate at 100 credits per estimated US$1.
   Credits are not a balance, a purchase, an invoice, or an exact bill.
 
-If the rate for a model is missing, USD and credits are shown as
+Free models (such as the offline mock) show **no cost (US$0)**. If the rate
+for a model is missing, USD and credits are shown as
 **unavailable** and the rates as **MISSING**; if rates are outdated they are
 labelled **STALE**. Unknown cost is never shown as zero. The Usage tab also
 shows the current session's totals and the local history, which **Clear
@@ -151,8 +155,10 @@ for actual charges.
    modifies files outside it.
 2. **Ask:** select context files, type a prompt, and press **Send to DJ**.
    **Stop request** cancels a running request.
-3. **Review:** the proposed musical plan and the diff of every file change
-   appear. *PENDING REVIEW: nothing has been written yet.*
+3. **Review:** the proposed musical plan (with the DJ's assumptions,
+   uncertainty, and questions) and the diff of every file change appear.
+   *PENDING REVIEW: nothing has been written yet.* If the DJ suggests an
+   entry file or render length, the render panel adopts it.
 4. **Approve or reject:** **Approve and apply...** asks you to confirm, saves
    a backup, then writes the files. **Reject** discards the proposal; nothing
    is written. While a proposal is pending, approve or reject it before
@@ -176,12 +182,17 @@ conversation. A failed action is never reported as completed.
 ## Variation sessions
 
 On **Variations**, type a variation prompt, choose how many candidates (1 to
-4), and press **Start session**. Each candidate's code, seed, settings,
-render, and checks are kept in an isolated session folder, and the list shows
-each candidate's checks. **Stop** ends the session early; the session also
-stops at the limit. **Audition selected** plays a candidate; **Apply
-selected...** (after confirmation, with a backup) replaces the project's files
-with that candidate's. Your project is unchanged until you apply one.
+4), and press **Start session**. With **Render each candidate** ticked, you
+first confirm that each generated candidate may be rendered in a separate
+process (with the length, rate, and channels from the Compose tab); untick it
+to only generate code. Each candidate is one provider request with its own
+fixed seed. Its code, seed, settings, render, and checks are kept in an
+isolated folder under `.maxxedbeats/sessions/`; failed candidates are listed
+as FAILED with the reason. **Stop** ends the session early. **Render
+selected...** renders one candidate later (after confirmation), **Audition
+selected** plays it, and **Apply selected...** (after confirmation, with a
+backup) applies that candidate's changes to your project. Your project is
+unchanged until you apply one.
 
 ## Troubleshooting
 

@@ -669,3 +669,106 @@ credentials and private user data out of this file.
   `scsynth`, GUI/SCIDE sign-off, and releases other than SuperCollider 3.14.1
   remain unverified. Branch decisions:
   [`decisions/agents-plugin-fix-and-completion/`](./decisions/agents-plugin-fix-and-completion/README.md).
+
+### DEC-030 — Provider transport: direct sclang + OS `curl`, no helper
+
+- **Date:** 2026-10-07
+- **Context:** sclang has no HTTPS client. [path-feasibility.md](./provider/path-feasibility.md)
+  proposed deferring the transport choice because no runtime evidence existed.
+- **Decision:** Supersedes that "defer". Provider HTTPS runs by launching the
+  OS `curl` asynchronously from sclang (TLS validated, never `-k`;
+  cancellable; timeouts); no bundled helper process. Evidence and
+  alternatives: [providers.md](./design/providers.md).
+- **Consequences:** Nothing extra to ship or sign. The Windows path
+  (`curl.exe`, PowerShell) is designed but must be verified on Windows.
+
+### DEC-031 — Keys stay in the OS credential store and reach only `curl`
+
+- **Date:** 2026-10-07
+- **Decision:** macOS Keychain, Windows Credential Manager, Linux Secret
+  Service. Keys flow store → shell variable → `curl` stdin; writes go through
+  a FIFO; keys never return to sclang and never appear in argv, environment,
+  settings, logs, project files, or error text (redacted).
+- **Consequences:** Only the Keychain backend is runtime-verified.
+
+### DEC-032 — Provider APIs and model selection
+
+- **Date:** 2026-10-07
+- **Decision:** OpenAI Responses API with `store: false`; Anthropic Messages
+  API. Model lists come from each provider's model-list API, are cached per
+  provider, and the selection is persisted per provider; an unavailable
+  selection is an error, never silently replaced.
+
+### DEC-033 — Usage pricing only from verified rates
+
+- **Date:** 2026-10-07
+- **Decision:** A versioned rate table lists only rates verified on the
+  retrieval date; unknown cost is `nil` (shown "unavailable"), never zero;
+  rates become stale after 45 days or their `validUntil`. Credits are an
+  informational 100 per estimated US$1.
+
+### DEC-034 — Strict `maxxedbeats.proposal/1` responses
+
+- **Date:** 2026-10-07
+- **Decision:** Models must answer with one strict JSON object (format id,
+  plan, summary, edits with `create`/`replace`/`edit`, optional entry, render
+  settings, seed). Unknown fields, unsafe paths, stale `oldText`, and secrets
+  are rejected before anything is shown or written; undo refuses after later
+  user edits. Details: [workflow.md](./design/workflow.md).
+
+### DEC-035 — Approved, isolated, separate-process rendering
+
+- **Date:** 2026-10-07
+- **Decision:** Rendering requires `approved: true`; a separate `sclang`
+  builds the Score and `scsynth -N` renders it, both with `env -i` and an
+  isolated HOME. Variation sessions render only with `approveRenders: true`,
+  which the GUI passes only after the user confirms.
+- **Consequences:** Generated code never runs in the user's interpreter; this
+  is isolation, not a sandbox.
+
+### DEC-036 — `MBWorkflowTry` instead of `try` in assistant code
+
+- **Date:** 2026-10-07
+- **Context:** On SuperCollider 3.14.1 a `try` that catches an error raised
+  during argument evaluation corrupts the caller's pending sends.
+- **Decision:** Workflow and GUI code run guarded functions on their own
+  Routine stack via `MBWorkflowTry`; provider code evaluates into variables
+  before passing them on.
+
+### DEC-037 — GUI wired through one service port and in-window confirmations
+
+- **Date:** 2026-10-07
+- **Decision:** `MBGuiController` talks to an Event of functions built by a
+  single factory, `MaxxedBeats.services`, which maps it to the contract
+  classes. Apply, render, undo, key removal, history clearing, and
+  candidate rendering wait for an in-window Confirm. Context files are opt-in.
+  The GUI stores no settings files of its own (the provider layer owns
+  `providers.json`, `model-catalog.json`, `usage-history.json`).
+  Details: [gui.md](./design/gui.md).
+
+### DEC-038 — One installer for the Quark and ChaosOsc
+
+- **Date:** 2026-10-07
+- **Decision:** `scripts/install_maxxedbeats.py` copies the Quark plus
+  `agent/*.md` (to `<quark>/agent`, which `MBAgent` finds) and installs
+  ChaosOsc through `install_chaososc.py`; both folders are marker-checked
+  before any change; one set of recompile/reboot instructions is printed.
+
+### DEC-039 — The mock provider emits real proposals
+
+- **Date:** 2026-10-07
+- **Decision:** `MBMockProvider` answers with valid `maxxedbeats.proposal/1`
+  JSON containing a renderable ChaosOsc composition whose root, chaos amount,
+  and pattern depend on the request and seed, so propose, render, and the
+  variation loop are testable end to end offline.
+
+### DEC-040 — Resilient plugin header downloads in CI
+
+- **Date:** 2026-10-07
+- **Context:** Plugin Builds run 37555986033 failed on a transient
+  `TimeoutError` fetching headers from raw.githubusercontent.com.
+- **Decision:** `fetch_sc_plugin_api.py` retries timeouts, URL/connection
+  errors, and HTTP 429/5xx with exponential backoff (4 attempts); 404 and
+  other 4xx are unchanged. Files are written atomically. All plugin-building
+  workflows cache `plugin/.sc-plugin-api-cache` keyed on the OS and the
+  pinned SuperCollider commit.

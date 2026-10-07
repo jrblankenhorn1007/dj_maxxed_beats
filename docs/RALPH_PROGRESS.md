@@ -1111,3 +1111,40 @@ Ralph-Status: IN_PROGRESS
 - **Owner install:** `python3 scripts/install_chaososc.py` installed ChaosOsc
   into the default Extensions folder; real-HOME `sclang` compiled the class
   and `scsynth` (default plugin search) rendered finite, non-silent audio.
+
+## Iteration 7 — MaxxedBeats AI assistant — 2026-10-07
+
+- **Parent branch:** `ralph/ai-assistant-20261007`; worker-01 providers
+  (`docs/design/providers.md`), worker-02 workflow (`docs/design/workflow.md`),
+  worker-03 GUI/packaging/CI (`docs/design/gui.md`), merged at `8b1d6be`,
+  then integrated by worker-03. Evidence per worker under
+  [`ralph/`](./ralph/).
+- **Integration (TDD):** `MaxxedBeats.services` wired to the real classes
+  (store/registry/catalog/meter overrides, `approveRenders` only after
+  confirmation, `renderCandidate`, catalog refusals, proposal render
+  settings, `MBWorkflowTry` instead of `try`); `MBMockProvider` emits valid
+  `maxxedbeats.proposal/1` replies with a seed-dependent ChaosOsc
+  composition; installed `MBAgent` finds `<quark>/agent`.
+- **Targeted tests:** `SCLANG=… SCSYNTH=… python3 -m unittest tests.test_mb_gui
+  tests.test_mb_integration tests.test_mb_install tests.test_fetch_sc_plugin_api`
+  → OK. `tests/test_mb_integration.py` (real window, mock provider, fake
+  store, real NRT renders): 38 named checks, WAV re-checked in Python
+  (48 kHz, 2 ch, 2.00 s), no key in any written file; 75 s.
+- **CI hardening:** `fetch_sc_plugin_api.py` retries timeouts/URL/connection
+  errors and HTTP 429/5xx (4 attempts, 1/2/4 s), keeps 404/4xx semantics,
+  writes atomically; `actions/cache@v4` for `plugin/.sc-plugin-api-cache`
+  in all three workflows (cause: Plugin Builds run 37555986033 `TimeoutError`).
+- **Visual (support tooling, not sign-off):** `python3
+  tests/mb_gui/capture_screenshots.py` with the real classes and real renders
+  captured 10 native-window screenshots on the MacBook Neo; inspected; fixed
+  long-path wrapping, "1 files", conversation not scrolling to the newest
+  message, and a zero cost that read like a placeholder.
+- **Full gate:** `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth bash
+  scripts/run_headless_tests.sh` (real-time opt-in unset) → `Ran 180 tests in
+  187.597s … OK (skipped=1)`.
+- **Host:** MacBook Neo (`Mac17,5`), macOS 26, SuperCollider 3.14.1, Python 3.9.
+- **GitHub CI:** verified on a `ralph/ai-assistant-20261007-ciN` branch
+  before the PR (run IDs in the PR description).
+- **Unverified:** physical Windows 10 x64, SCIDE-launched visual sign-off,
+  live OpenAI/Anthropic calls, Linux assistant runtime.

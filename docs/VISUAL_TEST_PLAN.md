@@ -89,7 +89,7 @@ visual success from logs.
   `\send`, `\approve`, `\confirm`, `\render`, `\keyField_openai`), so a
   driver can call the real widgets' actions. `tests/mb_gui/visual_scenario.scd`
   is such a driver: it opens the window through `MaxxedBeats.gui` with
-  deterministic offline services and walks ten states (startup, request in
+  the offline mock provider and walks ten states (startup, request in
   flight, proposal diff, apply confirmation, render progress and result,
   usage, a provider error, masked key entry, a stopped variation session).
   To run it from SCIDE for sign-off, open the file and evaluate it: each
@@ -103,9 +103,10 @@ visual success from logs.
   supports but does not replace the sign-off above.
 - Windows: run the scenario from SCIDE and capture the window with the
   Snipping Tool (Win+Shift+S) or `Alt+PrintScreen` at each step.
-- Until the provider and workflow layers are merged, the scenario uses the
-  fake services in `tests/mb_gui/fake_services.scd`; the sign-off run must use
-  the real `MBMockProvider` and a real NRT render.
+- The scenario uses the real classes with `MBMockProvider` (offline,
+  deterministic), an in-memory credential store, and real NRT renders with
+  ChaosOsc (the installed plugin from SCIDE, or the test build via
+  `MB_PLUGIN_DIR` when captured by the script).
 
 ## Evidence to retain
 

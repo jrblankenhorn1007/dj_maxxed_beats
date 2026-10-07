@@ -8,16 +8,17 @@ proposed plan and `.scd` code changes, approve them, and render audio offline
 with SuperCollider and the bundled ChaosOsc UGen. There is no separate
 desktop app.
 
-> **Current state.** The ChaosOsc plugin works. The assistant window
-> (`MaxxedBeats.gui`), the combined installer, help, user guide, and a
-> macOS/Windows CI workflow are implemented and tested headlessly with fake
-> services. The provider layer (keys, model catalog, usage) and the workflow
-> layer (projects, agent, renderer, variations) are delivered in parallel
-> branches; until they are merged, the window opens and reports the missing
-> classes as a configuration error instead of contacting a provider. Visual
-> sign-off on Windows 10 x64 and MacBook Neo is still open (see the
-> [visual test plan](./docs/VISUAL_TEST_PLAN.md)). Tests never use real API
-> keys or call a model provider.
+> **Current state.** The assistant works end to end inside SuperCollider:
+> `MaxxedBeats.gui` opens the window; OpenAI and Anthropic (via the OS
+> `curl`, keys in the OS credential store) and an offline mock provider are
+> available; proposals are reviewed as diffs, applied only after
+> confirmation (with backups and undo), and rendered offline to WAV in a
+> separate process only after approval. It is verified on macOS (MacBook
+> Neo) and in CI on macOS and Windows. Physical Windows 10 x64 and the
+> SCIDE-launched visual sign-off are still open (see the
+> [visual test plan](./docs/VISUAL_TEST_PLAN.md) and
+> [implementation status](./docs/implementation_status.md)). Tests never use
+> real API keys or call a model provider.
 
 ## What exists today
 
@@ -27,9 +28,18 @@ desktop app.
   Play preview and Reveal, per-provider API-key management with a privacy and
   API-cost notice, per-request and per-session usage (tokens, estimated USD,
   informational credits, rate-table version) with a local history, and a
-  bounded variation session. Nothing is written, evaluated, or rendered
+  bounded variation session (1–4 candidates, optionally rendered after
+  confirmation). Nothing is written, evaluated, or rendered
   without explicit confirmation. See the [user guide](./docs/USER_GUIDE.md)
   and the [GUI design](./docs/design/gui.md).
+- **Providers and workflow:** OpenAI (Responses API) and Anthropic
+  (Messages API) adapters over the OS `curl`, macOS Keychain / Windows
+  Credential Manager / Linux Secret Service key storage, a per-provider model
+  catalog, a versioned rate table, the strict `maxxedbeats.proposal/1`
+  response format, project backups/undo, approved separate-process NRT
+  rendering with audio checks, and a deterministic offline mock provider
+  (`Mock DJ (offline)`). See the [provider](./docs/design/providers.md) and
+  [workflow](./docs/design/workflow.md) designs.
 - **Installer:** `scripts/install_maxxedbeats.py` installs, updates, and
   removes the MaxxedBeats Quark and the ChaosOsc plugin together
   (marker-protected, `--dry-run`, macOS/Windows/Linux paths).
@@ -106,13 +116,17 @@ SCLANG=/path/to/sclang SCSYNTH=/path/to/scsynth \
   python3 -m unittest discover -s tests -p 'test_mb_*.py' -v
 ```
 
-These build the real assistant window headlessly with deterministic fake
-services (no provider calls, no keys, isolated `HOME`), drive its widgets, and
-test the installer and the `Assistant Tests` workflow
-(`.github/workflows/assistant-tests.yml`, macOS and Windows). For the visual
-plan, `python3 tests/mb_gui/capture_screenshots.py` (macOS, opt-in) drives
-the real window and captures it with `screencapture`; the screenshots still
-need inspection and do not replace the SCIDE sign-off.
+These cover the providers (loopback fake servers, temporary keychain), the
+workflow and real NRT renders, the window's state machine with fake
+services, an end-to-end window integration through the real classes with the
+mock provider and real renders (`tests/test_mb_integration.py`), the
+installer, and the `Assistant Tests` workflow
+(`.github/workflows/assistant-tests.yml`, macOS and Windows). All run with an
+isolated `HOME`, no real keys, and no network. For the visual plan,
+`python3 tests/mb_gui/capture_screenshots.py` (macOS, opt-in) drives the
+real window with the mock provider and real renders and captures it with
+`screencapture`; the screenshots still need inspection and do not replace
+the SCIDE sign-off.
 
 ### Static analysis and warning-free builds
 
