@@ -14,6 +14,7 @@
   GitHub Copilot provider requirement, on
   `ralph/ai-assistant-finish-20261007-1607` from `origin/main`
   `e1c70289c94f8e5d188547f756069f6e249c8836`.
+- **Implementation commit:** `822db890bef35da1e559634af4ddc0f418afa60d`.
 - **Loop state:** in progress; the implementation is not yet published, opened
   as a PR, or merged to `main`.
 - **Current verification:** the full local gate passes **213 tests** with four

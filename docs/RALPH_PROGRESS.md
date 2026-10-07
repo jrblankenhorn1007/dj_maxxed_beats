@@ -1213,8 +1213,9 @@ Ralph-Status: IN_PROGRESS
 ## Iteration 8 — Windows CI fixes and GitHub Copilot provider row — 2026-10-07
 
 - **Working branch:** `ralph/ai-assistant-finish-20261007-1607`, created from
-  `origin/main` `e1c70289c94f8e5d188547f756069f6e249c8836`. The branch is not
-  yet published or integrated; the origin fetch before publication confirmed
+  `origin/main` `e1c70289c94f8e5d188547f756069f6e249c8836`. Implementation
+  commit: `822db890bef35da1e559634af4ddc0f418afa60d`. The branch is not yet
+  published or integrated; the origin fetch before publication confirmed
   `origin/main` had not moved.
 - **Windows Red:** Assistant Tests run `37578448992` failed on Windows x64
   (`f6f6aea`). The Credential Manager output contained
