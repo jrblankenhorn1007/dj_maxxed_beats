@@ -8,7 +8,8 @@ audio file, and ask for revisions or other project tasks.
 
 The initial target platforms are Windows 10 (64-bit) and the Apple Silicon
 MacBook Neo. The assistant supports user-provided OpenAI and Anthropic (Claude)
-API keys, and lets the user choose a provider and an available model.
+API keys and GitHub Copilot subscription sign-in, and lets the user choose a
+provider and an available model.
 
 ## Recommended architecture
 
@@ -53,9 +54,10 @@ The same composition can be auditioned live or rendered offline.
 
 1. From the SuperCollider IDE, the user opens the agent window and describes a
    track or selects an existing `.scd` project.
-2. The user configures an OpenAI or Anthropic API key, selects that provider,
-   and chooses an available model. The extension explains that prompts and
-   selected project context are sent to that provider.
+2. The user configures an OpenAI or Anthropic API key, or signs in to GitHub
+   Copilot, in the shared Keys & Privacy provider rows; then they select that
+   provider and choose an available model. The extension explains that prompts
+   and selected project context are sent to that provider.
 3. The agent proposes a musical plan (for example, sections, tempo, motifs,
    instruments, and duration) and generates or edits `.scd` composition code
    that can use the custom sound-design UGens.
@@ -128,9 +130,10 @@ history. Never record credentials or private user data.
 - Manage conversations and the selected project in the agent window.
 - Send prompts and only the project context explicitly selected or needed for
   the task to the provider selected by the user.
-- Provide provider adapters for OpenAI and Anthropic (Claude), with a common
-  extension-facing interface for supported chat, streaming, and structured-edit
-  capabilities. Keep provider-specific API behavior behind these adapters.
+- Provide provider adapters for OpenAI and Anthropic (Claude), plus an optional
+  GitHub Copilot subscription adapter using its official runtime and sign-in.
+  Keep provider-specific API behavior behind the common extension-facing
+  interface for supported chat, streaming, and structured-edit capabilities.
 - Show usage after each model request and for the current sampling session:
   provider-reported input/output/cached token counts, estimated API cost in
   USD, and estimated app credits. Keep a local usage history that the user can
@@ -164,7 +167,9 @@ history. Never record credentials or private user data.
 ### Provider and API-key handling
 
 - Support separately managed OpenAI and Anthropic API keys. The user can add,
-  replace, remove, or validate each key independently.
+  replace, remove, or validate each key independently. Show GitHub Copilot
+  sign-in beside those provider rows; Copilot uses its official runtime's
+  subscription authentication and never asks for an OpenAI/Anthropic key.
 - Never hard-code keys or write them into project files, agent Markdown, logs,
   crash reports, or source control.
 - Prefer the operating system's credential store (macOS Keychain and Windows
@@ -386,9 +391,10 @@ introduce only the smallest maintainable harness needed to run it.
 - **Data safety:** provider API keys are absent from project files, logs,
   diagnostics, and crash output; project changes are reviewable and reversible.
 - **Provider/model selection:** OpenAI and Anthropic keys can be managed
-  independently; available models can be refreshed per configured provider;
-  the chosen provider/model is explicit for each request; switching providers
-  and reporting unavailable models work without silent fallback.
+  independently, and GitHub Copilot can be signed in through its official
+  runtime; available models can be refreshed per configured provider; the
+  chosen provider/model is explicit for each request; switching providers and
+  reporting unavailable models work without silent fallback.
 - **Usage/cost visibility:** each successful model response reports provider
   usage units/tokens and an estimated USD/credit amount when a valid rate is
   available; per-session totals aggregate correctly. Missing or stale rates
@@ -410,7 +416,9 @@ introduce only the smallest maintainable harness needed to run it.
   tied to the SuperCollider plugin ABI/version; packaging and supported SC
   versions are therefore part of the product.
 - OpenAI and Anthropic API availability, model behavior, latency, and cost are
-  external dependencies; the app must expose errors and avoid silent retries.
+  external dependencies; Copilot also requires the official CLI, its supported
+  Python runtime/SDK, and a signed-in subscription. The app must expose errors
+  and avoid silent retries.
 - SuperCollider's upstream README lists Windows 10 as supported and documents
   Apple Silicon builds. MacBook Neo-specific hardware/OS support still needs
   a real-device smoke test.

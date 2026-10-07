@@ -1,0 +1,13 @@
+(
+	name: "MaxxedBeats",
+	summary: "In-SuperCollider AI music assistant: plan, review, and render compositions offline",
+	version: "0.1.0",
+	author: "MaxxedBeats contributors",
+	license: "GPL-3.0-or-later",
+	schelp: "Guides/MaxxedBeats-Assistant",
+	url: "https://github.com/jrblankenhorn1007/dj_maxxed_beats",
+	dependencies: [],
+	since: "2026",
+	copyright: "MaxxedBeats contributors",
+	isCompatible: { Main.versionAtLeast(3, 14) }
+)
