@@ -11,19 +11,21 @@
   and the requested GitHub Copilot provider; PR #37 merged to `origin/main` at
   `66aac98e566f3ecb25d893d726e9568e8c65f6bf`.
 - **Implementation commit:** `822db890bef35da1e559634af4ddc0f418afa60d`.
-- **Post-merge memory/status follow-up:** in progress on
-  `ralph/assistant-postmerge-followup-20261007-a29464e`, based on merged
-  `origin/main`. It records the categorized cross-platform lessons and
-  coordinator run progress; the final sign-out status will follow after this
-  merge. This is part of iteration 8, not a new implementation iteration.
-- **Loop state:** implementation content is merged and verified; the run
-  remains in progress until the memory update and final sign-out status are
-  merged and verified.
+- **Post-merge memory/status follow-up:** PR #38 merged to `origin/main` at
+  `36ba6c3e5d3e7dea06aa711608804b1ab56a4e76`; the categorized cross-platform
+  lessons and coordinator run progress are integrated. This is part of
+  iteration 8, not a new implementation iteration.
+- **Coordinator sign-out:** recorded in coordinator status revision 3 after
+  verifying the implementation and memory/status merges on `origin/main`.
+- **Loop state:** implementation content and memory update are merged and
+  verified; the coordinator sign-out is recorded.
 - **Current verification:** the full local gate passes **213 tests** with four
   existing platform/opt-in skips. PR run `37653854390` passed the Windows
   assistant suite (105 tests; only the macOS Keychain test skipped), macOS
   suite, and Windows package install/smoke/uninstall. Headless Tests
   `37653854360` and all three Plugin Builds jobs in `37653854372` passed.
+  PR #38 passed all 14 hosted checks, received a `CLEAN` independent review,
+  and its merge was verified on fetched `origin/main`.
   Copilot sign-in appears in the shared Keys & Privacy provider rows and is
   covered by GUI/factory tests.
 - **User installation:** the actual assistant is installed and its native

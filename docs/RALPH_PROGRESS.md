@@ -1,4 +1,4 @@
-Ralph-Status: IN_PROGRESS
+Ralph-Status: COMPLETE
 
 > This per-iteration log lives in `docs/RALPH_PROGRESS.md`.
 
@@ -1286,3 +1286,21 @@ Ralph-Status: IN_PROGRESS
 - **Remaining environment gaps:** this Mac has Python 3.9.6, no Python 3.11,
   and no Copilot CLI; live Copilot sign-in/generation and a physical Windows
   10/11 GUI check are not claimed.
+
+## Coordinator completion gate correction — 2026-10-07
+
+- **PR #38 review:** the independent review returned `CLEAN` for base
+  `66aac98e566f3ecb25d893d726e9568e8c65f6bf` and head
+  `8588dd45ce66446b353bffc060cb53801bd986cd`. All 14 hosted checks passed.
+- **Memory/status integration:** PR #38 merged at
+  `36ba6c3e5d3e7dea06aa711608804b1ab56a4e76`; after fetching `origin`,
+  `git merge-base --is-ancestor 36ba6c3e5d3e7dea06aa711608804b1ab56a4e76
+  origin/main` passed with `origin/main` at that SHA.
+- **Premature completion root cause:** the task-completion tool was called
+  while the persisted coordinator record still had `status: IN_PROGRESS`,
+  `revision: 2`, null sign-out fields, and PR #38 was open. The final-state
+  predicate and pending merge ancestry had not been checked.
+- **Correction:** this status update records the sign-out only after PR #37
+  and PR #38 were merged and verified. The task remains open until this final
+  status update is merged and its merge SHA is verified on fetched
+  `origin/main`.
