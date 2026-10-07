@@ -1,7 +1,7 @@
 schema_version: 2
 snapshot_path: "docs/ralph-status.md"
-snapshot_revision: 25
-updated_at_utc: "2026-10-07T22:18:10Z"
+snapshot_revision: 27
+updated_at_utc: "2026-10-07T23:11:40Z"
 overall_status: IN_PROGRESS
 current_run_ids:
   - "copilot-setup-onboarding-20261007-1640"
@@ -413,7 +413,7 @@ runs:
     worker_count_note: "Both scoped workers completed; worker-02's shared-repository integration remains blocked on explicit remote-publish authorization."
   - run_id: "copilot-setup-onboarding-20261007-1640"
     task_ids: ["copilot-runtime-setup-onboarding"]
-    aggregate_status: IN_PROGRESS
+    aggregate_status: BLOCKED
     requested_worker_count: 2
     effective_worker_count: 0
     active_worker_count: 0
@@ -425,7 +425,7 @@ runs:
     coordinator_rebased_onto_origin_main_sha: null
     coordinator_implementation_commit_sha: "cab1f464346953e6a39b4477125de0c8bcc6a078"
     created_at_utc: "2026-10-07T20:39:31Z"
-    updated_at_utc: "2026-10-07T22:18:10Z"
+    updated_at_utc: "2026-10-07T23:11:40Z"
     split_plan:
       - task_id: "copilot-runtime-setup-onboarding"
         worker_id: "coordinator-01"
@@ -442,8 +442,8 @@ runs:
             - "extension/Data/copilot/bridge.py native CLI discovery and test_mb_copilot.CopilotBridgeTests.test_resolve_cli_finds_per_user_native_install_outside_path"
             - "extension/Classes/Providers/MBCopilotProvider.sc runtime refresh test"
       no_durable_lessons_reason: null
-    memory_review: PENDING_REMOTE_MERGE
-    next_action: "Publish the Ubuntu APT fallback fix in a stacked PR against PR #41 head f8f400a, rerun hosted checks and obtain targeted round-2 remediation confirmation, then merge PR #41 through GitHub's protected API/UI path and complete post-merge verification and memory review."
+    memory_review: COMPLETE
+    next_action: "User: install Python 3.11+ from the setup helper's Python.org flow, rerun setup, complete GitHub browser sign-in, then exercise the required visual scenario on Windows 10 x64 and MacBook Neo."
 
 branch_agent_index:
   - run_id: "djmb-plugin-completion-20261006-2310"
@@ -980,7 +980,7 @@ branch_agent_index:
     base_origin_main_sha: "dac46c31f6711ad0d90d40b9634ba92aa5a0203b"
     rebased_onto_origin_main_sha: null
     implementation_commit_sha: "cab1f464346953e6a39b4477125de0c8bcc6a078"
-    status: IN_PROGRESS
+    status: BLOCKED
     iteration: 1
     merge_actor_worker_id: null
     worker_sign_off:
@@ -989,19 +989,26 @@ branch_agent_index:
       cryptographic_signature_status: NOT_CRYPTOGRAPHICALLY_SIGNED
       attested_at_utc: "2026-10-07T22:14:25Z"
     pull_request:
-      status: PENDING
+      status: MERGED
       number: 41
       url: "https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/41"
       base_sha: "dac46c31f6711ad0d90d40b9634ba92aa5a0203b"
-      head_sha: "f8f400a45297e39b02434d4fc3d665a49889c964"
+      head_sha: "e9a003cb537c1cca80f0828b8cf8186d5b49e681"
+      merged_at_utc: "2026-10-07T22:26:54Z"
+      merge_sha: "740ccf6cbb7ad875ee1333762dc84b635361cbb1"
+    implementation_merge_verification:
+      status: VERIFIED
+      merge_sha: "740ccf6cbb7ad875ee1333762dc84b635361cbb1"
+      verified_origin_main_sha: "e73b953671ba72e9af388ceaa21ebcdcfe3d63d6"
+      verification_method: "git merge-base --is-ancestor 740ccf6cbb7ad875ee1333762dc84b635361cbb1 origin/main"
     review:
-      status: PENDING
+      status: COMPLETE
       reviewer_agents: ["Ralph Code Reviewer", "Ralph Security Reviewer"]
       reviewed_base_sha: "dac46c31f6711ad0d90d40b9634ba92aa5a0203b"
-      reviewed_head_sha: "f8f400a45297e39b02434d4fc3d665a49889c964"
+      reviewed_head_sha: "e9a003cb537c1cca80f0828b8cf8186d5b49e681"
       rounds_completed: 2
       max_rounds: 2
-      unresolved_finding_count: 1
+      unresolved_finding_count: 0
       author_decision:
         status: NOT_REQUIRED
         choice: null
@@ -1019,37 +1026,47 @@ branch_agent_index:
         source: null
     status_path: "docs/ralph/ralph-copilot-windows-onboarding-20261007-1640/agents/coordinator-01/status.md"
     progress_path: "docs/ralph/ralph-copilot-windows-onboarding-20261007-1640/agents/coordinator-01/progress.md"
-    decision_record_path: "docs/decisions/ralph-copilot-windows-onboarding-20261007-1640/agents/coordinator-01/pr-pending.md"
+    decision_record_path: "docs/decisions/ralph-copilot-windows-onboarding-20261007-1640/agents/coordinator-01/pr-41.md"
     decision_index_path: "docs/decisions/ralph-copilot-windows-onboarding-20261007-1640/README.md"
     checks:
       - command: "SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth bash scripts/run_headless_tests.sh"
         result: "PASS (232 tests, five platform/opt-in skips; 205.315 seconds)"
-      - command: "PYTHONPATH=tests python3 -m unittest test_mb_copilot_setup -q"
-        result: "PASS (14 tests, one Windows-only case skipped on macOS)"
-      - command: "PYTHONPATH=tests python3 -m unittest -v test_mb_copilot_setup.CopilotSetupTests.test_linux_apt_fallback_explains_when_python311_is_unavailable test_mb_copilot_setup.CopilotSetupTests.test_linux_launcher_explains_that_interactive_terminal_is_required"
-        result: "PASS (2 Linux fallback/terminal tests)"
-      - command: "bash -n extension/Data/copilot/setup-copilot.sh && git diff --check"
-        result: PASS
-      - command: "Install pinned GitHub Copilot CLI release into a temporary directory; verify SHA-256 and run --version"
-        result: "PASS (GitHub Copilot CLI 1.0.93)"
-      - command: "git diff --cached --check"
-        result: PASS
-      - command: "Ruby schema-v2 dashboard/leaf/resource and memory-handoff consistency check"
-        result: PASS
-      - command: "Ruby local-link validation for branch dossier and decision records"
-        result: "PASS (10 branch Markdown files)"
-      - command: "Windows PowerShell package-script tests"
-        result: "NOT_RUN locally (PowerShell unavailable); PR #41 Windows package/Assistant checks passed on original head b7b19a5; review-fix head still needs hosted CI"
-      - command: "Hosted PR #41 checks"
-        result: "PASS on original head b7b19a596837b5fd667680385224a162b3e91ee6 (macOS, Windows x64, Windows package, headless, and ChaosOsc builds)"
-      - command: "Hosted Windows Assistant checks on first review-fix PR #42 head 494310d5ed47b1b935ddcd84c9434e228ccae326"
-        result: "Initial runs failed on test-only POSIX assumptions; corrected tests passed on replacement PR #43 head 7f77de1f42e7cb7076fab32277e975b327b84e04."
-      - command: "Hosted PR #43 checks and merge"
-        result: "PASS (all macOS, Windows x64/package, headless, and ChaosOsc checks; merged into PR #41 at f8f400a45297e39b02434d4fc3d665a49889c964)"
-      - command: "Hosted PR #41 checks at current head f8f400a45297e39b02434d4fc3d665a49889c964"
-        result: "PASS (macOS, Windows x64/package, headless, and ChaosOsc builds)"
-      - command: "Round-2 independent review at PR #41 head f8f400a45297e39b02434d4fc3d665a49889c964"
-        result: "Security: no vulnerabilities. Code review: one MEDIUM Ubuntu 22.04 APT/Python fallback finding, fixed locally in implementation commit cab1f464346953e6a39b4477125de0c8bcc6a078; targeted exact-head confirmation pending."
+      - command: "SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth PYTHONPATH=tests python3 -m unittest test_mb_copilot test_mb_copilot_setup -q"
+        result: "PASS (32 tests; one Windows-only skip). The initial invocation omitted SCLANG/SCSYNTH; the configured rerun passed."
+      - command: "python3 scripts/install_maxxedbeats.py --dry-run"
+        result: "PASS; both marker-protected installed folders were identified for replacement."
+      - command: "python3 scripts/install_maxxedbeats.py"
+        result: "PASS; universal macOS ChaosOsc built and the merged Quark/plugin installed."
+      - command: "Hosted PR #41 checks on final head e9a003cb537c1cca80f0828b8cf8186d5b49e681"
+        result: "PASS (Assistant macOS/Windows, Windows package, headless-tests, ChaosOsc macOS/Linux/Windows)."
+      - command: "PR #45 memory checks and remote verification"
+        result: "PASS; memory review PR #45 merged at e73b953671ba72e9af388ceaa21ebcdcfe3d63d6 and verified on fetched origin/main."
       - command: "Live Copilot sign-in and generation"
-        result: "NOT_RUN (Python 3.11+ is not installed in this environment)"
-    next_action: "Publish the Ubuntu APT fallback fix in a stacked PR against PR #41 head f8f400a, rerun hosted checks and obtain targeted round-2 remediation confirmation, then use the protected merge path."
+        result: "NOT_RUN; Python 3.11+ is not installed and GitHub browser sign-in requires user interaction."
+      - command: "Required SCIDE visual acceptance on Windows 10 x64 and MacBook Neo"
+        result: "NOT_RUN; no fresh visual scenario or screenshot inspection was performed."
+    blockers:
+      - "User must install Python 3.11+ using the setup helper's Python.org flow, rerun setup, and complete GitHub browser sign-in."
+      - "Project-wide visual acceptance remains open for Windows 10 x64 and MacBook Neo."
+    memory_review:
+      status: COMPLETE
+      outcome: DURABLE_LESSON_CAPTURED
+      memory_update: VERIFIED
+      sources:
+        - ".github/memory/README.md"
+        - ".github/memory/runtime-setup.md"
+        - ".github/memory/testing.md"
+    memory_followup:
+      branch: "ralph/copilot-memory-20261007-2227"
+      pull_request:
+        number: 45
+        url: "https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/45"
+        state: MERGED
+        merged_at_utc: "2026-10-07T22:53:57Z"
+        merge_sha: "e73b953671ba72e9af388ceaa21ebcdcfe3d63d6"
+      merge_verification:
+        status: VERIFIED
+        merge_sha: "e73b953671ba72e9af388ceaa21ebcdcfe3d63d6"
+        verified_origin_main_sha: "e73b953671ba72e9af388ceaa21ebcdcfe3d63d6"
+        verification_method: "git merge-base --is-ancestor e73b953671ba72e9af388ceaa21ebcdcfe3d63d6 origin/main"
+    next_action: "User: install Python 3.11+, run setup, sign in to GitHub Copilot, and complete the required visual scenario before project-wide completion."
