@@ -38,7 +38,8 @@ Routine {
 				~throwsKind.({ project.resolve(bad) }, \validation), bad.asCompileString);
 		};
 		~check.("resolve_accepts_nested_new_path",
-			project.resolve("sub/new/thing.scd") == (project.root +/+ "sub/new/thing.scd"));
+			MBProject.comparablePath(project.resolve("sub/new/thing.scd"))
+				== MBProject.comparablePath(project.root +/+ "sub/new/thing.scd"));
 		~check.("read_returns_contents", project.read("comp.scd") == original);
 		~check.("read_rejects_symlink_escape", ~throwsKind.({ project.read("filelink.scd") }, \validation));
 		~check.("read_missing_is_io_error", ~throwsKind.({ project.read("missing.scd") }, \io));

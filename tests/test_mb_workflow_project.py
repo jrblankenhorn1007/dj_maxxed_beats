@@ -20,7 +20,7 @@ class MBProjectWorkflowTests(ScenarioTestCase):
         (project / ".hidden.scd").write_text("hidden\n")
         (project / "renders").mkdir()
         (project / "renders" / "old.wav").write_bytes(b"RIFF")
-        (work / "outside.scd").write_text("// outside\n")
+        (work / "outside.scd").write_bytes(b"// outside\n")
         (work / "outside-dir").mkdir()
         os.symlink(str(work / "outside-dir"), str(project / "dirlink"))
         os.symlink(str(work / "outside.scd"), str(project / "filelink.scd"))

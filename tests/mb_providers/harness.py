@@ -7,6 +7,7 @@ Each snippet runs inside a Routine on AppClock. Helpers available to it:
 """
 
 import json
+import sys
 import os
 from pathlib import Path
 import shutil
@@ -28,6 +29,9 @@ PROLOGUE = r"""
 ~errInfo = { |e| if(e.isKindOf(MBError)) { (kind: e.kind, detail: e.detail) } { (kind: \other, detail: e.asString) } };
 ~await = { |fn| var c = Condition(false), out; fn.({ |...args| out = args; c.test = true; c.signal }); c.wait; out };
 ~elapsed = { Main.elapsedTime };
+// On Windows sclang's Platform.userConfigDir ignores LOCALAPPDATA, so the
+// isolated settings folder is passed explicitly there.
+"MB_TEST_SETTINGS_DIR".getenv !? { |dir| MBProviderPaths.settingsDirOverride = dir };
 AppClock.sched(%TIMEOUT%, { "MBTEST_TIMEOUT".postln; 1.exit; nil });
 Routine({
 	try {
@@ -112,6 +116,8 @@ def isolated_env(workdir):
     })
     for name in ("OPENAI_API_KEY", "ANTHROPIC_API_KEY", "CURL_HOME"):
         env.pop(name, None)
+    if sys.platform == "win32":
+        env["MB_TEST_SETTINGS_DIR"] = str(home / "AppData" / "Local" / "SuperCollider" / "MaxxedBeats")
     return env, home
 
 

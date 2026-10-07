@@ -53,10 +53,7 @@ def isolated_environment(name):
     environment.update(
         {
             "HOME": str(home),
-            "USERPROFILE": str(home),
             "TMPDIR": str(temp),
-            "TEMP": str(temp),
-            "TMP": str(temp),
             "XDG_CONFIG_HOME": str(home / ".config"),
             "XDG_DATA_HOME": str(home / ".local" / "share"),
             "LOCALAPPDATA": str(home / "AppData" / "Local"),
@@ -109,7 +106,7 @@ def run_sclang_script(name, script, include_paths, timeout=None):
                 timeout, "\n".join(output.splitlines()[-60:])
             )
         )
-    return result.stdout + result.stderr
+    return result.stdout + result.stderr + "\n[sclang exit code {}]".format(result.returncode)
 
 
 def parse_results(output):
