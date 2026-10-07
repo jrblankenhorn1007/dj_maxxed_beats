@@ -252,7 +252,9 @@ MBRenderer {
 		var argv = [sclang] ++ includePaths.collect { |dir| ["--include-path", dir] }.flatten ++ [workDir +/+ "runner.scd"];
 		this.prProgress(\building, 0.05, "Building the Score from " ++ entryPath.asString ++ " in a separate sclang process");
 		process = MBRenderProcess.run(argv, this.prEnvironment, workDir +/+ "sclang.log", timeout, { |finished|
-			if(handle.active) { this.prScoreBuilt(finished) };
+			// After a cancel, clean again once the child has really exited:
+			// a dying child can recreate files in its isolated HOME.
+			if(handle.active) { this.prScoreBuilt(finished) } { this.prCleanHome };
 		}, ["Library has not been compiled successfully", "ERROR: duplicate Class"]);
 	}
 
@@ -305,7 +307,7 @@ MBRenderer {
 		this.prProgress(\rendering, 0.4, "Rendering " ++ settings[\duration] ++ " s offline with scsynth (NRT)");
 		process = MBRenderProcess.run(argv, this.prEnvironment, workDir +/+ "scsynth.log",
 			max(timeout, settings[\duration] * 4), { |finished|
-				if(handle.active) { this.prAudioRendered(finished) };
+				if(handle.active) { this.prAudioRendered(finished) } { this.prCleanHome };
 			});
 	}
 

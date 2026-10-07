@@ -145,6 +145,14 @@ Routine {
 		~check.("cancel_stops_render_without_outputs",
 			~failedWith.(outcome, \cancelled) and: { [~wavs.value.size, ~sidecars.value.size] == before },
 			~describe.(outcome));
+		// The killed child exits asynchronously; its exit callback removes the
+		// isolated HOME it may have recreated. Wait for that (bounded).
+		block { |break|
+			100.do {
+				if((~root +/+ ".maxxedbeats/renders/*/home").pathMatch.isEmpty) { break.value };
+				0.1.wait;
+			};
+		};
 	} { |error|
 		~check.("uncaught_error", false, error.errorString);
 	};

@@ -125,6 +125,16 @@ def parse_results(output):
     return passes, failures, done
 
 
+def unexpected_errors(output):
+    """sclang output without known environmental noise: on hosted Windows
+    runners sclang cannot bind its UDP port ("No networking: unable to bind
+    udp socket") and then reports `_GetLangPort` failing at startup."""
+    text = output.replace("ERROR: Message", "")
+    if "No networking: unable to bind udp socket" in text:
+        text = text.replace("ERROR: Primitive '_GetLangPort' failed.", "")
+    return text
+
+
 class SclangScriptCase(unittest.TestCase):
     script = None
     include_paths = (CLASSES,)
@@ -143,7 +153,7 @@ class SclangScriptCase(unittest.TestCase):
         self.assertEqual(done, (len(passes), len(failures)),
                          "\n".join(line for line in output.splitlines() if "FAIL" in line or "ERROR" in line))
         self.assertGreaterEqual(len(passes), self.minimum_passes, tail)
-        self.assertNotIn("ERROR:", output.replace("ERROR: Message", ""), tail)
+        self.assertNotIn("ERROR:", unexpected_errors(output), tail)
         return passes
 
 
