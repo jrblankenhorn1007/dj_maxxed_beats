@@ -1212,11 +1212,12 @@ Ralph-Status: IN_PROGRESS
 
 ## Iteration 8 — Windows CI fixes and GitHub Copilot provider row — 2026-10-07
 
-- **Working branch:** `ralph/ai-assistant-finish-20261007-1607`, created from
-  `origin/main` `e1c70289c94f8e5d188547f756069f6e249c8836`. Implementation
-  commit: `822db890bef35da1e559634af4ddc0f418afa60d`. The branch is not yet
-  published or integrated; the origin fetch before publication confirmed
-  `origin/main` had not moved.
+- **Implementation integration:** branch
+  `ralph/ai-assistant-finish-20261007-1607`, implementation commit
+  `822db890bef35da1e559634af4ddc0f418afa60d`, merged by PR #37 at
+  `66aac98e566f3ecb25d893d726e9568e8c65f6bf`. The tested PR head was
+  `a29464e9515f676bfef6a144d030b20e2db9a363`; the merge was verified on
+  fetched `origin/main`.
 - **Windows Red:** Assistant Tests run `37578448992` failed on Windows x64
   (`f6f6aea`). The Credential Manager output contained
   `Target: MaxxedBeatsTest-...:openai`, not the legacy `LegacyGeneric:target=`
@@ -1225,8 +1226,8 @@ Ralph-Status: IN_PROGRESS
   completion to fail. Windows variation tests passed.
 - **Credential parser Green:** added regression coverage for current target
   records, legacy records, and the empty-listing header. The focused
-  `CredentialListingTests` now pass (3 tests) on macOS; Windows execution
-  remains pending CI.
+  `CredentialListingTests` pass (3 tests) on macOS; the real Windows
+  Credential Manager test passed in Assistant Tests run `37653854390`.
 - **Renderer fixture Green:** replaced nested shell quoting with
   `Pipe.argv` and a PowerShell helper that plants a symlink to an explicit
   external sentinel. The renderer still has to reject the render and preserve
@@ -1262,7 +1263,26 @@ Ralph-Status: IN_PROGRESS
 - **Visual check:** `python3 tests/mb_gui/capture_screenshots.py` captured ten
   native screenshots. Inspected `09-keys-masked.png`: OpenAI, Anthropic, and
   GitHub Copilot appear as aligned provider rows, with no Copilot key field.
-- **Remaining verification:** CI7's failure is addressed in the working tree,
-  but a new Windows run has not yet been triggered. This Mac has Python 3.9.6,
-  no Python 3.11, and no Copilot CLI; live Copilot sign-in/generation and a
-  physical Windows 10/11 GUI check are not claimed.
+- **Hosted PR verification:** at PR head
+  `a29464e9515f676bfef6a144d030b20e2db9a363`, Assistant Tests run
+  `37653854390` passed on macOS and Windows. Windows ran 105 tests with one
+  macOS-only Keychain test skipped; no Windows behavior tests were skipped.
+  The Windows package install/smoke/uninstall job passed. Headless Tests
+  `37653854360` and all three Plugin Builds jobs in run `37653854372` passed.
+  The duplicate push-triggered runs also passed.
+- **Post-merge memory review:** reviewed `.github/memory/README.md` and the
+  cross-platform, testing, and git-workflow categories. Added two
+  cross-platform lessons: parse Credential Manager output by actual target
+  records, and launch Windows test helpers with argument arrays. The existing
+  git-workflow category already documents the GH013/API/UI-only update rule;
+  no duplicate was added.
+- **Status follow-up:** direct push of the post-check status commit
+  `08ea68c2df9bdd01bbcd40e2fb1332d52d289443` was rejected by the repository's
+  `code_coverage` rule. The local branch and commit were preserved. This
+  memory/status update is on a fresh branch from merged `origin/main`
+  `66aac98e566f3ecb25d893d726e9568e8c65f6bf`; the coordinator run remains
+  in progress until this follow-up and the final sign-out status are merged
+  and verified.
+- **Remaining environment gaps:** this Mac has Python 3.9.6, no Python 3.11,
+  and no Copilot CLI; live Copilot sign-in/generation and a physical Windows
+  10/11 GUI check are not claimed.
