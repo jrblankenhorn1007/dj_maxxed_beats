@@ -109,7 +109,11 @@ hosted Assistant Tests suite; no Windows behavior tests are skipped. The zip
 package is installed with its `install.ps1`, smoke-tested, and removed in CI.
 A physical Windows 10/11 PC and SCIDE-launched visual sign-off remain open
 (manual checks). Copilot's SDK auth, live model refresh, and one short request
-are verified on the MacBook Neo through the new SDK-managed runtime; the
+passed in a fresh SuperCollider provider process on the MacBook Neo through
+the new SDK-managed runtime. A subsequent screenshot of the active SCIDE
+window reported Copilot unauthenticated and model refresh failing; the
+fresh-process result does not establish that this window works. In-app
+sign-in/model refresh and a real GUI request still need confirmation. The
 Windows visual workflow remains unverified. The official CLI is present
 per-user for browser sign-in, while model operations use the runtime pinned by
 the SDK.
@@ -123,7 +127,7 @@ the SDK.
 | Providers and transport | Implemented | Direct sclang + OS `curl`; TLS enforced; cancellable; keys never in argv/env/files. Windows: `curl.exe` started by a PowerShell helper that writes the key only to curl's stdin. [Provider design](./design/providers.md). |
 | Credentials | Implemented | macOS Keychain via `security` (temporary-keychain test); Windows Credential Manager via the PowerShell helper (real round trip with unique test-only targets); Linux Secret Service command-tested only; in-memory fake for tests. |
 | Model catalog | Implemented | Per-provider refresh/cache/selection (`model-catalog.json`, `providers.json`); never substitutes; stale after failure or 24 h. |
-| GitHub Copilot | Implemented; live macOS path verified | Official subscription provider with no API key; setup pre-downloads the SDK-pinned runtime, the official CLI handles browser login, model refresh returned 28 models, and one `gpt-5-mini` request succeeded. Tool access remains disabled; Windows GUI behavior is unverified. |
+| GitHub Copilot | Implemented; active GUI unresolved | Official subscription provider with no API key; setup pre-downloads the SDK-pinned runtime and the official CLI handles browser login. A separate fresh provider process returned 28 models and completed one `gpt-5-mini` request, but the user's active SCIDE screenshot still reports an auth/model-refresh failure. In-window sign-in and a real GUI request remain unverified; tool access remains disabled and Windows GUI behavior is unverified. |
 | Usage, USD, credits | Implemented | Versioned rate table `2026-10-06.1`; 100 credits per estimated USD; missing/stale labelled, never zero; local history (`usage-history.json`). |
 | Project, proposals, apply, undo | Implemented | Strict `maxxedbeats.proposal/1`; path confinement; confirmed apply with backups; undo refuses after later user edits. [Workflow design](./design/workflow.md). |
 | Rendering | Implemented | Approved only; separate `sclang` → Score → `scsynth -N`; POSIX `env -i` + isolated HOME, Windows PowerShell launcher with a cleared environment and `sclang -l` (`excludeDefaultPaths`); installed ChaosOsc in the default plugin paths; checks and JSON sidecar. Linux launching unverified. |
@@ -132,7 +136,7 @@ the SDK.
 | Packaging | Implemented | `scripts/install_maxxedbeats.py` installs/removes the Quark (with `agent/*.md`) and ChaosOsc together; marker-protected; dry run. Windows without developer tools: `MaxxedBeats-Windows-x64.zip` includes the Copilot bridge/requirements and documents its optional Python/CLI prerequisites; hosted install/smoke/uninstall passed. |
 | Documentation | Implemented | [User guide](./USER_GUIDE.md), README, SCDoc help, three design docs. |
 | Tests and CI | Implemented | PR #50 passes Assistant Tests (macOS/Windows), Windows package, Headless Tests, and Plugin Builds (three OSes). The startup fix passes the full headless gate (237 tests, 7 skips); the installed Copilot provider passes live auth/model refresh and one short request on the MacBook Neo. |
-| Visual verification | Partial | The installed extension's class library compiled in headless sclang and the live provider passed, but no SCIDE visual walkthrough was performed after this install. Required SCIDE-launched sign-off on Windows 10 x64 and MacBook Neo remains open. |
+| Visual verification | Partial; active GUI auth unresolved | The installed extension's class library compiled in headless sclang and a separate fresh provider process passed, but the user's screenshot of the active SCIDE shows Copilot unauthenticated and model refresh failing. No successful SCIDE walkthrough/request has been verified. Required SCIDE-launched sign-off on Windows 10 x64 and MacBook Neo remains open. |
 
 ## Verification and platform coverage
 

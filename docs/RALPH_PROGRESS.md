@@ -1675,14 +1675,20 @@ Ralph-Status: IN_PROGRESS
   and completion callbacks returned authenticated status, 28 models, and
   `MAXXEDBEATS COPILOT CONNECTED.` respectively. The one-off verification
   script was removed after this pass.
-- **Post-merge memory review:** `.github/memory/runtime-setup.md` had no
-  duplicate SDK-runtime lesson. A concise rule now records use of the
-  SDK-managed version-matched protocol runtime, with the interactive CLI
-  reserved for login. The memory update is being integrated on
-  `ralph/copilot-sdk-memory-20261008-af98284`.
-- **Remaining platform coverage:** no SCIDE visual run was performed for this
-  iteration, and physical Windows 10 x64 visual acceptance remains open.
-- **Integration:** PR #50 is merged and the installed default provider path
-  passes. The required post-merge memory update still needs remote integration.
-  Physical Windows 10 x64 and SCIDE visual acceptance remain open; keep the
-  overall project `IN_PROGRESS` and do not emit `RALPH_COMPLETE`.
+- **Post-merge memory review and integration:** `.github/memory/runtime-setup.md`
+  had no duplicate SDK-runtime lesson. PR #51 adds the SDK-managed,
+  version-matched runtime rule and merged at
+  `2ab8c19fd07d51b5a985f3a546d19f4492f1a24e` after a clean exact-head code
+  review and passing hosted checks. The merge was fetched and verified on
+  `origin/main`.
+- **Observed SCIDE discrepancy:** a user-provided screenshot of the active
+  SCIDE showed Copilot unauthenticated and model refresh failing, even though
+  the separate fresh installed-provider process returned authenticated status,
+  28 models, and a successful request. That headless/provider result does not
+  verify the active window. Its in-app sign-in/model-refresh action and a real
+  GUI request still need confirmation.
+- **Remaining platform coverage:** successful SCIDE visual acceptance on the
+  MacBook Neo and physical Windows 10 x64 visual acceptance remain open.
+- **Integration:** PR #50 and memory PR #51 are merged and the fresh installed
+  provider path passes. Keep the overall project `IN_PROGRESS`; do not emit
+  `RALPH_COMPLETE` until the active GUI and physical-platform acceptance pass.
