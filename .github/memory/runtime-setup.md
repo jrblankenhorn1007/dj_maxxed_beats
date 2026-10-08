@@ -32,3 +32,15 @@
   [Linux setup helper](../../extension/Data/copilot/setup-copilot.sh) and
   [setup tests](../../tests/test_mb_copilot_setup.py).
 - **Scope:** User-facing Linux setup for required runtimes.
+
+### Point runtime errors at the platform setup action
+- **Rule:** When a GUI-launched provider cannot start because its runtime
+  prerequisites are missing, name the OS-specific setup launcher and the
+  immediate action instead of only listing version requirements.
+- **Why:** The generic Copilot Python/SDK error did not identify the existing
+  macOS, Linux, or Windows helper. The bridge now names each launcher, and
+  tests verify the platform messages reach the SuperCollider provider error
+  callback. See the
+  [bridge](../../extension/Data/copilot/bridge.py) and
+  [Copilot tests](../../tests/test_mb_copilot.py).
+- **Scope:** Optional external runtimes launched from GUI applications.

@@ -1,10 +1,7 @@
 # Code review archive
 
-- **State:** `PENDING`; the independent review will be bound to the exact PR
-  base/head pair.
-- **Required reviewer:** independent read-only Ralph Code Reviewer.
-- **Security review:** not required; this change only alters static
-  configuration-error guidance and regression tests.
-- Keep the review report as sidecar evidence while the PR is open. Archive the
-  immutable prompt and report here only after integration.
+- **State:** `COMPLETE`; one independent review round, exact base/head recorded.
+- **Review prompt:** [round 1](../prompts/reviewer-round-01.md).
+- **Report:** [round 1](./round-01.md).
+- **Result:** no significant issues; no security review was required.
 *** End of File

@@ -52,4 +52,36 @@
   remains open.
 - **Integration:** implementation content is committed locally but not yet
   published, reviewed, or merged. Do not emit `RALPH_COMPLETE`.
+
+## Iteration 2 integration and memory review — 2026-10-08
+
+- **PR #47:** base `68c7a9b709d7b5f9412e2358015f21af2bce8dcf`, final head
+  `dd71106b1a2c14caa8897ec0f8ad5b7263d2e7af`; merged at
+  `2026-10-07T23:57:05Z` as `edc9c64b138e5e183dc6bea64a8c99cb3253866a`.
+- **Review:** the independent exact-head code review found no significant
+  issues. Hosted Assistant macOS/Windows, Windows package, headless, and
+  ChaosOsc macOS/Linux/Windows checks all passed.
+- **Integrated gate:** after fetching and fast-forwarding the clean local main
+  worktree, `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
+  bash scripts/run_headless_tests.sh` passed **236 tests, 6 skipped** in
+  249.900 seconds on `origin/main` at
+  `edc9c64b138e5e183dc6bea64a8c99cb3253866a`.
+- **Local install:** `python3 scripts/install_maxxedbeats.py --dry-run`
+  confirmed both marker-protected installs could be replaced safely.
+  `python3 scripts/install_maxxedbeats.py` rebuilt universal macOS ChaosOsc
+  and reinstalled the merged Quark/plugin. The installed `bridge.py` matches
+  the merged source; macOS/Linux setup launchers are present and executable.
+- **Memory review:** `.github/memory/README.md`,
+  `.github/memory/runtime-setup.md`, `.github/memory/cross-platform.md`, and
+  `.github/memory/testing.md` were reviewed. A reusable lesson about naming
+  the platform-specific setup action in runtime errors is being captured in
+  `.github/memory/runtime-setup.md` through fresh branch
+  `ralph/copilot-guidance-memory-20261007-2359`; its PR/merge verification
+  remains pending.
+- **Remaining gaps:** this Mac still uses Python 3.9.6. Copilot Python 3.11+
+  setup, browser sign-in, and generation remain unverified; the user must run
+  the helper and complete the official sign-in. Physical Windows 10 x64 and
+  MacBook Neo visual acceptance remain open. The project is still blocked;
+  do not emit `RALPH_COMPLETE`.
 *** End of File
