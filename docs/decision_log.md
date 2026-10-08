@@ -916,3 +916,28 @@ credentials and private user data out of this file.
   request. The targeted and full headless tests pass, and the branch bridge
   authenticates in the GUI-like environment. The installed active-window
   model refresh and real GUI request remain pending.
+
+### DEC-047 — Disable both Copilot SDK telemetry channels
+
+- **Date:** 2026-10-08
+- **Context:** The product promises that telemetry and usage history stay on
+  the machine except as part of a user-initiated model request. Copilot SDK
+  1.0.16 has two independent telemetry paths: providing any client
+  `telemetry` configuration enables OpenTelemetry instrumentation, and
+  GitHub-authenticated sessions enable session telemetry by default when its
+  option is omitted. Ambient `COPILOT_*` or `OTEL_*` variables can also
+  configure the child runtime.
+- **Decision:** Omit the client `telemetry` argument, filter inherited
+  `COPILOT_*` and `OTEL_*` variables case-insensitively, and explicitly set
+  `enable_session_telemetry=False` for every session.
+- **Alternatives:** Keep a false-looking telemetry dictionary; disable only
+  client OpenTelemetry; or rely on the SDK's default for session telemetry.
+- **Rationale:** The pinned SDK documents the session option as independent
+  of client OpenTelemetry and maps the explicit false value into the runtime
+  session payload. Leaving the client option unset and removing ambient
+  telemetry configuration prevents either path from silently turning on.
+- **Consequences:** Regression tests verify both SDK settings and inherited
+  environment filtering. The Copilot request/auth path and tool denial remain
+  unchanged. PR #54 is preserved but must not merge; its replacement branch
+  has not yet passed hosted checks or independent exact-head review. Active
+  SCIDE and physical Windows acceptance remain open.

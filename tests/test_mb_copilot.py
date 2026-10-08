@@ -197,9 +197,32 @@ class CopilotBridgeTests(unittest.TestCase):
             "per-request COPILOT_HOME must not hide the user's saved login",
         )
         options = self.bridge.session_options({"model": "test-model"}, self.directory)
+        self.assertIs(
+            options.get("enable_session_telemetry"), False,
+            "GitHub-authenticated sessions enable SDK telemetry unless disabled",
+        )
         self.assertEqual(options["available_tools"], [])
         self.assertEqual(options["tools"], [])
         self.assertIs(options["on_permission_request"], self.bridge.deny_permission)
+        self.assertNotIn(
+            "telemetry", client_factory.call_args.kwargs,
+            "the SDK enables telemetry when its telemetry argument is provided",
+        )
+
+    def test_runtime_environment_excludes_telemetry_variables(self):
+        environment = {
+            "PATH": "/usr/bin:/bin",
+            "COPILOT_OTEL_ENABLED": "true",
+            "OTEL_EXPORTER_OTLP_ENDPOINT": "https://collector.invalid",
+            "Otel_Exporter_Otlp_Protocol": "http/protobuf",
+        }
+        with mock.patch.dict(self.bridge.os.environ, environment, clear=True):
+            child_environment = self.bridge.runtime_environment()
+
+        self.assertEqual(child_environment.get("PATH"), "/usr/bin:/bin")
+        self.assertNotIn("COPILOT_OTEL_ENABLED", child_environment)
+        self.assertNotIn("OTEL_EXPORTER_OTLP_ENDPOINT", child_environment)
+        self.assertNotIn("Otel_Exporter_Otlp_Protocol", child_environment)
 
     def operation(self, client, action="complete", model="test-model", timeout=1):
         spec = {"action": action, "timeout": timeout, "request": {

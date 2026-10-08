@@ -1,7 +1,7 @@
 schema_version: 2
 snapshot_path: "docs/ralph-status.md"
-snapshot_revision: 36
-updated_at_utc: "2026-10-08T02:55:01Z"
+snapshot_revision: 39
+updated_at_utc: "2026-10-08T04:32:30Z"
 overall_status: IN_PROGRESS
 current_run_ids:
   - "copilot-setup-onboarding-20261007-1640"
@@ -425,7 +425,7 @@ runs:
     coordinator_rebased_onto_origin_main_sha: null
     coordinator_implementation_commit_sha: "68708847c72d601f1f997589f2d5011a8deb65a6"
     created_at_utc: "2026-10-07T20:39:31Z"
-    updated_at_utc: "2026-10-08T02:55:01Z"
+    updated_at_utc: "2026-10-08T04:32:30Z"
     split_plan:
       - task_id: "copilot-runtime-setup-onboarding"
         worker_id: "coordinator-01"
@@ -465,7 +465,7 @@ runs:
         - ".github/memory/README.md"
         - ".github/memory/runtime-setup.md"
         - ".github/memory/git-workflow.md"
-    next_action: "Coordinator: merge the Copilot auth-home fix, install it into the active SCIDE extension, and verify in-window model refresh plus a real GUI request. Physical Windows 10 x64 visual acceptance also remains open; keep the run IN_PROGRESS."
+    next_action: "Coordinator: keep PR #54 unmerged; publish and review the complete telemetry replacement from origin/main, merge it after all gates pass, and complete the post-merge memory review. Active SCIDE and physical Windows 10 x64 acceptance remain open."
 
 branch_agent_index:
   - run_id: "djmb-plugin-completion-20261006-2310"
@@ -1321,3 +1321,74 @@ branch_agent_index:
     decision_record_path: "docs/decisions/ralph-copilot-auth-path-fix-20261008-288416a/agents/coordinator-01/pr-pending.md"
     decision_index_path: "docs/decisions/ralph-copilot-auth-path-fix-20261008-288416a/README.md"
     next_action: "Publish the tested bridge/test change, obtain exact-head code and security reviews, merge it, then install and verify authentication/model refresh in the active SCIDE window. Windows visual acceptance remains open."
+  - run_id: "copilot-setup-onboarding-20261007-1640"
+    task_ids: ["copilot-runtime-setup-onboarding"]
+    worker_id: "coordinator-01"
+    worker_name: "coordinator-01 / Copilot telemetry hardening replacement"
+    branch: "ralph/copilot-telemetry-hardening-20261008-3515844-ci2"
+    branch_slug: "ralph-copilot-telemetry-hardening-20261008-3515844-ci2"
+    base_origin_main_sha: "3515844e4db4b7a6a58a2d1ed1a49b9e518cc8a5"
+    rebased_onto_origin_main_sha: null
+    implementation_commit_sha: "5c6db42ca8b0171287a26563901e8e2222b360ad"
+    status: IN_PROGRESS
+    iteration: 5
+    merge_actor_worker_id: "coordinator-01"
+    pull_request:
+      status: NOT_OPENED
+      number: null
+      url: null
+    review:
+      status: PENDING
+      reviewer_agents:
+        - "Ralph Code Reviewer (GPT-6.1 Luna)"
+        - "Ralph Security Reviewer (GPT-6.1 Luna)"
+      reviewed_base_sha: null
+      reviewed_head_sha: null
+      rounds_completed: 0
+      max_rounds: 2
+      unresolved_finding_count: null
+      author_decision:
+        status: PENDING
+        choice: null
+        rationale: null
+        recorded_at_utc: null
+    resource_usage:
+      time_spent_seconds: 1393
+      time_basis: WALL_CLOCK_ELAPSED
+      token_spend:
+        status: NOT_REPORTED
+        input_tokens: null
+        output_tokens: null
+        total_tokens: null
+        cached_input_tokens: null
+        source: null
+    worker_sign_off:
+      status: RECEIVED
+      attestation_kind: SELF_ATTESTATION
+      cryptographic_signature_status: NOT_CRYPTOGRAPHICALLY_SIGNED
+      attested_at_utc: "2026-10-08T04:26:00Z"
+    status_path: "docs/ralph/ralph-copilot-telemetry-hardening-20261008-3515844-ci2/agents/coordinator-01/status.md"
+    progress_path: "docs/ralph/ralph-copilot-telemetry-hardening-20261008-3515844-ci2/agents/coordinator-01/progress.md"
+    decision_record_path: "docs/decisions/ralph-copilot-telemetry-hardening-20261008-3515844-ci2/agents/coordinator-01/pr-pending.md"
+    decision_index_path: "docs/decisions/ralph-copilot-telemetry-hardening-20261008-3515844-ci2/README.md"
+    checks:
+      - command: "PYTHONPATH=tests python3 -m unittest -v test_mb_copilot.CopilotBridgeTests.test_sdk_startup_uses_sdk_runtime_without_relaxing_tool_denial"
+        result: "RED: session telemetry option was absent instead of False."
+      - command: "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=tests python3 -m unittest -v test_mb_copilot.CopilotBridgeTests.test_sdk_startup_uses_sdk_runtime_without_relaxing_tool_denial test_mb_copilot.CopilotBridgeTests.test_runtime_environment_excludes_telemetry_variables"
+        result: "RED after the session flag was fixed: client telemetry configuration and inherited OTEL variables still enabled client OpenTelemetry."
+      - command: "PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=tests python3 -m unittest -v test_mb_copilot.CopilotBridgeTests.test_sdk_startup_uses_sdk_runtime_without_relaxing_tool_denial test_mb_copilot.CopilotBridgeTests.test_runtime_environment_excludes_telemetry_variables"
+        result: "GREEN (2 tests) after both SDK telemetry paths and inherited variables were disabled."
+      - command: "PYTHONDONTWRITEBYTECODE=1 SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth PYTHONPATH=tests python3 -m unittest test_mb_copilot test_mb_copilot_setup -q"
+        result: "PASS (36 tests, 1 skipped)."
+      - command: "PYTHONDONTWRITEBYTECODE=1 SSL_CERT_FILE='/Users/jrblankenhorn/Library/Application Support/MaxxedBeats/Copilot/venv/lib/python3.14/site-packages/certifi/cacert.pem' SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth bash scripts/run_headless_tests.sh"
+        result: "PASS after the final code commit (238 tests, 7 skipped; 205.194 seconds)."
+      - command: "'/Users/jrblankenhorn/Library/Application Support/MaxxedBeats/Copilot/venv/bin/python' --version && '/Users/jrblankenhorn/Library/Application Support/MaxxedBeats/Copilot/venv/bin/python' -c 'import importlib.metadata as metadata; print(\"github-copilot-sdk\", metadata.version(\"github-copilot-sdk\"))'"
+        result: "PASS (private Python 3.14.8, github-copilot-sdk 1.0.16); no runtime or system Python changes."
+      - command: "git diff --cached --check"
+        result: "PASS for the staged branch progress, decision, status, prompt, and dossier files."
+    memory_review:
+      status: PENDING
+      outcome: DURABLE_LESSON_CANDIDATE
+      memory_update: PENDING_IMPLEMENTATION_MERGE
+      memory_followup_branch: null
+    next_action: "Finish the final diff/status checks, publish this fresh branch, wait for hosted checks, then run exact-head code/security reviews with GPT-6.1 Luna. Merge only after all gates pass; keep PR #54 unmerged until the replacement is integrated."
