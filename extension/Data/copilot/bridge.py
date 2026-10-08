@@ -112,9 +112,12 @@ def resolve_cli(spec):
 
 
 def runtime_environment():
-    return {key: value for key, value in os.environ.items()
-            if not key.startswith("COPILOT_") and key not in (
-                "GH_TOKEN", "GITHUB_TOKEN", "OPENAI_API_KEY", "ANTHROPIC_API_KEY")}
+    blocked_keys = {"GH_TOKEN", "GITHUB_TOKEN", "OPENAI_API_KEY", "ANTHROPIC_API_KEY"}
+    return {
+        key: value for key, value in os.environ.items()
+        if not key.upper().startswith(("COPILOT_", "OTEL_"))
+        and key.upper() not in blocked_keys
+    }
 
 
 async def run_login(spec, directory):
@@ -170,13 +173,13 @@ def sdk_client(directory):
             "config", "Copilot's required Python SDK 1.0.16 is missing or incompatible. "
             "Git authorization does not install this runtime. "
             + setup_helper_instruction()) from None
-    # Keep the default Copilot home so the SDK runtime can use the CLI's saved login.
-    # Per-request workspace and config isolation are set on the session instead.
+    # Keep the user's saved auth home. Isolate requests on each session and leave
+    # telemetry unset, since any SDK telemetry config enables instrumentation.
     return CopilotClient(
         connection=StdioRuntimeConnection(),
         working_directory=str(directory / "workspace"),
         env=runtime_environment(), use_logged_in_user=True, log_level="none",
-        telemetry={"enabled": False}, enable_remote_sessions=False)
+        enable_remote_sessions=False)
 
 
 def session_options(request, directory):
