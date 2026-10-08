@@ -39,6 +39,12 @@
   SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
   bash scripts/run_headless_tests.sh` passed **238 tests, 7 skipped** in
   **343.896 seconds**.
+- **Compile/hygiene gate:** the first `bash scripts/run_quality_checks.sh`
+  attempt stopped when system Python could not verify GitHub's certificate
+  while downloading the SuperCollider headers. Rerunning as
+  `SSL_CERT_FILE='/Users/jrblankenhorn/Library/Application Support/MaxxedBeats/Copilot/venv/lib/python3.14/site-packages/certifi/cacert.pem'
+  bash scripts/run_quality_checks.sh` passed Bash/Python syntax checks, Clang
+  analysis, DSP tests, the plugin build, and exported-load-symbol verification.
 - **Still open:** the auth-home fix is merged, but neither it nor the
   telemetry hardening has been installed into the active SCIDE extension.
   In-window model refresh, a real GUI request, and physical Windows 10 x64

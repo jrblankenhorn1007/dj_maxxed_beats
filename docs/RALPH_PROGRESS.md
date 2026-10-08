@@ -1783,6 +1783,11 @@ Ralph-Status: IN_PROGRESS
   SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
   bash scripts/run_headless_tests.sh` passed **238 tests, 7 skipped** in
   **343.896 seconds**.
+- **Compile/hygiene gate:** `bash scripts/run_quality_checks.sh` first failed
+  during GitHub header download because system Python did not trust the
+  certificate. Rerun with the app's certifi `SSL_CERT_FILE` passed Bash and
+  Python syntax, Clang analysis, DSP tests, plugin build, and load-symbol
+  verification.
 - **PR #53 integration:** base `288416aa955a270cf0167593bbe54005743c6b81`,
   head `40bd5db24da7bf5749ff07a64f0e274585cb0e26`, merged as
   `3515844e4db4b7a6a58a2d1ed1a49b9e518cc8a5`; hosted checks and exact-head

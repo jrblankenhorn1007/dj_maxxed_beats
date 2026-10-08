@@ -87,9 +87,11 @@
   active-window acceptance.
 - **Current verification:** iteration 13 Red confirmed both telemetry
   regressions; Green passed **36 focused tests, 1 skipped** and the full
-  headless gate (**238 tests, 7 skipped**, 343.896 seconds). Its auth-only
-  bridge probe returned `{"authenticated": true}` with SCIDE's minimal
-  `PATH`; it did not generate a completion.
+  headless gate (**238 tests, 7 skipped**, 343.896 seconds). The compile/
+  hygiene gate also passed with the app's certifi bundle: Bash/Python syntax,
+  Clang analysis, DSP tests, plugin build, and load-symbol verification. Its
+  auth-only bridge probe returned `{"authenticated": true}` with SCIDE's
+  minimal `PATH`; it did not generate a completion.
 - **Runtime setup:** the app-private environment has Python 3.14.8, SDK
   1.0.16, and CLI 1.0.93. The user's browser sign-in is present. System Python
   remains 3.9.6; it is not the runtime used by the Copilot bridge.
