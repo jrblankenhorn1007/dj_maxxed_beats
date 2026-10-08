@@ -7,8 +7,11 @@
 - **Coordinator:** `coordinator-01 / Copilot runtime startup fix`
 - **Base `origin/main`:** `1871b5bc9a18951185efa2103dd89e375081007d`
 - **Implementation commit:** `68708847c72d601f1f997589f2d5011a8deb65a6`
-- **State:** live Copilot auth, model discovery, and one short request pass on
-  macOS; the full headless gate passes. PR review and merge are pending.
+- **State:** [PR #50](https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/50)
+  merged at `af9828452017d9379f505adcf890342d838d3b7f`; the updated extension
+  is installed and the default provider passed live authentication,
+  28-model refresh, and one real completion on macOS. The post-merge memory
+  lesson is being integrated separately.
 - **User request:** [summary](./prompts/user-request.md)
 - **Coordinator assignment:** [scope](./prompts/coordinator-assignment.md)
 - **Handoff:** [coordinator-01](./agents/coordinator-01/handoff.md)

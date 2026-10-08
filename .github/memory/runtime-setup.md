@@ -12,6 +12,24 @@
   [Copilot tests](../../tests/test_mb_copilot.py).
 - **Scope:** External runtimes launched from SuperCollider GUI processes.
 
+### Use the SDK-managed runtime for SDK protocol connections
+- **Rule:** When an SDK provides a version-matched protocol runtime, use the
+  SDK-managed runtime for SDK connections; reserve its standalone interactive
+  CLI for interactive authentication.
+- **Why:** Copilot SDK 1.0.16 could not handshake when given the standalone
+  CLI 1.0.93 or its CLI-only flags. The SDK's default stdio connection
+  authenticated, listed models, and completed a request. The setup helper
+  pre-provisions the compatible runtime through the SDK's official entry point.
+  See the [bridge](../../extension/Data/copilot/bridge.py),
+  [setup helper](../../extension/Data/copilot/setup_copilot.py),
+  [regression tests](../../tests/test_mb_copilot.py), and
+  [iteration 11 evidence](../../docs/RALPH_PROGRESS.md).
+- **Scope:** SDK clients that spawn a protocol subprocess distinct from a
+  companion interactive CLI.
+- **Gotcha:** CLI command-line flags and SDK runtime arguments are not
+  interchangeable; preserving a tool restriction in unsupported CLI flags
+  can prevent the SDK runtime from starting at all.
+
 ### Verify downloaded command-line runtimes before extraction
 - **Rule:** Pin the upstream release, verify its platform-specific SHA-256
   before unpacking, and extract only the expected executable.

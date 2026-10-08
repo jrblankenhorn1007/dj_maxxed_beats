@@ -1634,10 +1634,10 @@ Ralph-Status: IN_PROGRESS
 - **Refactor/final targeted verification:** reran that same focused command
   after the final bridge/setup changes; it remained green. No separate
   behavior-changing refactor was needed.
-- **Live verification:** the SDK runtime reported authenticated status and
-  refreshed **28 models**. The installed `MBCopilotProvider` SuperCollider
-  API returned authenticated status and the same model count through the
-  branch's bridge. One `gpt-5-mini` request returned
+- **Live source-branch verification:** the SDK runtime reported authenticated
+  status and refreshed **28 models**. The installed `MBCopilotProvider`
+  SuperCollider API returned authenticated status and the same model count
+  through the branch bridge. One `gpt-5-mini` request returned
   `MAXXEDBEATS COPILOT CONNECTED.` The bridge's pre-generation runtime
   metadata check passed, confirming no tools were exposed.
 - **Recovered environment issues:** the first default CLI invocation rejected
@@ -1658,7 +1658,31 @@ Ralph-Status: IN_PROGRESS
   bash scripts/run_headless_tests.sh` passed **237 tests, 7 skipped** in
   253.055 seconds. Skips are platform/dependency/opt-in checks, including the
   Windows PowerShell package scripts, unavailable PyYAML, and real-time audio.
+- **PR #50 review and integration:** independent code and security reviews
+  were bound to base `1871b5bc9a18951185efa2103dd89e375081007d` and head
+  `00b2e80ae1aaae5338de97515d2a4cc5d721f5c5`; neither reviewer found an issue.
+  Every hosted Assistant, headless, Windows package, and macOS/Linux/Windows
+  ChaosOsc check passed. `gh pr merge 50 --merge` merged the change at
+  `af9828452017d9379f505adcf890342d838d3b7f`; after fetching, that exact merge
+  was verified on `origin/main`.
+- **Default installed-provider verification:** from the updated main checkout,
+  `python3 scripts/install_maxxedbeats.py --dry-run` and
+  `python3 scripts/install_maxxedbeats.py` passed; the universal ChaosOsc
+  plugin rebuilt and the marked Quark was replaced. The source and installed
+  bridge SHA-256 both equaled
+  `fbc001b5f7cebb35b17be4e5b52154a66ecba788f3cda0ea4b15b7b2f5fba90f`.
+  The installed SuperCollider 3.14.1 `MBCopilotProvider` auth, model-refresh,
+  and completion callbacks returned authenticated status, 28 models, and
+  `MAXXEDBEATS COPILOT CONNECTED.` respectively. The one-off verification
+  script was removed after this pass.
+- **Post-merge memory review:** `.github/memory/runtime-setup.md` had no
+  duplicate SDK-runtime lesson. A concise rule now records use of the
+  SDK-managed version-matched protocol runtime, with the interactive CLI
+  reserved for login. The memory update is being integrated on
+  `ralph/copilot-sdk-memory-20261008-af98284`.
 - **Remaining platform coverage:** no SCIDE visual run was performed for this
   iteration, and physical Windows 10 x64 visual acceptance remains open.
-- **Integration:** implementation branch is not yet published or merged.
-  Keep the overall project `IN_PROGRESS`; do not emit `RALPH_COMPLETE`.
+- **Integration:** PR #50 is merged and the installed default provider path
+  passes. The required post-merge memory update still needs remote integration.
+  Physical Windows 10 x64 and SCIDE visual acceptance remain open; keep the
+  overall project `IN_PROGRESS` and do not emit `RALPH_COMPLETE`.
