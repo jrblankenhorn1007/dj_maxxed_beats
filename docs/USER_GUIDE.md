@@ -201,9 +201,11 @@ and any confirmation request. Below are four tabs: **Compose**,
    once if the installer did not set up Copilot. It installs the official
    [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/install-copilot-cli)
    and Python SDK into a private runtime; you do not need to type a `pip`
-   command or set a CLI path. OpenAI, Anthropic, and Mock do not need Python
-   or the Copilot SDK. Click **Sign in to GitHub Copilot...** in its row and
-   complete GitHub's browser sign-in.
+   command or set a CLI path. It also pre-downloads the SDK-matched runtime so
+   model refresh does not have to install it on first use. OpenAI, Anthropic,
+   and Mock do not need Python or the Copilot SDK. Click
+   **Sign in to GitHub Copilot...** in its row and complete GitHub's browser
+   sign-in.
    The runtime may need its own sign-in even if you are already signed in to the
    VS Code Copilot extension; MaxxedBeats does not extract VS Code credentials.
    Then press **Refresh models**, choose an available model, and send your prompt.

@@ -1,7 +1,7 @@
 """Optional official Copilot SDK bridge. No tokens, CLI prompts, or shell tools.
 
-Requires Python >=3.11 and requirements.txt. The SDK uses the native CLI's
-headless stdio runtime and its existing login; this is not GitHub Models.
+Requires Python >=3.11 and requirements.txt. The SDK uses its pinned stdio
+runtime; the official CLI owns browser sign-in. This is not GitHub Models.
 """
 import argparse
 import asyncio
@@ -154,7 +154,7 @@ async def run_login(spec, directory):
                 await process.wait()
 
 
-def sdk_client(spec, directory):
+def sdk_client(directory):
     if sys.version_info < (3, 11):
         raise BackendError(
             "config", "Copilot requires Python 3.11+ and github-copilot-sdk==1.0.16. "
@@ -170,11 +170,9 @@ def sdk_client(spec, directory):
             "config", "Copilot's required Python SDK 1.0.16 is missing or incompatible. "
             "Git authorization does not install this runtime. "
             + setup_helper_instruction()) from None
-    cli = resolve_cli(spec)
+    # The standalone CLI is for browser login; the SDK supplies its compatible runtime.
     return CopilotClient(
-        connection=StdioRuntimeConnection(path=cli, args=[
-            "--no-custom-instructions", "--disable-builtin-mcps",
-            "--deny-tool=*", "--deny-url=*", "--no-auto-update"]),
+        connection=StdioRuntimeConnection(),
         working_directory=str(directory / "workspace"), base_directory=str(directory),
         env=runtime_environment(), use_logged_in_user=True, log_level="none",
         telemetry={"enabled": False}, enable_remote_sessions=False)
@@ -215,7 +213,7 @@ async def run_operation(spec, directory, client_factory=None):
 
     async def operation():
         nonlocal client, session
-        client = client_factory() if client_factory else sdk_client(spec, directory)
+        client = client_factory() if client_factory else sdk_client(directory)
         await client.start()
         auth = await client.get_auth_status()
         if spec["action"] == "auth":

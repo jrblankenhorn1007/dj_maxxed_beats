@@ -206,9 +206,19 @@ def setup_runtime(cli_path=None, *, install_cli=False, python_version=None,
              "from importlib.metadata import version; "
              "assert version('github-copilot-sdk') == '{}'".format(SDK_VERSION)],
             check=True, capture_output=True, text=True, timeout=30)
+        runtime_setup = (
+            "import certifi, os, runpy, sys; "
+            "os.environ.setdefault('SSL_CERT_FILE', certifi.where()); "
+            "sys.argv = ['copilot', 'download-runtime']; "
+            "runpy.run_module('copilot', run_name='__main__')"
+        )
+        subprocess.run(
+            [str(python), "-c", runtime_setup],
+            check=True, timeout=600)
     except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
         raise SetupError(
-            "The Copilot SDK could not be installed. Check your internet connection and run setup again."
+            "The Copilot SDK or its compatible runtime could not be installed. "
+            "Check your internet connection and run setup again."
         ) from None
 
     configuration = {
