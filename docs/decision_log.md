@@ -916,3 +916,26 @@ credentials and private user data out of this file.
   request. The targeted and full headless tests pass, and the branch bridge
   authenticates in the GUI-like environment. The installed active-window
   model refresh and real GUI request remain pending.
+
+### DEC-047 — Leave Copilot SDK telemetry disabled
+
+- **Date:** 2026-10-08
+- **Context:** The bridge passed `telemetry={"enabled": False}` to the pinned
+  Copilot SDK. SDK 1.0.16 treats every non-null telemetry configuration as
+  enabled and sets `COPILOT_OTEL_ENABLED=true`; the bridge also inherited
+  ambient `OTEL_*` environment variables. This contradicted the product's
+  documented no-telemetry privacy guarantee.
+- **Decision:** Omit the SDK telemetry argument and filter inherited
+  `COPILOT_*` and `OTEL_*` variables case-insensitively from the provider
+  subprocess environment.
+- **Alternatives:** Keep the `enabled:false` dictionary, rely on an
+  undocumented interpretation of that key, or remove only the
+  SDK-specific flag while allowing standard OpenTelemetry settings through.
+- **Rationale:** The SDK source confirms that providing any telemetry
+  configuration enables instrumentation. Omission is the SDK's disabled
+  default; filtering both variable families also prevents inherited settings
+  from turning telemetry back on.
+- **Consequences:** Copilot requests no longer enable OpenTelemetry through
+  SDK configuration or inherited environment variables. Regression tests
+  cover both settings; request/session isolation and tool denial are
+  unchanged.

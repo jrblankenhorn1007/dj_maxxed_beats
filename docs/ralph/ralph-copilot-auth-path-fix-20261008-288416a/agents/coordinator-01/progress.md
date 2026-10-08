@@ -37,6 +37,19 @@
 - **Remaining acceptance:** the branch code is not yet installed into the
   active SCIDE extension. In-window model refresh, a real GUI request, and
   physical Windows 10 x64 visual acceptance remain unverified.
-- **Next:** merge the exact-head reviewed change, install the merged bridge,
-  verify auth and model refresh inside the active SCIDE window, and complete
-  one short real request. Keep the overall run `IN_PROGRESS`.
+- **Next:** after iteration 5 and its memory review are merged, install the
+  final bridge and verify auth, model refresh, and one short request inside
+  the active SCIDE window. Keep the overall run `IN_PROGRESS`.
+
+## PR #53 merge synchronization
+
+- **Merged:** PR #53 merged at `2026-10-08T03:20:54Z` as
+  `3515844e4db4b7a6a58a2d1ed1a49b9e518cc8a5`; after fetching,
+  `git merge-base --is-ancestor` verified the merge on `origin/main`.
+- **Review/checks:** both exact-head reviewers found no issue in the PR diff;
+  all hosted Assistant, headless, Windows package, and Plugin Builds checks
+  passed. The code reviewer separately identified the telemetry-config bug
+  documented in iteration 5.
+- **Still open:** the PR #53 bridge fix is not installed in the active SCIDE
+  extension. Its authentication/model refresh and a real GUI request remain
+  unverified; physical Windows 10 x64 visual acceptance is also open.

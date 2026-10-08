@@ -116,6 +116,8 @@ follow the current prompt before merging and add their dossier when integrated.
 | `ralph/implementation-records-coordinator-20260925-081730` | In progress | Parent PR pending | [Branch record](./ralph-implementation-records-coordinator-20260925-081730/README.md) |
 | `ralph/copilot-guided-setup-20261007-2335` | Merged | PR #47; merge `edc9c64b138e5e183dc6bea64a8c99cb3253866a` | [Branch record](./ralph-copilot-guided-setup-20261007-2335/README.md) |
 | `ralph/copilot-cli-startup-20261008-0045` | Merged | PR #50; base `1871b5bc9a18951185efa2103dd89e375081007d`, head `00b2e80ae1aaae5338de97515d2a4cc5d721f5c5`, merge `af9828452017d9379f505adcf890342d838d3b7f` | [Branch record](./ralph-copilot-cli-startup-20261008-0045/README.md) |
+| `ralph/copilot-auth-path-fix-20261008-288416a` | Merged; active-SCIDE acceptance pending | PR #53; base `288416aa955a270cf0167593bbe54005743c6b81`, head `40bd5db24da7bf5749ff07a64f0e274585cb0e26`, merge `3515844e4db4b7a6a58a2d1ed1a49b9e518cc8a5` | [Branch record](./ralph-copilot-auth-path-fix-20261008-288416a/README.md) |
+| `ralph/copilot-telemetry-hardening-20261008-3515844-ci1` | In progress; CI candidate, PR pending | Base `3515844e4db4b7a6a58a2d1ed1a49b9e518cc8a5`; implementation commit `9b936df7b4787e2d3bb02ab60ee2eaa50216a704` | [Branch record](./ralph-copilot-telemetry-hardening-20261008-3515844-ci1/README.md) |
 
 ## Reusable dossier template
 

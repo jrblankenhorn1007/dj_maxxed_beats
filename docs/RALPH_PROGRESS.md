@@ -1743,3 +1743,54 @@ Ralph-Status: IN_PROGRESS
   merged bridge into the active SCIDE extension, then verify in-window auth,
   model refresh, and a short real request. Keep the project `IN_PROGRESS`
   until those checks and required physical-platform acceptance are recorded.
+
+## Iteration 13 — Keep Copilot SDK telemetry disabled — 2026-10-08
+
+- **Run/task:** `copilot-setup-onboarding-20261007-1640` /
+  `copilot-runtime-setup-onboarding`; coordinator `coordinator-01`.
+- **Branch/worktree:** `ralph/copilot-telemetry-hardening-20261008-3515844-ci1` /
+  `/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-copilot-telemetry-hardening-20261008-3515844-ci1`.
+- **Base:** fetched `origin/main` at
+  `3515844e4db4b7a6a58a2d1ed1a49b9e518cc8a5`. PR #53's auth-home fix is
+  merged and verified on remote main.
+- **Implementation commit:**
+  `9b936df7b4787e2d3bb02ab60ee2eaa50216a704` (bridge and tests only).
+- **Python status:** the app's private Copilot environment already contains
+  Python 3.14.8, SDK 1.0.16, and CLI 1.0.93. The system Python 3.9.6 is
+  separate and was not the cause of the active SCIDE auth failure.
+- **Privacy root cause:** SDK 1.0.16 sets `COPILOT_OTEL_ENABLED=true` for
+  any non-null telemetry configuration, so
+  `telemetry={"enabled": false}` still enabled instrumentation. The bridge
+  also inherited standard `OTEL_*` variables, contrary to
+  `IMPLEMENTATION_PLAN.md`'s no-telemetry requirement.
+- **Red:** added a test asserting that the SDK telemetry option is absent and
+  that inherited `COPILOT_*`/`OTEL_*` variables are filtered case-insensitively.
+  The focused two-test command failed both assertions before production
+  changes, for the expected reasons.
+- **Green:** omitted the SDK telemetry argument and filtered the two
+  environment-variable families. The same two-test command passed. Session
+  workspace/config isolation, default saved auth home, and tool denial are
+  unchanged.
+- **Focused suite:** `SCLANG=... SCSYNTH=... PYTHONPATH=tests python3 -m
+  unittest test_mb_copilot test_mb_copilot_setup -q` passed **36 tests,
+  1 skipped**.
+- **Live auth probe:** with SCIDE's system-only `PATH`, the branch bridge and
+  private Python returned `{"authenticated": true}` using the saved login.
+  This was auth-only and did not send a model-generation request.
+- **Full gate:** `PYTHONDONTWRITEBYTECODE=1
+  SSL_CERT_FILE='/Users/jrblankenhorn/Library/Application Support/MaxxedBeats/Copilot/venv/lib/python3.14/site-packages/certifi/cacert.pem'
+  SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
+  bash scripts/run_headless_tests.sh` passed **238 tests, 7 skipped** in
+  **343.896 seconds**.
+- **PR #53 integration:** base `288416aa955a270cf0167593bbe54005743c6b81`,
+  head `40bd5db24da7bf5749ff07a64f0e274585cb0e26`, merged as
+  `3515844e4db4b7a6a58a2d1ed1a49b9e518cc8a5`; hosted checks and exact-head
+  code/security reviews passed. The auth-home fix is not yet installed in the
+  active SCIDE extension.
+- **Still open:** active-window authentication/model refresh, one real GUI
+  request, and physical Windows 10 x64 visual acceptance. Keep the project
+  `IN_PROGRESS`; do not claim end-to-end completion from these local checks.
+- **Next:** complete the branch dossier, publish the immutable CI candidate,
+  wait for all hosted checks, open a PR, obtain fresh exact-head reviews, and
+  merge. Then install the final bridge and verify the actual SCIDE window.
