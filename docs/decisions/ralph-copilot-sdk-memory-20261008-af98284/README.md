@@ -7,4 +7,4 @@
 - **Base `origin/main`:** `af9828452017d9379f505adcf890342d838d3b7f`
 - **Memory decision:** capture the verified SDK-managed runtime rule in
   `.github/memory/runtime-setup.md`.
-- **PR record:** [coordinator-01](./agents/coordinator-01/pr-pending.md)
+- **PR record:** [coordinator-01, PR #51](./agents/coordinator-01/pr-51.md)

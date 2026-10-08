@@ -26,6 +26,17 @@
   and memory follow-up change set.
 - **Prior branch review/merge/install:** see the PR #50 record and iteration
   11 project progress entry.
-- **Post-merge integration:** this memory update requires its own PR and
-  verification on fetched `origin/main`. SCIDE visual acceptance and physical
-  Windows 10 x64 visual acceptance remain open for the broader project.
+- **Post-merge integration:** PR #51 was reviewed against base
+  `af9828452017d9379f505adcf890342d838d3b7f` and head
+  `b47e96dbeb94125549105c6fd6fdc631d42605b0`; the independent code reviewer
+  found no significant issues and all hosted checks passed. It merged at
+  `2ab8c19fd07d51b5a985f3a546d19f4492f1a24e`, which was fetched and verified
+  on `origin/main`.
+- **Observed GUI discrepancy:** a user-provided screenshot of the active
+  SCIDE showed Copilot unauthenticated and model refresh failing, despite the
+  separate fresh installed-provider process reporting authenticated status,
+  28 models, and a successful request. The active GUI path is therefore not
+  verified; the in-app sign-in/model-refresh action and a real GUI request
+  remain to be confirmed.
+- **Remaining acceptance:** physical Windows 10 x64 and successful SCIDE
+  visual acceptance remain open. Keep the overall project `IN_PROGRESS`.
