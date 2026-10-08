@@ -1,6 +1,6 @@
 # Code review archive
 
-- **State:** pending PR publication.
+- **State:** PR #50 is open; exact-final-head review is pending.
 - **Required reviewers:** independent Ralph Code Reviewer and Ralph Security
   Reviewer; the change modifies runtime process selection and tool
   restrictions.

@@ -70,6 +70,6 @@
   passed **237 tests, 7 skipped** in 253.055 seconds.
 - **Remaining coverage:** no SCIDE visual scenario was performed in this
   iteration; physical Windows 10 x64 visual acceptance remains open.
-- **Integration:** the implementation branch is not yet published or merged.
-  Keep the project in progress until PR review, remote merge, and the required
-  post-merge memory review are complete.
+- **Integration:** PR #50 is open with initial head
+  `00b2e80ae1aaae5338de97515d2a4cc5d721f5c5`; checks and exact-final-head
+  reviews remain pending, and the change is not merged.

@@ -64,8 +64,8 @@
   follow-up status update.
 - **Current iteration:** branch `ralph/copilot-cli-startup-20261008-0045`,
   based on fetched `origin/main` `1871b5bc9a18951185efa2103dd89e375081007d`.
-  The live startup fix passed the full gate and is awaiting publication,
-  independent PR review, and remote integration.
+  The live startup fix passed the full gate. PR #50 is open; hosted checks,
+  independent review, and remote integration are pending.
 - **Run state:** `IN_PROGRESS`; the Copilot auth/model/request path now works
   on this Mac. The broader project remains incomplete until the required
   Windows 10 x64 and MacBook Neo visual acceptance is recorded.

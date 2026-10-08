@@ -1660,5 +1660,6 @@ Ralph-Status: IN_PROGRESS
   Windows PowerShell package scripts, unavailable PyYAML, and real-time audio.
 - **Remaining platform coverage:** no SCIDE visual run was performed for this
   iteration, and physical Windows 10 x64 visual acceptance remains open.
-- **Integration:** implementation branch is not yet published or merged.
-  Keep the overall project `IN_PROGRESS`; do not emit `RALPH_COMPLETE`.
+- **Integration:** PR #50 is open; hosted checks and independent reviews are
+  pending, and the change is not yet merged. Keep the overall project
+  `IN_PROGRESS`; do not emit `RALPH_COMPLETE`.

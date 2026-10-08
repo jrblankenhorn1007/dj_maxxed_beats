@@ -13,6 +13,6 @@
   full headless gate passed 237 tests with seven skips. Live SDK auth and
   28-model refresh passed, the actual SuperCollider provider callbacks passed,
   and one short `gpt-5-mini` request succeeded.
-- **Next action:** complete PR publication, exact-head code/security review,
+- **Next action:** complete PR #50 checks and exact-head code/security review,
   remote merge, and post-merge memory review. Physical Windows visual
   acceptance remains open.
