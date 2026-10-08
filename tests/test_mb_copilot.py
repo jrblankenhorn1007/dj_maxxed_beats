@@ -152,7 +152,7 @@ class CopilotBridgeTests(unittest.TestCase):
                     mock.patch.object(self.bridge.sys, "version_info", (3, 10)), \
                     mock.patch.object(self.bridge.sys, "platform", platform_name):
                 with self.assertRaises(self.bridge.BackendError) as caught:
-                    self.bridge.sdk_client({}, self.directory)
+                    self.bridge.sdk_client(self.directory)
             self.assertEqual(caught.exception.kind, "config")
             detail = caught.exception.detail.lower()
             self.assertIn("python 3.11+", detail)
@@ -174,9 +174,28 @@ class CopilotBridgeTests(unittest.TestCase):
                     mock.patch("importlib.metadata.version", return_value="1.0.16"), \
                     mock.patch.dict("sys.modules", {"copilot": None}):
                 with self.assertRaises(self.bridge.BackendError) as caught:
-                    self.bridge.sdk_client({}, self.directory)
+                    self.bridge.sdk_client(self.directory)
             self.assertEqual(caught.exception.kind, "config")
             self.assertIn(launcher.lower(), caught.exception.detail.lower())
+
+    def test_sdk_startup_uses_sdk_runtime_without_relaxing_tool_denial(self):
+        copilot = types.ModuleType("copilot")
+        client_factory = mock.Mock()
+        connection_factory = mock.Mock()
+        copilot.CopilotClient = client_factory
+        copilot.StdioRuntimeConnection = connection_factory
+        with mock.patch.object(self.bridge.sys, "version_info", (3, 11)), \
+                mock.patch("importlib.metadata.version", return_value="1.0.16"), \
+                mock.patch.dict("sys.modules", {"copilot": copilot}), \
+                mock.patch.object(self.bridge, "runtime_environment", return_value={}):
+            client = self.bridge.sdk_client(self.directory)
+
+        self.assertIs(client, client_factory.return_value)
+        connection_factory.assert_called_once_with()
+        options = self.bridge.session_options({"model": "test-model"}, self.directory)
+        self.assertEqual(options["available_tools"], [])
+        self.assertEqual(options["tools"], [])
+        self.assertIs(options["on_permission_request"], self.bridge.deny_permission)
 
     def operation(self, client, action="complete", model="test-model", timeout=1):
         spec = {"action": action, "timeout": timeout, "request": {

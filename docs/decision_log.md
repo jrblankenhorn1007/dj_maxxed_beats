@@ -868,3 +868,27 @@ credentials and private user data out of this file.
   appropriate next action. Tests cover each platform and the provider error
   callback. Live setup/sign-in/generation and required physical visual
   acceptance remain unverified.
+
+### DEC-045 — Use the SDK-pinned runtime for Copilot stdio
+
+- **Date:** 2026-10-08
+- **Context:** The bridge passed the standalone Copilot CLI into the SDK's
+  `StdioRuntimeConnection` and supplied CLI flags. Live startup failed before
+  authentication: the standalone CLI rejected `--deny-tool=*`, and the SDK's
+  bundled runtime rejected interactive CLI flags.
+- **Decision:** Use the SDK-managed, version-matched stdio runtime for model
+  operations and keep the standalone CLI only for its official browser login.
+  Pre-download the SDK runtime during setup with the SDK's certificate bundle.
+  Keep tool denial in the SDK session configuration: expose no tools or MCP
+  servers, reject permission requests, and refuse generation if runtime
+  metadata reports any tools.
+- **Alternatives:** Keep launching the standalone CLI with evolving flag
+  syntax, remove the tool restrictions, or use a separate runtime download
+  path unrelated to the pinned SDK.
+- **Rationale:** The SDK package pins and provisions the protocol-compatible
+  runtime. Session-level tool restrictions preserve the security boundary
+  without relying on unsupported process flags.
+- **Consequences:** Model operations use the SDK-managed runtime; browser
+  login still uses the installed official CLI. Setup downloads the compatible
+  runtime before saving its configuration, and regression tests cover the
+  default runtime connection and setup provisioning.

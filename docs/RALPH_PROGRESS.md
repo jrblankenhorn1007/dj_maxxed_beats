@@ -1593,3 +1593,72 @@ Ralph-Status: IN_PROGRESS
   Python 3.11+ installation, Copilot browser sign-in/model refresh/generation,
   and the Windows 10 x64/MacBook Neo visual scenarios remain unverified. Do
   not emit `RALPH_COMPLETE`.
+
+## Iteration 11 — Copilot SDK runtime startup — 2026-10-08
+
+- **Run/task:** `copilot-setup-onboarding-20261007-1640` /
+  `copilot-runtime-setup-onboarding`; coordinator `coordinator-01`.
+- **Branch/worktree:** `ralph/copilot-cli-startup-20261008-0045` /
+  `/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-copilot-cli-startup-20261008-0045`.
+- **Base:** fetched `origin/main` at
+  `1871b5bc9a18951185efa2103dd89e375081007d`.
+- **Implementation commit:** `68708847c72d601f1f997589f2d5011a8deb65a6`.
+- **Root cause:** the bridge passed the standalone interactive Copilot CLI
+  (1.0.93) and its CLI flags into `StdioRuntimeConnection`. That executable is
+  for browser login, not the SDK's pinned stdio runtime. The CLI rejected
+  `--deny-tool=*`; after removing it, the SDK handshake still exited. The
+  SDK-provided runtime separately rejected `--disable-builtin-mcps` as an
+  unsupported argument. The SDK 1.0.16 package owns the compatible runtime
+  selection and pins its own runtime bundle.
+- **Red — bridge:** before changing production code,
+  `PYTHONPATH=tests python3 -m unittest -v
+  test_mb_copilot.CopilotBridgeTests.test_sdk_startup_uses_sdk_runtime_without_relaxing_tool_denial`
+  failed because `sdk_client` passed `path='native-copilot'` and
+  `--no-custom-instructions`, `--disable-builtin-mcps`, `--deny-url=*`, and
+  `--no-auto-update` to the SDK connection.
+- **Red — setup:** before changing production code,
+  `PYTHONPATH=tests python3 -m unittest -v
+  test_mb_copilot_setup.CopilotSetupTests.test_setup_installs_pinned_sdk_and_saves_runtime_paths`
+  failed because setup did not download the SDK-compatible runtime.
+- **Green:** model/auth operations now use the SDK's default
+  `StdioRuntimeConnection()` with no standalone CLI path or CLI-only flags.
+  Empty tool/MCP lists, the rejecting permission callback, and the runtime
+  metadata check still refuse tool-enabled generation. Setup pre-downloads
+  the SDK-pinned runtime through its official `download-runtime` entry point,
+  using `certifi.where()` for Python's TLS trust bundle.
+- **Focused verification:**
+  `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
+  PYTHONPATH=tests python3 -m unittest test_mb_copilot test_mb_copilot_setup -q`
+  passed **35 tests, 1 skipped**.
+- **Refactor/final targeted verification:** reran that same focused command
+  after the final bridge/setup changes; it remained green. No separate
+  behavior-changing refactor was needed.
+- **Live verification:** the SDK runtime reported authenticated status and
+  refreshed **28 models**. The installed `MBCopilotProvider` SuperCollider
+  API returned authenticated status and the same model count through the
+  branch's bridge. One `gpt-5-mini` request returned
+  `MAXXEDBEATS COPILOT CONNECTED.` The bridge's pre-generation runtime
+  metadata check passed, confirming no tools were exposed.
+- **Recovered environment issues:** the first default CLI invocation rejected
+  the invalid wildcard, then exited without the SDK handshake; switching to
+  the SDK runtime and omitting CLI flags resolved startup. A default
+  `python -m copilot download-runtime` and the first full test-gate attempt
+  failed certificate verification on this Python.org Python 3.14 install.
+  Using the private SDK's `certifi` CA bundle downloaded the verified runtime
+  and allowed the full gate to pass. An initial live SuperCollider probe
+  either loaded duplicate installed/source classes or used an isolated HOME
+  that hid the login; using the installed class tree, isolated XDG config,
+  and the real user HOME passed auth and model refresh.
+- **Required full gate:**
+  `PYTHONDONTWRITEBYTECODE=1
+  SSL_CERT_FILE='/Users/jrblankenhorn/Library/Application Support/MaxxedBeats/Copilot/venv/lib/python3.14/site-packages/certifi/cacert.pem'
+  SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
+  bash scripts/run_headless_tests.sh` passed **237 tests, 7 skipped** in
+  253.055 seconds. Skips are platform/dependency/opt-in checks, including the
+  Windows PowerShell package scripts, unavailable PyYAML, and real-time audio.
+- **Remaining platform coverage:** no SCIDE visual run was performed for this
+  iteration, and physical Windows 10 x64 visual acceptance remains open.
+- **Integration:** implementation branch is not yet published or merged.
+  Keep the overall project `IN_PROGRESS`; do not emit `RALPH_COMPLETE`.

@@ -287,6 +287,13 @@ class CopilotSetupTests(unittest.TestCase):
             "--disable-pip-version-check", "-r",
             str(SETUP_PATH.with_name("requirements.txt"))], calls)
         self.assertIn([cli_path, "--version"], calls)
+        runtime_downloads = [
+            call.args[0] for call in run.call_args_list
+            if call.args and call.args[0][:2] == [str(python_path), "-c"]
+            and "download-runtime" in call.args[0][2]
+        ]
+        self.assertEqual(len(runtime_downloads), 1)
+        self.assertIn("certifi.where()", runtime_downloads[0][2])
         self.assertTrue(all(call.kwargs.get("shell") is not True for call in run.call_args_list))
 
     @unittest.skipIf(os.name == "nt", "Windows CLI setup is delegated to the packaged WinGet helper")
