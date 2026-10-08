@@ -5,7 +5,7 @@
 > This snapshot is rewritten each iteration; `RALPH_PROGRESS.md` holds
 > per-iteration test evidence, and `decision_log.md` is append-only.
 
-## Copilot onboarding — live provider path verified on macOS
+## Copilot onboarding — installed Copilot provider verified on macOS
 
 - The precise cause was twofold: the native Copilot CLI was installed
   per-user but outside the `PATH` inherited by SCIDE, and the installed
@@ -40,16 +40,18 @@
   `--deny-tool=*`; after that flag was removed, it still exited without
   completing the SDK handshake. The SDK's own pinned runtime rejected those
   interactive CLI flags as unsupported.
-- **Fix in progress:** the bridge now uses the SDK-managed stdio runtime;
-  the standalone CLI remains responsible only for browser login. The setup
-  helper pre-downloads the SDK-matched runtime using the SDK's certificate
-  bundle. Tool access stays denied through empty session tool/MCP lists, a
-  rejecting permission handler, and the bridge's runtime metadata check.
-- **Live verification:** SDK auth returned `authenticated: true`, model
-  refresh returned 28 models, and the real `MBCopilotProvider` SuperCollider
-  callbacks returned authenticated status and the same 28 models. One
-  `gpt-5-mini` request returned the expected short response. The full
-  deterministic project gate passed; PR integration is pending.
+- **Fix merged:** PR #50 replaced the standalone CLI stdio connection with
+  the SDK-managed runtime and pre-downloads that runtime during setup using
+  the SDK environment's certifi trust bundle. The standalone CLI remains
+  responsible only for browser login. Empty tool/MCP lists, a rejecting
+  permission handler, and the runtime metadata check keep tools disabled.
+  PR #50 merged at `af9828452017d9379f505adcf890342d838d3b7f`.
+- **Installed-path verification:** the marker-protected installer replaced
+  the default SuperCollider extension from merged `origin/main`. The
+  installed bridge SHA-256 matches the merged source. The default installed
+  `MBCopilotProvider` reported authenticated status, refreshed 28 models, and
+  completed a real `gpt-5-mini` request with the expected
+  `MAXXEDBEATS COPILOT CONNECTED.` response.
 - **Remaining project acceptance:** the required visible SCIDE scenario on
   Windows 10 x64 and the MacBook Neo has not been run for this latest install.
 
@@ -64,22 +66,21 @@
   follow-up status update.
 - **Current iteration:** branch `ralph/copilot-cli-startup-20261008-0045`,
   based on fetched `origin/main` `1871b5bc9a18951185efa2103dd89e375081007d`.
-  The live startup fix passed the full gate. PR #50 is open; hosted checks,
-  independent review, and remote integration are pending.
+  PR #50 merged at `af9828452017d9379f505adcf890342d838d3b7f`; the exact-head
+  code/security reviews and hosted checks passed. The post-merge memory lesson
+  is being integrated in branch `ralph/copilot-sdk-memory-20261008-af98284`.
 - **Run state:** `IN_PROGRESS`; the Copilot auth/model/request path now works
   on this Mac. The broader project remains incomplete until the required
   Windows 10 x64 and MacBook Neo visual acceptance is recorded.
 - **Current verification:** the focused Copilot bridge/setup suite passed
   **35 tests, 1 skipped**. The full headless gate passed **237 tests,
-  7 skipped** in 253.055 seconds. Live SDK auth and model refresh passed,
-  including the actual SuperCollider provider callbacks; one real short
-  `gpt-5-mini` request succeeded.
+  7 skipped** in 253.055 seconds. All hosted PR #50 checks passed. The
+  installed default provider passed live auth, 28-model refresh, and one
+  real short `gpt-5-mini` completion.
 - **Runtime setup:** the app's private runtime contains Python 3.14.8, SDK
   1.0.16, and CLI 1.0.93; official browser sign-in is complete. This does not
-  replace macOS's system Python. The live check used the branch bridge; the
-  default installed bridge still needs commit `68708847c72d601f1f997589f2d5011a8deb65a6`
-  installed after merge. The user guide points to the platform-specific
-  setup helper and explains that Copilot has no API key field.
+  replace macOS's system Python. The merged bridge is installed at the default
+  extension path. Copilot uses browser sign-in, not an API key.
 - **Delivered:** in-SuperCollider assistant window (`MaxxedBeats.gui`),
   OpenAI/Anthropic/mock providers over OS `curl`, OS credential stores,
   model catalog, usage/cost/credits, project review/apply/backup/undo,
@@ -130,8 +131,8 @@ the SDK.
 | Mock provider | Implemented | Deterministic `maxxedbeats.proposal/1` replies with a seed-dependent ChaosOsc composition; drives tests and the visual scenario. |
 | Packaging | Implemented | `scripts/install_maxxedbeats.py` installs/removes the Quark (with `agent/*.md`) and ChaosOsc together; marker-protected; dry run. Windows without developer tools: `MaxxedBeats-Windows-x64.zip` includes the Copilot bridge/requirements and documents its optional Python/CLI prerequisites; hosted install/smoke/uninstall passed. |
 | Documentation | Implemented | [User guide](./USER_GUIDE.md), README, SCDoc help, three design docs. |
-| Tests and CI | Implemented | PR #47 passes Assistant Tests (macOS/Windows), Windows package, Headless Tests, and Plugin Builds (three OSes). This startup fix passes the full headless gate (237 tests, 7 skips); live Copilot auth/model refresh and one short request also pass on the MacBook Neo. |
-| Visual verification | Partial | Previous native Keys & Privacy screenshot confirms the Copilot peer row; the latest install has not been recompiled or visually rechecked. Required SCIDE-launched sign-off on Windows 10 x64 and MacBook Neo remains open. |
+| Tests and CI | Implemented | PR #50 passes Assistant Tests (macOS/Windows), Windows package, Headless Tests, and Plugin Builds (three OSes). The startup fix passes the full headless gate (237 tests, 7 skips); the installed Copilot provider passes live auth/model refresh and one short request on the MacBook Neo. |
+| Visual verification | Partial | The installed extension's class library compiled in headless sclang and the live provider passed, but no SCIDE visual walkthrough was performed after this install. Required SCIDE-launched sign-off on Windows 10 x64 and MacBook Neo remains open. |
 
 ## Verification and platform coverage
 

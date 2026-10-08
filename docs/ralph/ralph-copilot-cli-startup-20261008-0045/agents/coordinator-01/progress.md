@@ -70,6 +70,27 @@
   passed **237 tests, 7 skipped** in 253.055 seconds.
 - **Remaining coverage:** no SCIDE visual scenario was performed in this
   iteration; physical Windows 10 x64 visual acceptance remains open.
-- **Integration:** PR #50 is open with initial head
-  `00b2e80ae1aaae5338de97515d2a4cc5d721f5c5`; checks and exact-final-head
-  reviews remain pending, and the change is not merged.
+- **Exact-head review:** PR #50 base/head were
+  `1871b5bc9a18951185efa2103dd89e375081007d` /
+  `00b2e80ae1aaae5338de97515d2a4cc5d721f5c5`. The code reviewer reported no
+  significant issues; the security reviewer reported no vulnerabilities.
+- **Hosted checks:** `gh pr checks 50` passed all Assistant macOS/Windows,
+  headless, Windows package, and macOS/Linux/Windows plugin-build checks.
+- **Merge:** `gh pr merge 50 --merge` returned success at
+  `2026-10-08T01:29:43Z`; merge SHA
+  `af9828452017d9379f505adcf890342d838d3b7f`. After `git fetch origin`,
+  `git merge-base --is-ancestor af9828452017d9379f505adcf890342d838d3b7f origin/main`
+  passed.
+- **Installed default path:** the merged source was installed with
+  `python3 scripts/install_maxxedbeats.py --dry-run` followed by
+  `python3 scripts/install_maxxedbeats.py`. Source and installed bridge
+  SHA-256 matched. The installed `MBCopilotProvider` returned authenticated
+  status, 28 models, and one real `gpt-5-mini` response:
+  `MAXXEDBEATS COPILOT CONNECTED.`
+- **Memory review:** the Project Memory skill and `.github/memory/README.md`,
+  `runtime-setup.md`, and `git-workflow.md` were reviewed. No duplicate
+  SDK-managed-runtime lesson existed; the new durable lesson is being
+  integrated on `ralph/copilot-sdk-memory-20261008-af98284`.
+- **Remaining:** the memory follow-up merge and final run-status sync remain
+  pending. SCIDE visual acceptance and physical Windows 10 x64 visual
+  acceptance remain outside this iteration.

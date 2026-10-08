@@ -115,6 +115,7 @@ follow the current prompt before merging and add their dossier when integrated.
 | `ralph/iteration-3-b2f6a9e` | Preserved preflight-blocked attempt | No PR; implementation did not start | [Branch record](./ralph-iteration-3-b2f6a9e/README.md) |
 | `ralph/implementation-records-coordinator-20260925-081730` | In progress | Parent PR pending | [Branch record](./ralph-implementation-records-coordinator-20260925-081730/README.md) |
 | `ralph/copilot-guided-setup-20261007-2335` | Merged | PR #47; merge `edc9c64b138e5e183dc6bea64a8c99cb3253866a` | [Branch record](./ralph-copilot-guided-setup-20261007-2335/README.md) |
+| `ralph/copilot-cli-startup-20261008-0045` | Merged | PR #50; base `1871b5bc9a18951185efa2103dd89e375081007d`, head `00b2e80ae1aaae5338de97515d2a4cc5d721f5c5`, merge `af9828452017d9379f505adcf890342d838d3b7f` | [Branch record](./ralph-copilot-cli-startup-20261008-0045/README.md) |
 
 ## Reusable dossier template
 

@@ -1,7 +1,7 @@
 schema_version: 2
 snapshot_path: "docs/ralph-status.md"
-snapshot_revision: 31
-updated_at_utc: "2026-10-08T01:19:08Z"
+snapshot_revision: 34
+updated_at_utc: "2026-10-08T01:42:17Z"
 overall_status: IN_PROGRESS
 current_run_ids:
   - "copilot-setup-onboarding-20261007-1640"
@@ -425,7 +425,7 @@ runs:
     coordinator_rebased_onto_origin_main_sha: null
     coordinator_implementation_commit_sha: "68708847c72d601f1f997589f2d5011a8deb65a6"
     created_at_utc: "2026-10-07T20:39:31Z"
-    updated_at_utc: "2026-10-08T01:19:08Z"
+    updated_at_utc: "2026-10-08T01:42:17Z"
     split_plan:
       - task_id: "copilot-runtime-setup-onboarding"
         worker_id: "coordinator-01"
@@ -447,18 +447,25 @@ runs:
           evidence:
             - "extension/Data/copilot/bridge.py setup_helper_instruction and sdk_client"
             - "tests/test_mb_copilot.py platform guidance and provider callback tests"
+        - rule: "Use an SDK-managed, version-matched protocol runtime for SDK connections; reserve the companion interactive CLI for login."
+          why: "The standalone Copilot CLI rejected SDK-incompatible flags and exited before handshake, while the SDK-managed runtime authenticated, listed models, and completed a real request."
+          scope: "SDK clients that spawn a protocol runtime distinct from a companion interactive CLI."
+          evidence:
+            - "extension/Data/copilot/bridge.py"
+            - "extension/Data/copilot/setup_copilot.py"
+            - "tests/test_mb_copilot.py and tests/test_mb_copilot_setup.py"
+            - "docs/RALPH_PROGRESS.md Iteration 11 and PR #50 live installed-provider verification"
       no_durable_lessons_reason: null
     memory_review:
-      status: COMPLETE
+      status: IN_PROGRESS
       outcome: DURABLE_LESSON_CAPTURED
-      memory_update: INCLUDED_IN_POST_MERGE_FOLLOWUP
-      memory_followup_branch: "ralph/copilot-guidance-memory-20261007-2359"
+      memory_update: PENDING_REMOTE_MERGE
+      memory_followup_branch: "ralph/copilot-sdk-memory-20261008-af98284"
       sources:
         - ".github/memory/README.md"
         - ".github/memory/runtime-setup.md"
-        - ".github/memory/cross-platform.md"
-        - ".github/memory/testing.md"
-    next_action: "Coordinator: wait for PR #50 checks and exact-head code/security review, then merge and verify on origin/main and complete the post-merge memory review. Physical visual acceptance remains open."
+        - ".github/memory/git-workflow.md"
+    next_action: "Coordinator: merge and verify the SDK-runtime memory follow-up, then record final run status. Physical Windows/SCIDE visual acceptance remains open."
 
 branch_agent_index:
   - run_id: "djmb-plugin-completion-20261006-2310"
@@ -1151,35 +1158,38 @@ branch_agent_index:
     base_origin_main_sha: "1871b5bc9a18951185efa2103dd89e375081007d"
     rebased_onto_origin_main_sha: null
     implementation_commit_sha: "68708847c72d601f1f997589f2d5011a8deb65a6"
-    status: IN_PROGRESS
+    status: AWAITING_MERGE
     iteration: 3
+    merge_actor_worker_id: "coordinator-01"
     pull_request:
-      status: PENDING
+      status: MERGED
       number: 50
       url: "https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/50"
       base_sha: "1871b5bc9a18951185efa2103dd89e375081007d"
       head_sha: "00b2e80ae1aaae5338de97515d2a4cc5d721f5c5"
+      merged_at_utc: "2026-10-08T01:29:43Z"
+      merge_sha: "af9828452017d9379f505adcf890342d838d3b7f"
     implementation_merge_verification:
-      status: PENDING
-      merge_sha: null
-      verified_origin_main_sha: null
-      verification_method: null
-      verified_at_utc: null
+      status: VERIFIED
+      merge_sha: "af9828452017d9379f505adcf890342d838d3b7f"
+      verified_origin_main_sha: "af9828452017d9379f505adcf890342d838d3b7f"
+      verification_method: "git merge-base --is-ancestor af9828452017d9379f505adcf890342d838d3b7f origin/main"
+      verified_at_utc: "2026-10-08T01:37:41Z"
     review:
-      status: PENDING
+      status: COMPLETE
       reviewer_agents: ["Ralph Code Reviewer", "Ralph Security Reviewer"]
-      reviewed_base_sha: null
-      reviewed_head_sha: null
-      rounds_completed: 0
+      reviewed_base_sha: "1871b5bc9a18951185efa2103dd89e375081007d"
+      reviewed_head_sha: "00b2e80ae1aaae5338de97515d2a4cc5d721f5c5"
+      rounds_completed: 1
       max_rounds: 2
       unresolved_finding_count: 0
       author_decision:
-        status: NOT_APPLICABLE
+        status: NOT_REQUIRED
         choice: null
-        rationale: null
-        recorded_at_utc: null
+        rationale: "Both exact-head reviewers reported no findings."
+        recorded_at_utc: "2026-10-08T01:29:43Z"
     resource_usage:
-      time_spent_seconds: 2173
+      time_spent_seconds: 3562
       time_basis: WALL_CLOCK_ELAPSED
       token_spend:
         status: NOT_REPORTED
@@ -1194,8 +1204,71 @@ branch_agent_index:
       cryptographic_signature_status: NOT_CRYPTOGRAPHICALLY_SIGNED
       attested_at_utc: "2026-10-08T01:15:13Z"
       statement: "Self-attestation against implementation commit 68708847c72d601f1f997589f2d5011a8deb65a6; not cryptographically signed."
+    memory_review:
+      status: IN_PROGRESS
+      outcome: DURABLE_LESSON_CAPTURED
+      memory_update: PENDING_REMOTE_MERGE
+      memory_followup_branch: "ralph/copilot-sdk-memory-20261008-af98284"
     status_path: "docs/ralph/ralph-copilot-cli-startup-20261008-0045/agents/coordinator-01/status.md"
     progress_path: "docs/ralph/ralph-copilot-cli-startup-20261008-0045/agents/coordinator-01/progress.md"
     decision_record_path: "docs/decisions/ralph-copilot-cli-startup-20261008-0045/agents/coordinator-01/pr-50.md"
     decision_index_path: "docs/decisions/ralph-copilot-cli-startup-20261008-0045/README.md"
-    next_action: "Coordinator: wait for PR #50 checks and exact-head code/security reviews; merge only after they pass."
+    next_action: "Coordinator: merge the memory follow-up, then verify its remote-main merge before marking the iteration complete."
+  - run_id: "copilot-setup-onboarding-20261007-1640"
+    task_ids: ["copilot-runtime-setup-onboarding"]
+    worker_id: "coordinator-01"
+    worker_name: "coordinator-01 / Copilot SDK runtime memory follow-up"
+    branch: "ralph/copilot-sdk-memory-20261008-af98284"
+    branch_slug: "ralph-copilot-sdk-memory-20261008-af98284"
+    base_origin_main_sha: "af9828452017d9379f505adcf890342d838d3b7f"
+    rebased_onto_origin_main_sha: null
+    implementation_commit_sha: "3299e83876bb0e0fb40900d5d9b8226512b4c30d"
+    status: IN_PROGRESS
+    iteration: 3
+    merge_actor_worker_id: null
+    pull_request:
+      status: PENDING
+      number: null
+      url: null
+      base_sha: "af9828452017d9379f505adcf890342d838d3b7f"
+      head_sha: null
+    implementation_merge_verification:
+      status: PENDING
+      merge_sha: null
+      verified_origin_main_sha: null
+      verification_method: null
+      verified_at_utc: null
+    review:
+      status: PENDING
+      reviewer_agents: ["Ralph Code Reviewer"]
+      reviewed_base_sha: null
+      reviewed_head_sha: null
+      rounds_completed: 0
+      max_rounds: 2
+      unresolved_finding_count: 0
+      author_decision:
+        status: NOT_REQUIRED
+        choice: null
+        rationale: null
+        recorded_at_utc: null
+    resource_usage:
+      time_spent_seconds: 359
+      time_basis: WALL_CLOCK_ELAPSED
+      token_spend:
+        status: NOT_REPORTED
+        input_tokens: null
+        output_tokens: null
+        total_tokens: null
+        cached_input_tokens: null
+        source: null
+    worker_sign_off:
+      status: RECEIVED
+      attestation_kind: SELF_ATTESTATION
+      cryptographic_signature_status: NOT_CRYPTOGRAPHICALLY_SIGNED
+      attested_at_utc: "2026-10-08T01:41:43Z"
+      statement: "Self-attestation against memory lesson commit 3299e83876bb0e0fb40900d5d9b8226512b4c30d; not cryptographically signed."
+    status_path: "docs/ralph/ralph-copilot-sdk-memory-20261008-af98284/agents/coordinator-01/status.md"
+    progress_path: "docs/ralph/ralph-copilot-sdk-memory-20261008-af98284/agents/coordinator-01/progress.md"
+    decision_record_path: "docs/decisions/ralph-copilot-sdk-memory-20261008-af98284/agents/coordinator-01/pr-pending.md"
+    decision_index_path: "docs/decisions/ralph-copilot-sdk-memory-20261008-af98284/README.md"
+    next_action: "Finish the documentation-only memory update, publish once, obtain exact-head code review, and merge through GitHub."
