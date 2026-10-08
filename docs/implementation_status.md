@@ -5,14 +5,15 @@
 > This snapshot is rewritten each iteration; `RALPH_PROGRESS.md` holds
 > per-iteration test evidence, and `decision_log.md` is append-only.
 
-## Copilot onboarding — installed Copilot provider verified on macOS
+## Copilot onboarding — active SCIDE acceptance pending
 
-- The precise cause was twofold: the native Copilot CLI was installed
-  per-user but outside the `PATH` inherited by SCIDE, and the installed
-  extension was stale. Its `Data/copilot` folder contained only `bridge.py`
-  and `requirements.txt`, without the new setup helper. The local default
-  Python 3.9.6 is also below the SDK's Python 3.11 minimum. Copilot uses
-  GitHub browser sign-in, not an API-key field.
+- The initial setup gap (per-user CLI outside SCIDE's inherited `PATH`,
+  stale extension contents, and system-default Python 3.9.6 below the SDK's
+  minimum) was addressed by the setup/runtime work below. The app-private
+  Copilot environment is Python 3.14.8 with SDK 1.0.16 and CLI 1.0.93; the
+  system Python was not changed. The later active-SCIDE authentication
+  failure had a separate cause, fixed by PR #53 below. Copilot uses GitHub
+  browser sign-in, not an API-key field.
 - PR #41 added per-user CLI discovery, private SDK runtime setup, persisted
   executable paths, macOS/Linux/Windows setup helpers, a Windows package
   setup flow, and novice launch/sign-in instructions. PR #43 fixed Windows
@@ -52,35 +53,52 @@
   `MBCopilotProvider` reported authenticated status, refreshed 28 models, and
   completed a real `gpt-5-mini` request with the expected
   `MAXXEDBEATS COPILOT CONNECTED.` response.
+- **Active-SCIDE auth correction:** PR #53 fixed the bridge's temporary
+  `COPILOT_HOME` override and merged at
+  `3515844e4db4b7a6a58a2d1ed1a49b9e518cc8a5`. That fix is not yet installed
+  in the active extension; the earlier installed-path success was the
+  separate PR #50 provider-process test and does not prove the active SCIDE
+  window works.
+- **Privacy follow-up:** iteration 13 found that the bridge's
+  `telemetry={"enabled": false}` still enables OpenTelemetry in SDK 1.0.16.
+  The local fix omits the telemetry option and strips inherited
+  `COPILOT_*`/`OTEL_*` variables; focused and full headless tests pass. The
+  candidate is not yet published or merged.
 - **Remaining project acceptance:** the required visible SCIDE scenario on
   Windows 10 x64 and the MacBook Neo has not been run for this latest install.
 
 ## Latest loop report
 
-- **Most recently merged implementation iteration:** `10` — Copilot runtime
-  error guidance, PR #47 merged at
-  `edc9c64b138e5e183dc6bea64a8c99cb3253866a`.
-- **Post-merge memory follow-up:** PR #45 merged at
-  `e73b953671ba72e9af388ceaa21ebcdcfe3d63d6`. Iteration 10's memory review
-  captured an actionable platform-setup error lesson, included with this
-  follow-up status update.
-- **Current iteration:** branch `ralph/copilot-cli-startup-20261008-0045`,
-  based on fetched `origin/main` `1871b5bc9a18951185efa2103dd89e375081007d`.
-  PR #50 merged at `af9828452017d9379f505adcf890342d838d3b7f`; the exact-head
-  code/security reviews and hosted checks passed. The post-merge memory lesson
-  is being integrated in branch `ralph/copilot-sdk-memory-20261008-af98284`.
-- **Run state:** `IN_PROGRESS`; the Copilot auth/model/request path now works
-  on this Mac. The broader project remains incomplete until the required
-  Windows 10 x64 and MacBook Neo visual acceptance is recorded.
-- **Current verification:** the focused Copilot bridge/setup suite passed
-  **35 tests, 1 skipped**. The full headless gate passed **237 tests,
-  7 skipped** in 253.055 seconds. All hosted PR #50 checks passed. The
-  installed default provider passed live auth, 28-model refresh, and one
-  real short `gpt-5-mini` completion.
-- **Runtime setup:** the app's private runtime contains Python 3.14.8, SDK
-  1.0.16, and CLI 1.0.93; official browser sign-in is complete. This does not
-  replace macOS's system Python. The merged bridge is installed at the default
-  extension path. Copilot uses browser sign-in, not an API key.
+- **Most recently merged authentication fix:** iteration `12`, PR #53, merge
+  `3515844e4db4b7a6a58a2d1ed1a49b9e518cc8a5`. It removes the per-request
+  `CopilotClient.base_directory` override so the SDK uses the user's saved
+  auth home. Exact-head code/security reviews and hosted checks passed.
+- **Current iteration:** `13`, branch
+  `ralph/copilot-telemetry-hardening-20261008-3515844-ci1`, based on
+  `3515844e4db4b7a6a58a2d1ed1a49b9e518cc8a5`, implementation commit
+  `9b936df7b4787e2d3bb02ab60ee2eaa50216a704`. SDK 1.0.16 treats every
+  non-null telemetry configuration as enabled, even `enabled:false`; the
+  candidate omits that option and filters inherited `COPILOT_*` and `OTEL_*`
+  environment variables. It is not yet published, reviewed, or merged.
+- **Run state:** `IN_PROGRESS`. The active SCIDE window has not been
+  re-tested since PR #53 merged because its installed bridge has not been
+  replaced. In-window authentication, model refresh, and a real GUI request
+  are still unverified. Do not treat the prior separate-process request as
+  active-window acceptance.
+- **Current verification:** iteration 13 Red confirmed both telemetry
+  regressions; Green passed **36 focused tests, 1 skipped** and the full
+  headless gate (**238 tests, 7 skipped**, 343.896 seconds). The compile/
+  hygiene gate also passed with the app's certifi bundle: Bash/Python syntax,
+  Clang analysis, DSP tests, plugin build, and load-symbol verification. Its
+  auth-only bridge probe returned `{"authenticated": true}` with SCIDE's
+  minimal `PATH`; it did not generate a completion.
+- **Runtime setup:** the app-private environment has Python 3.14.8, SDK
+  1.0.16, and CLI 1.0.93. The user's browser sign-in is present. System Python
+  remains 3.9.6; it is not the runtime used by the Copilot bridge.
+- **Next:** complete the iteration 13 PR/review/merge and required memory
+  review; install the resulting merged bridge into the active extension;
+  verify authentication and model refresh in that SCIDE window; then send
+  one short, user-authorized real request.
 - **Delivered:** in-SuperCollider assistant window (`MaxxedBeats.gui`),
   OpenAI/Anthropic/mock providers over OS `curl`, OS credential stores,
   model catalog, usage/cost/credits, project review/apply/backup/undo,
@@ -108,15 +126,15 @@ servers, Credential Manager, renders, variations, GUI integration) pass the
 hosted Assistant Tests suite; no Windows behavior tests are skipped. The zip
 package is installed with its `install.ps1`, smoke-tested, and removed in CI.
 A physical Windows 10/11 PC and SCIDE-launched visual sign-off remain open
-(manual checks). Copilot's SDK auth, live model refresh, and one short request
-passed in a fresh SuperCollider provider process on the MacBook Neo through
-the new SDK-managed runtime. A subsequent screenshot of the active SCIDE
-window reported Copilot unauthenticated and model refresh failing; the
-fresh-process result does not establish that this window works. In-app
-sign-in/model refresh and a real GUI request still need confirmation. The
-Windows visual workflow remains unverified. The official CLI is present
-per-user for browser sign-in, while model operations use the runtime pinned by
-the SDK.
+(manual checks). The PR #50 SDK-managed runtime previously passed auth, model
+refresh, and one short request in a fresh provider process, but that did not
+resolve the active SCIDE window's reported authentication failure. PR #53 now
+fixes the root cause, but its bridge has not yet been installed into that
+window. The local auth probe confirms the branch bridge can see the saved
+login; in-window authentication/model refresh and a real GUI request remain
+unverified. The Windows visual workflow remains unverified. The official CLI
+is present per-user for browser sign-in, while model operations use the
+runtime pinned by the SDK.
 
 ## Component status
 
@@ -127,7 +145,7 @@ the SDK.
 | Providers and transport | Implemented | Direct sclang + OS `curl`; TLS enforced; cancellable; keys never in argv/env/files. Windows: `curl.exe` started by a PowerShell helper that writes the key only to curl's stdin. [Provider design](./design/providers.md). |
 | Credentials | Implemented | macOS Keychain via `security` (temporary-keychain test); Windows Credential Manager via the PowerShell helper (real round trip with unique test-only targets); Linux Secret Service command-tested only; in-memory fake for tests. |
 | Model catalog | Implemented | Per-provider refresh/cache/selection (`model-catalog.json`, `providers.json`); never substitutes; stale after failure or 24 h. |
-| GitHub Copilot | Implemented; active GUI unresolved | Official subscription provider with no API key; setup pre-downloads the SDK-pinned runtime and the official CLI handles browser login. A separate fresh provider process returned 28 models and completed one `gpt-5-mini` request, but the user's active SCIDE screenshot still reports an auth/model-refresh failure. In-window sign-in and a real GUI request remain unverified; tool access remains disabled and Windows GUI behavior is unverified. |
+| GitHub Copilot | Auth fix merged; active GUI unverified | Official subscription provider with no API key. PR #53 corrects the auth-home root cause but is not installed in the active SCIDE extension yet. Iteration 13's telemetry/privacy fix passes local tests but is not merged. Branch auth probe succeeds; in-window sign-in/model refresh and a real GUI request remain unverified. Tool access remains disabled; Windows GUI behavior is unverified. |
 | Usage, USD, credits | Implemented | Versioned rate table `2026-10-06.1`; 100 credits per estimated USD; missing/stale labelled, never zero; local history (`usage-history.json`). |
 | Project, proposals, apply, undo | Implemented | Strict `maxxedbeats.proposal/1`; path confinement; confirmed apply with backups; undo refuses after later user edits. [Workflow design](./design/workflow.md). |
 | Rendering | Implemented | Approved only; separate `sclang` → Score → `scsynth -N`; POSIX `env -i` + isolated HOME, Windows PowerShell launcher with a cleared environment and `sclang -l` (`excludeDefaultPaths`); installed ChaosOsc in the default plugin paths; checks and JSON sidecar. Linux launching unverified. |
@@ -135,8 +153,8 @@ the SDK.
 | Mock provider | Implemented | Deterministic `maxxedbeats.proposal/1` replies with a seed-dependent ChaosOsc composition; drives tests and the visual scenario. |
 | Packaging | Implemented | `scripts/install_maxxedbeats.py` installs/removes the Quark (with `agent/*.md`) and ChaosOsc together; marker-protected; dry run. Windows without developer tools: `MaxxedBeats-Windows-x64.zip` includes the Copilot bridge/requirements and documents its optional Python/CLI prerequisites; hosted install/smoke/uninstall passed. |
 | Documentation | Implemented | [User guide](./USER_GUIDE.md), README, SCDoc help, three design docs. |
-| Tests and CI | Implemented | PR #50 passes Assistant Tests (macOS/Windows), Windows package, Headless Tests, and Plugin Builds (three OSes). The startup fix passes the full headless gate (237 tests, 7 skips); the installed Copilot provider passes live auth/model refresh and one short request on the MacBook Neo. |
-| Visual verification | Partial; active GUI auth unresolved | The installed extension's class library compiled in headless sclang and a separate fresh provider process passed, but the user's screenshot of the active SCIDE shows Copilot unauthenticated and model refresh failing. No successful SCIDE walkthrough/request has been verified. Required SCIDE-launched sign-off on Windows 10 x64 and MacBook Neo remains open. |
+| Tests and CI | Implemented; iteration 13 PR pending | PR #53 hosted checks passed. Iteration 13 telemetry regression tests and full headless gate pass locally (238 tests, 7 skips); hosted checks/review/merge are pending. The earlier PR #50 provider-process request does not prove the current active SCIDE window works. |
+| Visual verification | Partial; active GUI acceptance pending | PR #53 fixes the reported auth-home cause but its bridge has not been installed into the active SCIDE window. No successful in-window authentication/model refresh/request has been verified after that fix. Required SCIDE-launched sign-off on Windows 10 x64 and MacBook Neo remains open. |
 
 ## Verification and platform coverage
 
