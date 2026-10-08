@@ -1,7 +1,7 @@
 schema_version: 2
 snapshot_path: "docs/ralph-status.md"
-snapshot_revision: 34
-updated_at_utc: "2026-10-08T02:01:09Z"
+snapshot_revision: 36
+updated_at_utc: "2026-10-08T02:55:01Z"
 overall_status: IN_PROGRESS
 current_run_ids:
   - "copilot-setup-onboarding-20261007-1640"
@@ -425,7 +425,7 @@ runs:
     coordinator_rebased_onto_origin_main_sha: null
     coordinator_implementation_commit_sha: "68708847c72d601f1f997589f2d5011a8deb65a6"
     created_at_utc: "2026-10-07T20:39:31Z"
-    updated_at_utc: "2026-10-08T01:42:17Z"
+    updated_at_utc: "2026-10-08T02:55:01Z"
     split_plan:
       - task_id: "copilot-runtime-setup-onboarding"
         worker_id: "coordinator-01"
@@ -465,7 +465,7 @@ runs:
         - ".github/memory/README.md"
         - ".github/memory/runtime-setup.md"
         - ".github/memory/git-workflow.md"
-    next_action: "User: complete the in-app Copilot sign-in/model refresh in the active SCIDE window and confirm a real GUI request. Physical Windows 10 x64 visual acceptance also remains open; keep the run IN_PROGRESS."
+    next_action: "Coordinator: merge the Copilot auth-home fix, install it into the active SCIDE extension, and verify in-window model refresh plus a real GUI request. Physical Windows 10 x64 visual acceptance also remains open; keep the run IN_PROGRESS."
 
 branch_agent_index:
   - run_id: "djmb-plugin-completion-20261006-2310"
@@ -1272,3 +1272,52 @@ branch_agent_index:
     decision_record_path: "docs/decisions/ralph-copilot-sdk-memory-20261008-af98284/agents/coordinator-01/pr-51.md"
     decision_index_path: "docs/decisions/ralph-copilot-sdk-memory-20261008-af98284/README.md"
     next_action: "Memory follow-up complete. Overall run remains IN_PROGRESS pending successful Copilot sign-in/model refresh and a real request in the active SCIDE window, plus physical Windows 10 x64 visual acceptance."
+  - run_id: "copilot-setup-onboarding-20261007-1640"
+    task_ids: ["copilot-runtime-setup-onboarding"]
+    worker_id: "coordinator-01"
+    worker_name: "coordinator-01 / Copilot auth-home fix"
+    branch: "ralph/copilot-auth-path-fix-20261008-288416a"
+    branch_slug: "ralph-copilot-auth-path-fix-20261008-288416a"
+    base_origin_main_sha: "288416aa955a270cf0167593bbe54005743c6b81"
+    rebased_onto_origin_main_sha: null
+    implementation_commit_sha: "6bcf922ade7ef988cc017969cec92c8bb6f7d518"
+    status: IN_PROGRESS
+    iteration: 4
+    merge_actor_worker_id: "coordinator-01"
+    pull_request:
+      status: NOT_OPENED
+      number: null
+      url: null
+    review:
+      status: PENDING
+      reviewer_agents: ["Ralph Code Reviewer", "Ralph Security Reviewer"]
+      reviewed_base_sha: null
+      reviewed_head_sha: null
+      rounds_completed: 0
+      max_rounds: 2
+      unresolved_finding_count: null
+      author_decision:
+        status: PENDING
+        choice: null
+        rationale: null
+        recorded_at_utc: null
+    resource_usage:
+      time_spent_seconds: 2454
+      time_basis: WALL_CLOCK_ELAPSED
+      token_spend:
+        status: NOT_REPORTED
+        input_tokens: null
+        output_tokens: null
+        total_tokens: null
+        cached_input_tokens: null
+        source: null
+    worker_sign_off:
+      status: PENDING
+      attestation_kind: SELF_ATTESTATION
+      cryptographic_signature_status: NOT_CRYPTOGRAPHICALLY_SIGNED
+      attested_at_utc: null
+    status_path: "docs/ralph/ralph-copilot-auth-path-fix-20261008-288416a/agents/coordinator-01/status.md"
+    progress_path: "docs/ralph/ralph-copilot-auth-path-fix-20261008-288416a/agents/coordinator-01/progress.md"
+    decision_record_path: "docs/decisions/ralph-copilot-auth-path-fix-20261008-288416a/agents/coordinator-01/pr-pending.md"
+    decision_index_path: "docs/decisions/ralph-copilot-auth-path-fix-20261008-288416a/README.md"
+    next_action: "Publish the tested bridge/test change, obtain exact-head code and security reviews, merge it, then install and verify authentication/model refresh in the active SCIDE window. Windows visual acceptance remains open."
