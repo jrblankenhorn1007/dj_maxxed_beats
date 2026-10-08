@@ -892,3 +892,27 @@ credentials and private user data out of this file.
   login still uses the installed official CLI. Setup downloads the compatible
   runtime before saving its configuration, and regression tests cover the
   default runtime connection and setup provisioning.
+
+### DEC-046 — Preserve the user's Copilot authentication home
+
+- **Date:** 2026-10-08
+- **Context:** The active SCIDE process had the correct private Python, SDK,
+  and installed Copilot CLI but could not refresh models. The bridge supplied
+  each temporary request directory as the SDK client's `base_directory`.
+  The SDK uses that value as `COPILOT_HOME`, hiding the user's saved login.
+  With the same bridge, Python, and request directory, authentication failed
+  under SCIDE's minimal `PATH`; the branch bridge authenticated after the
+  per-request override was removed.
+- **Decision:** Let the SDK use its default, stable user Copilot home.
+  Keep per-request workspace and configuration isolation in the session
+  options, and preserve the existing tool-denial settings.
+- **Alternatives:** Add a machine-specific `gh` path to SCIDE's environment,
+  persist/discover an extra executable path, or point `base_directory` at an
+  ad-hoc authentication directory.
+- **Rationale:** The SDK's default home is where the official login is
+  stored. The direct probe confirmed it works with the GUI's minimal `PATH`,
+  without depending on `gh` or a particular package-manager location.
+- **Consequences:** The bridge no longer changes `COPILOT_HOME` for each
+  request. The targeted and full headless tests pass, and the branch bridge
+  authenticates in the GUI-like environment. The installed active-window
+  model refresh and real GUI request remain pending.

@@ -170,10 +170,11 @@ def sdk_client(directory):
             "config", "Copilot's required Python SDK 1.0.16 is missing or incompatible. "
             "Git authorization does not install this runtime. "
             + setup_helper_instruction()) from None
-    # The standalone CLI is for browser login; the SDK supplies its compatible runtime.
+    # Keep the default Copilot home so the SDK runtime can use the CLI's saved login.
+    # Per-request workspace and config isolation are set on the session instead.
     return CopilotClient(
         connection=StdioRuntimeConnection(),
-        working_directory=str(directory / "workspace"), base_directory=str(directory),
+        working_directory=str(directory / "workspace"),
         env=runtime_environment(), use_logged_in_user=True, log_level="none",
         telemetry={"enabled": False}, enable_remote_sessions=False)
 

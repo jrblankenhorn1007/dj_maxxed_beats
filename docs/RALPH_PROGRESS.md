@@ -1692,3 +1692,54 @@ Ralph-Status: IN_PROGRESS
 - **Integration:** PR #50 and memory PR #51 are merged and the fresh installed
   provider path passes. Keep the overall project `IN_PROGRESS`; do not emit
   `RALPH_COMPLETE` until the active GUI and physical-platform acceptance pass.
+
+## Iteration 12 — Preserve the user's Copilot authentication home — 2026-10-08
+
+- **Run/task:** `copilot-setup-onboarding-20261007-1640` /
+  `copilot-runtime-setup-onboarding`; coordinator `coordinator-01`.
+- **Branch/worktree:** `ralph/copilot-auth-path-fix-20261008-288416a` /
+  `/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-copilot-auth-path-fix-20261008-288416a`.
+- **Base:** fetched `origin/main` at
+  `288416aa955a270cf0167593bbe54005743c6b81`.
+- **Implementation commit:** `6bcf922ade7ef988cc017969cec92c8bb6f7d518`.
+- **Root cause:** the SCIDE process already had Python 3.14.8, Copilot SDK
+  1.0.16, and the installed Copilot CLI. The bridge passed its temporary
+  per-request directory as `CopilotClient.base_directory`; the SDK uses this
+  to set `COPILOT_HOME`, so auth checks looked in the temporary request folder
+  instead of the user's saved `~/.copilot` login. Adding `gh` to `PATH` had
+  masked the failure via an alternate authentication route.
+- **Red:** before production changes,
+  `PYTHONPATH=tests python3 -m unittest -v
+  test_mb_copilot.CopilotBridgeTests.test_sdk_startup_uses_sdk_runtime_without_relaxing_tool_denial`
+  failed because `sdk_client` passed the per-request directory as
+  `base_directory`.
+- **Green:** removed the per-request `base_directory` override so the SDK
+  uses its default user Copilot home. The session still uses its isolated
+  request workspace/configuration and retains empty tool/MCP lists and the
+  rejecting permission handler.
+- **Focused test:** the regression test passed with the private Python 3.14.8
+  runtime. The repository's documented focused command
+  (`SCLANG=... SCSYNTH=... PYTHONPATH=tests python3 -m unittest
+  test_mb_copilot test_mb_copilot_setup -q`) passed **35 tests, 1 skipped**.
+  An initial invocation of that suite with the private Python instead of the
+  repository's default `python3` produced one unrelated `network` versus
+  `config` expectation in the missing-runtime fixture; rerunning the
+  documented command passed without changing the test or production code.
+- **Live bridge check:** ran the branch `bridge.py` with the private Python,
+  SCIDE's system-only `PATH`, the actual app run directory, and the user's
+  saved login. The response was `{"authenticated": true}`. The same setup
+  with the old bridge had returned unauthenticated.
+- **Full gate:** `PYTHONDONTWRITEBYTECODE=1
+  SSL_CERT_FILE='/Users/jrblankenhorn/Library/Application Support/MaxxedBeats/Copilot/venv/lib/python3.14/site-packages/certifi/cacert.pem'
+  SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
+  bash scripts/run_headless_tests.sh` passed **237 tests, 7 skipped** in
+  **242.434 seconds**. `git diff --check` passed.
+- **Not yet accepted:** the source-branch auth probe is not an installed
+  SCIDE test. This iteration has not yet installed the fix into the active
+  extension, confirmed the model list in that window, or sent a GUI request.
+  Physical Windows 10 x64 visual acceptance also remains open.
+- **Next:** complete exact-head code/security review and merge, install the
+  merged bridge into the active SCIDE extension, then verify in-window auth,
+  model refresh, and a short real request. Keep the project `IN_PROGRESS`
+  until those checks and required physical-platform acceptance are recorded.
