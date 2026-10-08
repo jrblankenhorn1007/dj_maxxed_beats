@@ -24,37 +24,47 @@
   platform-testing lessons. PR #45 merged at
   `e73b953671ba72e9af388ceaa21ebcdcfe3d63d6` and is verified on
   `origin/main`.
+- Follow-up PR #47 makes the Python/SDK configuration error name the correct
+  setup launcher on macOS, Linux, and Windows; it also explains that Git
+  authorization does not install the private runtime and Copilot does not use
+  an API key. PR #47's exact-head review found no significant issues and its
+  hosted checks passed; it merged at
+  `edc9c64b138e5e183dc6bea64a8c99cb3253866a`.
 - The merged MaxxedBeats and ChaosOsc were reinstalled locally through the
   marker-protected installer; the universal macOS plugin built successfully.
-  The installed setup helper, bridge, provider class, and SCIDE launcher match
-  `origin/main`. A focused post-install run passed 32 Copilot tests with one
-  Windows-only skip.
+  The installed setup helper, updated bridge, provider class, and SCIDE
+  launcher match `origin/main`. The installed bridge directs users to the
+  platform-specific setup helper. The integrated full headless gate passed
+  236 tests with six platform/opt-in skips.
 - **Current state: BLOCKED on manual runtime/authentication and visual
   acceptance.** Python 3.11+ is not present here and Homebrew is unavailable;
-  the setup helper opens the official Python download page. After installing
-  Python 3.11+, the user must rerun setup and complete GitHub's browser
-  sign-in. Live sign-in/generation was not tested. The required Windows 10
-  x64 and MacBook Neo visual scenario also remains open.
+  the macOS helper opens the official Python download page. The user must
+  install Python 3.11+, run `setup-copilot.command` again, then use the
+  **Sign in to GitHub Copilot...** button and refresh models. Live
+  sign-in/generation was not tested. The required Windows 10 x64 and MacBook
+  Neo visual scenario also remains open.
 
 ## Latest loop report
 
-- **Most recently merged implementation iteration:** `9` — Copilot runtime
-  onboarding and Windows package, PR #41 merged at
-  `740ccf6cbb7ad875ee1333762dc84b635361cbb1`.
+- **Most recently merged implementation iteration:** `10` — Copilot runtime
+  error guidance, PR #47 merged at
+  `edc9c64b138e5e183dc6bea64a8c99cb3253866a`.
 - **Post-merge memory follow-up:** PR #45 merged at
-  `e73b953671ba72e9af388ceaa21ebcdcfe3d63d6`; the categorized lessons are
-  integrated and verified on fetched `origin/main`.
+  `e73b953671ba72e9af388ceaa21ebcdcfe3d63d6`. Iteration 10's memory review
+  captured an actionable platform-setup error lesson, included with this
+  follow-up status update.
 - **Run state:** `BLOCKED` pending the user's one-time Python 3.11+ setup and
   GitHub browser sign-in, plus the required Windows 10 x64 and MacBook Neo
   visual acceptance. No project-wide `RALPH_COMPLETE` is claimed.
-- **Current verification:** hosted Assistant (macOS/Windows), Windows package,
-  headless, and three-platform ChaosOsc checks passed on the final PR #41
-  head. The post-install local Copilot test run passed **32 tests** with one
-  Windows-only skip; the local installer built and installed universal
-  macOS ChaosOsc.
+- **Current verification:** PR #47's hosted Assistant (macOS/Windows), Windows
+  package, headless, and three-platform ChaosOsc checks passed. The local
+  focused Copilot/setup/install/package suite passed **58 tests, 4 skipped**;
+  the full gate on integrated `origin/main` passed **236 tests, 6 skipped**.
+  The local installer rebuilt and installed universal macOS ChaosOsc.
 - **User installation:** the stale default Extensions copy was replaced by
-  the merged build. The setup helper is present and executable; SCIDE has not
-  been recompiled or visually retested in this session.
+  PR #47's merged build. The updated bridge and executable setup helpers are
+  installed; SCIDE has not been recompiled or visually retested in this
+  session.
 - **Delivered:** in-SuperCollider assistant window (`MaxxedBeats.gui`),
   OpenAI/Anthropic/mock providers over OS `curl`, OS credential stores,
   model catalog, usage/cost/credits, project review/apply/backup/undo,
@@ -84,8 +94,9 @@ package is installed with its `install.ps1`, smoke-tested, and removed in CI.
 A physical Windows 10/11 PC and SCIDE-launched visual sign-off remain open
 (manual checks). Copilot's bridge and SDK behavior are tested with fakes; live
 CLI setup/sign-in/generation are not verified because Python 3.11+ is not
-installed here. The official CLI is present per-user; the merged setup helper
-is now installed and directs the user to Python.org for the required runtime.
+installed here. The official CLI is present per-user; the installed bridge
+now names the correct setup helper for this OS and explains that this runtime
+step is separate from Git authorization.
 
 ## Component status
 
@@ -96,7 +107,7 @@ is now installed and directs the user to Python.org for the required runtime.
 | Providers and transport | Implemented | Direct sclang + OS `curl`; TLS enforced; cancellable; keys never in argv/env/files. Windows: `curl.exe` started by a PowerShell helper that writes the key only to curl's stdin. [Provider design](./design/providers.md). |
 | Credentials | Implemented | macOS Keychain via `security` (temporary-keychain test); Windows Credential Manager via the PowerShell helper (real round trip with unique test-only targets); Linux Secret Service command-tested only; in-memory fake for tests. |
 | Model catalog | Implemented | Per-provider refresh/cache/selection (`model-catalog.json`, `providers.json`); never substitutes; stale after failure or 24 h. |
-| GitHub Copilot | Implemented; live runtime unverified | Official runtime-backed subscription provider, no API key, dynamic model discovery, tools disabled; setup helper and saved-path refresh are installed. GUI/factory tests pass. Python 3.11+ setup and live CLI sign-in/generation remain unverified. |
+| GitHub Copilot | Implemented; live runtime unverified | Official runtime-backed subscription provider, no API key, dynamic model discovery, tools disabled; setup helper and saved-path refresh are installed. Missing Python/SDK errors now name the matching macOS/Linux/Windows setup helper. Python 3.11+ setup and live CLI sign-in/generation remain unverified. |
 | Usage, USD, credits | Implemented | Versioned rate table `2026-10-06.1`; 100 credits per estimated USD; missing/stale labelled, never zero; local history (`usage-history.json`). |
 | Project, proposals, apply, undo | Implemented | Strict `maxxedbeats.proposal/1`; path confinement; confirmed apply with backups; undo refuses after later user edits. [Workflow design](./design/workflow.md). |
 | Rendering | Implemented | Approved only; separate `sclang` → Score → `scsynth -N`; POSIX `env -i` + isolated HOME, Windows PowerShell launcher with a cleared environment and `sclang -l` (`excludeDefaultPaths`); installed ChaosOsc in the default plugin paths; checks and JSON sidecar. Linux launching unverified. |
@@ -104,8 +115,8 @@ is now installed and directs the user to Python.org for the required runtime.
 | Mock provider | Implemented | Deterministic `maxxedbeats.proposal/1` replies with a seed-dependent ChaosOsc composition; drives tests and the visual scenario. |
 | Packaging | Implemented | `scripts/install_maxxedbeats.py` installs/removes the Quark (with `agent/*.md`) and ChaosOsc together; marker-protected; dry run. Windows without developer tools: `MaxxedBeats-Windows-x64.zip` includes the Copilot bridge/requirements and documents its optional Python/CLI prerequisites; hosted install/smoke/uninstall passed. |
 | Documentation | Implemented | [User guide](./USER_GUIDE.md), README, SCDoc help, three design docs. |
-| Tests and CI | Implemented | The full local gate before the final Ubuntu fallback follow-up passed 232 tests with five platform/opt-in skips. PR #41 final head passes Assistant Tests (macOS/Windows), Windows package, Headless Tests, and Plugin Builds (three OSes). Post-install focused Copilot suite: 32 tests, one Windows-only skip. |
-| Visual verification | Partial | Previous native Keys & Privacy screenshot confirms the Copilot peer row; this installation was not recompiled or visually rechecked. Required SCIDE-launched sign-off on Windows 10 x64 and MacBook Neo remains open. |
+| Tests and CI | Implemented | PR #47 passes Assistant Tests (macOS/Windows), Windows package, Headless Tests, and Plugin Builds (three OSes). Focused Copilot/setup/install/package suite: 58 tests, 4 skips; integrated full gate: 236 tests, 6 skips. |
+| Visual verification | Partial | Previous native Keys & Privacy screenshot confirms the Copilot peer row; the latest install has not been recompiled or visually rechecked. Required SCIDE-launched sign-off on Windows 10 x64 and MacBook Neo remains open. |
 
 ## Verification and platform coverage
 

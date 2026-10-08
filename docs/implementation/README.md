@@ -114,6 +114,7 @@ follow the current prompt before merging and add their dossier when integrated.
 | `ralph/readme-docs-worker-01-20260925-0248` | Closed without merge; superseded | PR #17 closed; see branch decision | [Branch record](./ralph-readme-docs-worker-01-20260925-0248/README.md) |
 | `ralph/iteration-3-b2f6a9e` | Preserved preflight-blocked attempt | No PR; implementation did not start | [Branch record](./ralph-iteration-3-b2f6a9e/README.md) |
 | `ralph/implementation-records-coordinator-20260925-081730` | In progress | Parent PR pending | [Branch record](./ralph-implementation-records-coordinator-20260925-081730/README.md) |
+| `ralph/copilot-guided-setup-20261007-2335` | Merged | PR #47; merge `edc9c64b138e5e183dc6bea64a8c99cb3253866a` | [Branch record](./ralph-copilot-guided-setup-20261007-2335/README.md) |
 
 ## Reusable dossier template
 

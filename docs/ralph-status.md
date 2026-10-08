@@ -1,7 +1,7 @@
 schema_version: 2
 snapshot_path: "docs/ralph-status.md"
-snapshot_revision: 27
-updated_at_utc: "2026-10-07T23:11:40Z"
+snapshot_revision: 28
+updated_at_utc: "2026-10-08T00:12:08Z"
 overall_status: IN_PROGRESS
 current_run_ids:
   - "copilot-setup-onboarding-20261007-1640"
@@ -418,14 +418,14 @@ runs:
     effective_worker_count: 0
     active_worker_count: 0
     base_origin_main_sha: "dac46c31f6711ad0d90d40b9634ba92aa5a0203b"
-    coordinator_branch: "ralph/copilot-windows-onboarding-20261007-1640"
-    coordinator_branch_slug: "ralph-copilot-windows-onboarding-20261007-1640"
-    coordinator_worktree: "/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-copilot-windows-onboarding-20261007-1640"
-    coordinator_base_origin_main_sha: "dac46c31f6711ad0d90d40b9634ba92aa5a0203b"
+    coordinator_branch: "ralph/copilot-guided-setup-20261007-2335"
+    coordinator_branch_slug: "ralph-copilot-guided-setup-20261007-2335"
+    coordinator_worktree: "/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-copilot-guided-setup-20261007-2335"
+    coordinator_base_origin_main_sha: "68c7a9b709d7b5f9412e2358015f21af2bce8dcf"
     coordinator_rebased_onto_origin_main_sha: null
-    coordinator_implementation_commit_sha: "cab1f464346953e6a39b4477125de0c8bcc6a078"
+    coordinator_implementation_commit_sha: "817f9c56c05a67418b2b355347064717713551e8"
     created_at_utc: "2026-10-07T20:39:31Z"
-    updated_at_utc: "2026-10-07T23:11:40Z"
+    updated_at_utc: "2026-10-08T00:12:08Z"
     split_plan:
       - task_id: "copilot-runtime-setup-onboarding"
         worker_id: "coordinator-01"
@@ -433,7 +433,7 @@ runs:
         depends_on: []
     worker_count_note: "The Resource Manager had no free slots, and this cross-layer setup contract was kept with one coordinator to avoid overlapping assumptions; no child workers were launched."
     memory_handoff:
-      implementation_summary: "Discover the official Copilot CLI outside SCIDE PATH, create a private pinned SDK runtime, persist and refresh its executable paths, and package novice-oriented setup/launch wrappers."
+      implementation_summary: "Discover the official Copilot CLI outside SCIDE PATH, create a private pinned SDK runtime, persist and refresh its executable paths, package guided setup launchers, and name the correct launcher in runtime configuration errors."
       lesson_candidates:
         - rule: "Persist explicit executable paths for GUI-launched runtimes instead of depending on an interactive shell's PATH."
           why: "SCIDE could not see an already-installed per-user Copilot CLI because it was absent from the environment inherited by the GUI."
@@ -441,9 +441,24 @@ runs:
           evidence:
             - "extension/Data/copilot/bridge.py native CLI discovery and test_mb_copilot.CopilotBridgeTests.test_resolve_cli_finds_per_user_native_install_outside_path"
             - "extension/Classes/Providers/MBCopilotProvider.sc runtime refresh test"
+        - rule: "When a GUI reports missing external-runtime prerequisites, name the platform-specific setup helper and its immediate launch action."
+          why: "The generic Python/SDK error did not point users to the existing guided setup launchers and was confused with Git authorization."
+          scope: "Cross-platform optional provider runtime setup."
+          evidence:
+            - "extension/Data/copilot/bridge.py setup_helper_instruction and sdk_client"
+            - "tests/test_mb_copilot.py platform guidance and provider callback tests"
       no_durable_lessons_reason: null
-    memory_review: COMPLETE
-    next_action: "User: install Python 3.11+ from the setup helper's Python.org flow, rerun setup, complete GitHub browser sign-in, then exercise the required visual scenario on Windows 10 x64 and MacBook Neo."
+    memory_review:
+      status: COMPLETE
+      outcome: DURABLE_LESSON_CAPTURED
+      memory_update: INCLUDED_IN_POST_MERGE_FOLLOWUP
+      memory_followup_branch: "ralph/copilot-guidance-memory-20261007-2359"
+      sources:
+        - ".github/memory/README.md"
+        - ".github/memory/runtime-setup.md"
+        - ".github/memory/cross-platform.md"
+        - ".github/memory/testing.md"
+    next_action: "User: run the installed macOS setup-copilot.command, install Python 3.11+ from the official page it opens, rerun setup, use Sign in to GitHub Copilot..., and refresh models. Complete the required visual scenario on Windows 10 x64 and MacBook Neo."
 
 branch_agent_index:
   - run_id: "djmb-plugin-completion-20261006-2310"
@@ -1070,3 +1085,60 @@ branch_agent_index:
         verified_origin_main_sha: "e73b953671ba72e9af388ceaa21ebcdcfe3d63d6"
         verification_method: "git merge-base --is-ancestor e73b953671ba72e9af388ceaa21ebcdcfe3d63d6 origin/main"
     next_action: "User: install Python 3.11+, run setup, sign in to GitHub Copilot, and complete the required visual scenario before project-wide completion."
+  - run_id: "copilot-setup-onboarding-20261007-1640"
+    task_ids: ["copilot-runtime-setup-onboarding"]
+    worker_id: "coordinator-01"
+    worker_name: "coordinator-01 / Copilot setup onboarding"
+    branch: "ralph/copilot-guided-setup-20261007-2335"
+    branch_slug: "ralph-copilot-guided-setup-20261007-2335"
+    base_origin_main_sha: "68c7a9b709d7b5f9412e2358015f21af2bce8dcf"
+    rebased_onto_origin_main_sha: null
+    implementation_commit_sha: "817f9c56c05a67418b2b355347064717713551e8"
+    status: BLOCKED
+    iteration: 2
+    pull_request:
+      status: MERGED
+      number: 47
+      url: "https://github.com/jrblankenhorn1007/dj_maxxed_beats/pull/47"
+      base_sha: "68c7a9b709d7b5f9412e2358015f21af2bce8dcf"
+      head_sha: "dd71106b1a2c14caa8897ec0f8ad5b7263d2e7af"
+      merged_at_utc: "2026-10-07T23:57:05Z"
+      merge_sha: "edc9c64b138e5e183dc6bea64a8c99cb3253866a"
+    implementation_merge_verification:
+      status: VERIFIED
+      merge_sha: "edc9c64b138e5e183dc6bea64a8c99cb3253866a"
+      verified_origin_main_sha: "edc9c64b138e5e183dc6bea64a8c99cb3253866a"
+      verification_method: "git merge-base --is-ancestor edc9c64b138e5e183dc6bea64a8c99cb3253866a origin/main"
+    review:
+      status: COMPLETE
+      reviewer_agents: ["Independent code-review subagent"]
+      reviewed_base_sha: "68c7a9b709d7b5f9412e2358015f21af2bce8dcf"
+      reviewed_head_sha: "dd71106b1a2c14caa8897ec0f8ad5b7263d2e7af"
+      rounds_completed: 1
+      unresolved_finding_count: 0
+    checks:
+      - command: "SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth PYTHONPATH=tests python3 -m unittest test_mb_copilot test_mb_copilot_setup test_mb_install test_mb_package_windows -q"
+        result: "PASS (58 tests, 4 skipped)."
+      - command: "SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth bash scripts/run_headless_tests.sh"
+        result: "PASS (236 tests, 6 skipped; 248.669 seconds) on the implementation branch."
+      - command: "Hosted PR #47 checks on final head dd71106b1a2c14caa8897ec0f8ad5b7263d2e7af"
+        result: "PASS (Assistant macOS/Windows, Windows package, headless-tests, ChaosOsc macOS/Linux/Windows)."
+      - command: "SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth bash scripts/run_headless_tests.sh on integrated origin/main"
+        result: "PASS (236 tests, 6 skipped; 249.900 seconds) at edc9c64b138e5e183dc6bea64a8c99cb3253866a."
+      - command: "python3 scripts/install_maxxedbeats.py --dry-run && python3 scripts/install_maxxedbeats.py"
+        result: "PASS; marker-protected installation previewed, universal ChaosOsc rebuilt, and the merged Quark/plugin reinstalled."
+    memory_review:
+      status: COMPLETE
+      outcome: DURABLE_LESSON_CAPTURED
+      memory_update: INCLUDED_IN_POST_MERGE_FOLLOWUP
+      memory_followup_branch: "ralph/copilot-guidance-memory-20261007-2359"
+      sources:
+        - ".github/memory/README.md"
+        - ".github/memory/runtime-setup.md"
+        - ".github/memory/cross-platform.md"
+        - ".github/memory/testing.md"
+    status_path: "docs/ralph/ralph-copilot-guided-setup-20261007-2335/agents/coordinator-01/status.md"
+    progress_path: "docs/ralph/ralph-copilot-guided-setup-20261007-2335/agents/coordinator-01/progress.md"
+    decision_record_path: "docs/decisions/ralph-copilot-guided-setup-20261007-2335/agents/coordinator-01/pr-47.md"
+    decision_index_path: "docs/decisions/ralph-copilot-guided-setup-20261007-2335/README.md"
+    next_action: "User: install Python 3.11+, run the installed macOS setup helper, sign in through the GitHub Copilot button, refresh models, and complete Windows 10 x64/MacBook Neo visual acceptance."

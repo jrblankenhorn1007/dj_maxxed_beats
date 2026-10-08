@@ -1562,3 +1562,34 @@ Ralph-Status: IN_PROGRESS
   been published, reviewed, or merged. Keep the overall project blocked until
   the user completes Python 3.11+ setup and Copilot browser sign-in and the
   required Windows 10 x64/MacBook Neo visual acceptance passes.
+
+## Iteration 10 integration and memory review — 2026-10-08
+
+- **Implementation PR:** #47, exact base
+  `68c7a9b709d7b5f9412e2358015f21af2bce8dcf`, exact head
+  `dd71106b1a2c14caa8897ec0f8ad5b7263d2e7af`; merged at
+  `2026-10-07T23:57:05Z` as
+  `edc9c64b138e5e183dc6bea64a8c99cb3253866a`, verified on fetched
+  `origin/main`.
+- **Independent review:** exact-head code review reported no significant
+  issues. All hosted Assistant macOS/Windows, Windows package, headless, and
+  ChaosOsc macOS/Linux/Windows jobs passed.
+- **Integrated verification:** after fast-forwarding the clean integration
+  worktree to `edc9c64b138e5e183dc6bea64a8c99cb3253866a`,
+  `SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
+  bash scripts/run_headless_tests.sh` passed **236 tests, 6 skipped** in
+  249.900 seconds.
+- **Local installation:** the marker-protected dry run passed, then
+  `python3 scripts/install_maxxedbeats.py` rebuilt universal macOS ChaosOsc
+  and installed the merged Quark/plugin. The installed Copilot bridge matches
+  `origin/main`; `setup-copilot.command` and `setup-copilot.sh` are executable.
+- **Post-merge memory review:** the runtime setup, cross-platform, and testing
+  categories were reviewed. A durable lesson was captured: missing runtime
+  errors should identify the correct platform setup launcher and immediate
+  action. The memory entry and current-state records are included in the
+  post-merge follow-up.
+- **Still blocked on user/platform acceptance:** this Mac has Python 3.9.6.
+  Python 3.11+ installation, Copilot browser sign-in/model refresh/generation,
+  and the Windows 10 x64/MacBook Neo visual scenarios remain unverified. Do
+  not emit `RALPH_COMPLETE`.
