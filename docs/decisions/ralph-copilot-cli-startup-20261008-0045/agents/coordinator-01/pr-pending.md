@@ -1,0 +1,54 @@
+# Branch implementation decision record — PR pending
+
+- **Run/task:** `copilot-setup-onboarding-20261007-1640` /
+  `copilot-runtime-setup-onboarding`
+- **Coordinator:** `coordinator-01 / Copilot runtime startup fix`
+- **Branch:** `ralph/copilot-cli-startup-20261008-0045`
+- **Worktree:** `/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-copilot-cli-startup-20261008-0045`
+- **Base `origin/main`:** `1871b5bc9a18951185efa2103dd89e375081007d`
+- **Implementation commit:** `68708847c72d601f1f997589f2d5011a8deb65a6`
+- **Pull request:** expected; number not yet assigned.
+- **Project decision:** [DEC-045](../../../../decision_log.md#dec-045--use-the-sdk-pinned-runtime-for-copilot-stdio)
+
+## Decision
+
+Use the SDK-managed stdio runtime for model/authentication operations and
+retain the standalone Copilot CLI only for the official browser login. During
+setup, pre-download the SDK-pinned runtime with the SDK environment's
+`certifi` CA bundle.
+
+## Context and alternatives
+
+The bridge previously passed the normal interactive Copilot CLI and its
+flags to `StdioRuntimeConnection`. The live SDK handshake failed: the CLI
+rejected `--deny-tool=*`, the ordinary CLI then exited before the handshake,
+and the SDK runtime rejected CLI-only flags. Removing the flags entirely
+would also remove the CLI-level tool guard.
+
+Alternatives considered were continuing to pass the standalone CLI with
+version-specific flags, relaxing tool restrictions, or relying on an
+independent runtime downloader. The selected design uses the SDK's own
+version-matched runtime and keeps tool denial in the SDK session contract:
+empty tool/MCP lists, a rejecting permission callback, and refusal when
+runtime metadata reports any tools.
+
+## Recovered diagnostics and verification
+
+- The new runtime-connection test failed before implementation because the
+  bridge passed the standalone CLI path and unsupported flags.
+- The setup test failed before implementation because no SDK runtime download
+  was requested.
+- The first runtime download and full project gate failed certificate
+  verification under the Python.org Python 3.14 installation. Setting
+  `SSL_CERT_FILE` to the SDK venv's `certifi` bundle fixed the downloads and
+  the full gate passed.
+- Live SDK authentication, 28-model refresh, actual SuperCollider provider
+  auth/model callbacks, and one short `gpt-5-mini` request passed.
+- Full project gate:
+  `PYTHONDONTWRITEBYTECODE=1 SSL_CERT_FILE='<private SDK certifi bundle>'
+  SCLANG=/Applications/SuperCollider.app/Contents/MacOS/sclang
+  SCSYNTH=/Applications/SuperCollider.app/Contents/Resources/scsynth
+  bash scripts/run_headless_tests.sh` → **237 passed, 7 skipped**.
+
+The exact implementation commit, PR review, and merge evidence will be added
+before integration.

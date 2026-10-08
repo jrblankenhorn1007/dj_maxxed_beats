@@ -1,7 +1,7 @@
 schema_version: 2
 snapshot_path: "docs/ralph-status.md"
-snapshot_revision: 28
-updated_at_utc: "2026-10-08T00:12:08Z"
+snapshot_revision: 30
+updated_at_utc: "2026-10-08T01:15:13Z"
 overall_status: IN_PROGRESS
 current_run_ids:
   - "copilot-setup-onboarding-20261007-1640"
@@ -413,19 +413,19 @@ runs:
     worker_count_note: "Both scoped workers completed; worker-02's shared-repository integration remains blocked on explicit remote-publish authorization."
   - run_id: "copilot-setup-onboarding-20261007-1640"
     task_ids: ["copilot-runtime-setup-onboarding"]
-    aggregate_status: BLOCKED
+    aggregate_status: IN_PROGRESS
     requested_worker_count: 2
     effective_worker_count: 0
     active_worker_count: 0
     base_origin_main_sha: "dac46c31f6711ad0d90d40b9634ba92aa5a0203b"
-    coordinator_branch: "ralph/copilot-guided-setup-20261007-2335"
-    coordinator_branch_slug: "ralph-copilot-guided-setup-20261007-2335"
-    coordinator_worktree: "/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-copilot-guided-setup-20261007-2335"
-    coordinator_base_origin_main_sha: "68c7a9b709d7b5f9412e2358015f21af2bce8dcf"
+    coordinator_branch: "ralph/copilot-cli-startup-20261008-0045"
+    coordinator_branch_slug: "ralph-copilot-cli-startup-20261008-0045"
+    coordinator_worktree: "/Users/jrblankenhorn/dj_maxxed_beats.worktrees/ralph-copilot-cli-startup-20261008-0045"
+    coordinator_base_origin_main_sha: "1871b5bc9a18951185efa2103dd89e375081007d"
     coordinator_rebased_onto_origin_main_sha: null
-    coordinator_implementation_commit_sha: "817f9c56c05a67418b2b355347064717713551e8"
+    coordinator_implementation_commit_sha: "68708847c72d601f1f997589f2d5011a8deb65a6"
     created_at_utc: "2026-10-07T20:39:31Z"
-    updated_at_utc: "2026-10-08T00:12:08Z"
+    updated_at_utc: "2026-10-08T01:15:13Z"
     split_plan:
       - task_id: "copilot-runtime-setup-onboarding"
         worker_id: "coordinator-01"
@@ -458,7 +458,7 @@ runs:
         - ".github/memory/runtime-setup.md"
         - ".github/memory/cross-platform.md"
         - ".github/memory/testing.md"
-    next_action: "User: run the installed macOS setup-copilot.command, install Python 3.11+ from the official page it opens, rerun setup, use Sign in to GitHub Copilot..., and refresh models. Complete the required visual scenario on Windows 10 x64 and MacBook Neo."
+    next_action: "Coordinator: publish the live SDK startup fix, obtain exact-head code/security review, merge and verify on origin/main, then complete the post-merge memory review. Physical visual acceptance remains open."
 
 branch_agent_index:
   - run_id: "djmb-plugin-completion-20261006-2310"
@@ -1142,3 +1142,60 @@ branch_agent_index:
     decision_record_path: "docs/decisions/ralph-copilot-guided-setup-20261007-2335/agents/coordinator-01/pr-47.md"
     decision_index_path: "docs/decisions/ralph-copilot-guided-setup-20261007-2335/README.md"
     next_action: "User: install Python 3.11+, run the installed macOS setup helper, sign in through the GitHub Copilot button, refresh models, and complete Windows 10 x64/MacBook Neo visual acceptance."
+  - run_id: "copilot-setup-onboarding-20261007-1640"
+    task_ids: ["copilot-runtime-setup-onboarding"]
+    worker_id: "coordinator-01"
+    worker_name: "coordinator-01 / Copilot runtime startup fix"
+    branch: "ralph/copilot-cli-startup-20261008-0045"
+    branch_slug: "ralph-copilot-cli-startup-20261008-0045"
+    base_origin_main_sha: "1871b5bc9a18951185efa2103dd89e375081007d"
+    rebased_onto_origin_main_sha: null
+    implementation_commit_sha: "68708847c72d601f1f997589f2d5011a8deb65a6"
+    status: IN_PROGRESS
+    iteration: 3
+    pull_request:
+      status: NOT_OPENED
+      number: null
+      url: null
+      base_sha: "1871b5bc9a18951185efa2103dd89e375081007d"
+      head_sha: null
+    implementation_merge_verification:
+      status: PENDING
+      merge_sha: null
+      verified_origin_main_sha: null
+      verification_method: null
+      verified_at_utc: null
+    review:
+      status: NOT_APPLICABLE
+      reviewer_agents: []
+      reviewed_base_sha: null
+      reviewed_head_sha: null
+      rounds_completed: 0
+      max_rounds: 2
+      unresolved_finding_count: 0
+      author_decision:
+        status: NOT_APPLICABLE
+        choice: null
+        rationale: null
+        recorded_at_utc: null
+    resource_usage:
+      time_spent_seconds: 1938
+      time_basis: WALL_CLOCK_ELAPSED
+      token_spend:
+        status: NOT_REPORTED
+        input_tokens: null
+        output_tokens: null
+        total_tokens: null
+        cached_input_tokens: null
+        source: null
+    worker_sign_off:
+      status: RECEIVED
+      attestation_kind: SELF_ATTESTATION
+      cryptographic_signature_status: NOT_CRYPTOGRAPHICALLY_SIGNED
+      attested_at_utc: "2026-10-08T01:15:13Z"
+      statement: "Self-attestation against implementation commit 68708847c72d601f1f997589f2d5011a8deb65a6; not cryptographically signed."
+    status_path: "docs/ralph/ralph-copilot-cli-startup-20261008-0045/agents/coordinator-01/status.md"
+    progress_path: "docs/ralph/ralph-copilot-cli-startup-20261008-0045/agents/coordinator-01/progress.md"
+    decision_record_path: "docs/decisions/ralph-copilot-cli-startup-20261008-0045/agents/coordinator-01/pr-pending.md"
+    decision_index_path: "docs/decisions/ralph-copilot-cli-startup-20261008-0045/README.md"
+    next_action: "Coordinator: publish the branch, open the PR, and obtain exact-head code/security review."
