@@ -192,6 +192,10 @@ class CopilotBridgeTests(unittest.TestCase):
 
         self.assertIs(client, client_factory.return_value)
         connection_factory.assert_called_once_with()
+        self.assertIsNone(
+            client_factory.call_args.kwargs.get("base_directory"),
+            "per-request COPILOT_HOME must not hide the user's saved login",
+        )
         options = self.bridge.session_options({"model": "test-model"}, self.directory)
         self.assertEqual(options["available_tools"], [])
         self.assertEqual(options["tools"], [])
